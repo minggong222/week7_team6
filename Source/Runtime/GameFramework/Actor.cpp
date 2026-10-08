@@ -1,0 +1,288 @@
+#include "EnginePCH.h"
+#include "Actor.h"
+#include "Engine/World.h"
+#include "Engine/Level.h"
+#include "UObject/UObjectGlobals.h"
+#include "Components/SceneComponent.h"
+#include "Components/FireballComponent.h"
+
+AActor::AActor()
+{
+}
+
+AActor::~AActor()
+{
+	TArray<UActorComponent*> ToDelete = Components;
+	Components.Reset();
+	RootComponent = nullptr;
+
+	for (UActorComponent* Component : ToDelete)
+	{
+		delete Component;
+	}
+}
+
+void AActor::BeginPlay()
+{
+	//if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(RootComponent))
+	//{
+	//	World->AddPrimitive(Cast<UPrimitiveComponent>(RootComponent));
+	//}
+
+	for (UActorComponent* Component : Components)
+	{
+		Component->BeginPlay();
+	}
+
+	BeginPlayState = EActorBeginPlayState::BeginningPlay;
+}
+
+void AActor::EndPlay()
+{
+	BeginPlayState = EActorBeginPlayState::HasBegunPlay;
+}
+
+void AActor::Tick(float DeltaTime)
+{
+	for (UActorComponent* Component : Components)
+	{
+		Component->TickComponent(DeltaTime);
+	}
+}
+
+// xx component 호출
+bool AActor::CanEverTick() const
+{
+	return bCanEverTick;
+}
+
+bool AActor::IsActorTickEnabled() const
+{
+	return bCanEverTick && bTickEnabled;
+}
+
+void AActor::SetActorTickEnabled(bool bEnabled)
+{
+	const bool bNewEnabled = bCanEverTick && bEnabled;
+	if (bTickEnabled == bNewEnabled)
+		return;
+
+	bTickEnabled = bNewEnabled;
+	if (World)
+		World->RefreshActorTickRegistration(this);
+}
+
+UWorld* AActor::GetWorld() const
+{
+	return World;
+}
+
+void AActor::SetWorld(UWorld* InWorld)
+{
+	World = InWorld;
+}
+
+ULevel* AActor::GetLevel() const
+{
+	return Level;
+}
+
+void AActor::SetLevel(ULevel* InLevel)
+{
+	Level = InLevel;
+}
+
+const TArray<UActorComponent*>& AActor::GetComponents() const
+{
+	return Components;
+}
+
+USceneComponent* AActor::GetRootComponent() const
+{
+	return RootComponent;
+}
+
+void AActor::SetRootComponent(USceneComponent* SceneComponent)
+{
+	RootComponent = SceneComponent;
+}
+
+UActorComponent* AActor::AddComponentByClass(UClass* Class, FName Name)
+{
+	if (!Class || !Class->IsChildOf(UActorComponent::StaticClass()))
+	{
+		return nullptr;
+	}
+
+	UActorComponent* Component = Cast<UActorComponent>(FObjectFactory::ConstructObject(Class, this, Name));
+
+	if (!Component)
+	{
+		return nullptr;
+	}
+
+	Component->SetOwner(this);
+	Components.Add(Component);
+
+	if (Component->IsA<USceneComponent>())
+	{
+		if (!RootComponent)
+		{
+			RootComponent = Cast<USceneComponent>(Component);
+		}
+		else
+		{
+			Cast<USceneComponent>(Component)->SetupAttachment(RootComponent);
+		}
+	}
+
+	GetWorld()->AddComponent(Cast<UPrimitiveComponent>(Component));
+	GetWorld()->AddComponent(Cast<UFireballComponent>(Component));
+
+	if (BeginPlayState == EActorBeginPlayState::BeginningPlay)
+	{
+		Component->BeginPlay();
+	}
+
+	return Component;
+}
+
+bool AActor::GetTickInEditor() const
+{
+	return bTickInEditor;
+}
+
+void AActor::SetCanEverTick(const bool bEnabled)
+{
+	if (bCanEverTick == bEnabled)
+		return;
+
+	bCanEverTick = bEnabled;
+	if (!bCanEverTick)
+		bTickEnabled = false;
+	if (World)
+		World->RefreshActorTickRegistration(this);
+}
+
+void AActor::RemoveOwnedComponent(UActorComponent* Component)
+{
+	for (uint32 i = 0; i < Components.Num(); ++i)
+	{
+		if (Components[i] == Component)
+		{
+			Components.RemoveAt(i, 1);
+			break;
+		}
+	}
+
+	if (RootComponent == Component)
+	{
+		RootComponent = nullptr;
+	}
+}
+
+FVector AActor::GetActorLocation() const
+{
+	if (RootComponent)
+	{
+		return RootComponent->GetComponentLocation();
+	}
+	return FVector::ZeroVector;
+}
+
+//FRotator AActor::GetActorRotation() const
+//{
+//    if (RootComponent)
+//    {
+//        // USceneComponent의 GetComponentRotation() 호출
+//        return RootComponent->GetComponentRotation();
+//    }
+//    return FRotator::ZeroRotator;
+//}
+
+FVector AActor::GetActorScale3D() const
+{
+	if (RootComponent)
+	{
+		return RootComponent->GetComponentScale();
+	}
+	return FVector::OneVector;
+}
+
+//FQuat AActor::GetActorQuat() const
+//{
+//    if (RootComponent)
+//    {
+//        return FQuat(RootComponent->GetComponentRotation());
+//    }
+//    return FQuat::Identity;
+//}
+
+FTransform AActor::GetActorTransform() const
+{
+	if (RootComponent)
+	{
+		return FTransform(RootComponent->GetComponentRotation(), RootComponent->GetComponentLocation(), RootComponent->GetComponentScale());
+
+		// return FTransform(RootComponent->GetWorldMatrix());
+	}
+	return FTransform::Identity;
+}
+
+bool AActor::Destroy()
+{
+	if (!World)
+		return false;
+
+	return World->DestroyActor(this);
+}
+
+void AActor::DuplicateSubObjects()
+{
+	Super::DuplicateSubObjects();
+
+	TMap<UActorComponent*, UActorComponent*> DuplicateMap;
+	TMap<USceneComponent*, USceneComponent*> OldParents;
+	TArray<UActorComponent*> Temp;
+	Temp.Reserve(Components.Num());
+
+	for (UActorComponent* Comp : Components)
+	{
+		UActorComponent* NewComp = FObjectFactory::DuplicateObject(Comp, this);
+
+		if (!NewComp)
+		{
+			continue;
+		}
+
+		NewComp->SetOwner(this);
+
+		if (USceneComponent* SceneComp = Cast<USceneComponent>(NewComp))
+		{
+			OldParents.Add(SceneComp, SceneComp->GetAttachParent());
+		}
+
+		NewComp->DuplicateSubObjects();
+		DuplicateMap.Add(Comp, NewComp);
+		Temp.Add(NewComp);
+	}
+	UActorComponent** NewRoot = DuplicateMap.FindOrNull(RootComponent);
+	RootComponent = NewRoot ? Cast<USceneComponent>(*NewRoot) : nullptr;
+
+	for (UActorComponent* Comp : Temp)
+	{
+		if (USceneComponent* SceneComp = Cast<USceneComponent>(Comp))
+		{
+			USceneComponent** OldParent = OldParents.FindOrNull(SceneComp);
+			UActorComponent** DuplicatedOldParent = (OldParent ? DuplicateMap.FindOrNull(*OldParent) : nullptr);
+			USceneComponent* NewParent = DuplicatedOldParent ? Cast<USceneComponent>(*DuplicatedOldParent) : nullptr;
+
+			if (NewParent)
+			{
+				SceneComp->SetupAttachment(NewParent);
+			}
+		}
+	}
+
+	Components = std::move(Temp);
+}

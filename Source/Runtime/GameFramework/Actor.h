@@ -1,0 +1,97 @@
+#pragma once
+
+#include "UObject/Object.h"
+#include "Components/PrimitiveComponent.h"
+#include "UObject/Class.h"
+#include "UObject/UObjectGlobals.h"
+#include "Containers/Set.h"
+
+class ULevel;
+class UWorld;
+
+enum class EActorBeginPlayState
+{
+	HasNotBegunPlay,
+	BeginningPlay,
+	HasBegunPlay,
+};
+
+class AActor : public UObject
+{
+	DECLARE_CLASS(AActor, UObject)
+	REFLECT_START(ClassName)
+	REFLECT_END()
+  public:
+	AActor();
+	virtual ~AActor();
+
+	virtual void BeginPlay(); // xx World->AddPrimitive 책임이동 필요
+	virtual void EndPlay();
+	virtual void Tick(float DeltaTime); // xx component 호출
+	bool CanEverTick() const;
+	bool IsActorTickEnabled() const;
+	void SetActorTickEnabled(bool bEnabled);
+
+	UWorld* GetWorld() const;
+	void SetWorld(UWorld* InWorld);
+	ULevel* GetLevel() const;
+	void SetLevel(ULevel* InLevel);
+
+	const TArray<UActorComponent*>& GetComponents() const;
+	USceneComponent* GetRootComponent() const;
+	void SetRootComponent(USceneComponent* SceneComponent);
+	void RemoveOwnedComponent(UActorComponent* Component);
+
+	FVector GetActorLocation() const;
+	FRotator GetActorRotation() const;
+	FVector GetActorScale3D() const;
+	FQuat GetActorQuat() const; // xx 타입명변경
+	FTransform GetActorTransform() const;
+
+	bool Destroy();
+
+	// xx 삭제 예정
+	friend class UWorld;
+
+	template <typename T> T* CreateDefaultSubobject(FName Name)
+	{
+		T* Component = CastChecked<T>(FObjectFactory::ConstructObject(T::StaticClass(), this, Name));
+		Component->SetOwner(this);
+		Components.Add(Component);
+		return Component;
+	}
+
+	UActorComponent* AddComponentByClass(UClass* Class, FName Name = NAME_None);
+
+	virtual void DuplicateSubObjects() override;
+
+	template <typename T> T* FindComponentByClass() const
+	{
+		for (UActorComponent* Comp : Components)
+		{
+			if (T* Found = Cast<T>(Comp))
+			{
+				return Found;
+			}
+		}
+
+		return nullptr;
+	}
+
+	bool GetTickInEditor() const;
+
+  protected:
+	void SetCanEverTick(bool bEnabled);
+
+	TArray<UActorComponent*> Components;
+	USceneComponent* RootComponent = nullptr;
+
+	UWorld* World = nullptr;
+	ULevel* Level = nullptr;
+	bool bCanEverTick = true;
+	bool bTickEnabled = true;
+	bool bTickInEditor = false;
+	EActorBeginPlayState BeginPlayState = EActorBeginPlayState::HasNotBegunPlay;
+
+  private:
+};
