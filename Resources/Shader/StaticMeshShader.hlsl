@@ -130,16 +130,16 @@ PS_INPUT mainVS(VS_INPUT input)
     
     float3 V = normalize(CameraPosition - output.worldPosition);
     float3 N = normalize(output.normal);
-    float3 L = normalize(-Lights[0].Dir_Direction);
+    float3 L = normalize(-Light.Dir_Direction);
     float3 H = normalize(V + L);
     float3 lighting = float3(1.0f, 1.0f, 1.0f);
 
     // Ambient Light
-    float3 Dir_Ambient = Lights[0].Amb_Intensity * Lights[0].Amb_Color.xyz;
+    float3 Dir_Ambient = Light.Amb_Intensity * Light.Amb_Color.xyz;
     
     // Directional Light
     float Dir_NdotL = saturate(dot(N, L));
-    float3 Dir_Diffuse = (Lights[0].Dir_Color * Dir_NdotL).xyz;
+    float3 Dir_Diffuse = (Light.Dir_Color * Dir_NdotL).xyz;
     float Dir_NDotH = saturate(dot(N, H));
     float3 Dir_Specular = pow(Dir_NDotH, /*Shininess*/ 16.0f);
 
@@ -147,18 +147,18 @@ PS_INPUT mainVS(VS_INPUT input)
 
 
     // float3 N = normalize(output.normal);
-    // float3 L = normalize(-Lights[0].Dir_Direction);
+    // float3 L = normalize(-Light.Dir_Direction);
     
     // // Ambient Light
-    // float3 Dir_Ambient = Lights[0].Amb_Intensity * Lights[0].Amb_Color.xyz;
+    // float3 Dir_Ambient = Light.Amb_Intensity * Light.Amb_Color.xyz;
 
     // // Directional Light
     // float Dir_NdotL = saturate(dot(N, L));
-    // float3 Dir_Diffuse = Lights[0].Dir_Intensity * (Lights[0].Dir_Color * Dir_NdotL).xyz;
+    // float3 Dir_Diffuse = Light.Dir_Intensity * (Light.Dir_Color * Dir_NdotL).xyz;
 
     // float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse;
 
-    output.lighting = Dir_Lighting * Lights[0].Dir_Intensity;
+    output.lighting = Dir_Lighting * Light.Dir_Intensity;
 
 #endif
 
@@ -170,52 +170,65 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float4 texColor = g_txColor.Sample(g_Sample, input.uv + UVOffset);
     float4 albedo = texColor * BaseColor;
 
+    int X = input.position.x * 8 / ViewSizeX;
+    int Y = input.position.y * 8 / ViewSizeY;
+
+    FTileLightHeader Header = TileHeaders[Y * 8 + X];
+
+    float3 lighting = float3(0.0f, 0.0f, 0.0f);
+
+    for (uint i = Header.Offset; i < Header.Offset + Header.Count; ++i)
+    {
+        uint index = TileLightIndices[i];
+        FLightData Light = Lights[index];
+
+        
 #if LIGHTING_MODEL_GOURAUD
-    float3 lighting = input.lighting;
+        lighting = input.lighting;
 #endif
 
 #if LIGHTING_MODEL_LAMBERT
-    // Lambert 쉐이딩. 라이팅을 Pixel Shader 단계에서 처리. Diffuse Only. 따라서 Ambient Light는 없음
+        // Lambert 쉐이딩. 라이팅을 Pixel Shader 단계에서 처리. Diffuse Only. 따라서 Ambient Light는 없음
 
-    float3 N = normalize(input.normal);
-    float3 L = normalize(-Lights[0].Dir_Direction);
-    float3 lighting = float3(1.0f, 1.0f, 1.0f);
+        float3 N = normalize(input.normal);
+        float3 L = normalize(-Light.Dir_Direction);
 
-    // Ambient Light
-    float3 Dir_Ambient = Lights[0].Amb_Intensity * Lights[0].Amb_Color.xyz;
-    
-    // Directional Light
-    float Dir_NdotL = saturate(dot(N, L));
-    float3 Dir_Diffuse = (Lights[0].Dir_Color * Dir_NdotL).xyz;
+        // Ambient Light
+        float3 Dir_Ambient = Light.Amb_Intensity * Light.Amb_Color.xyz;
+        
+        // Directional Light
+        float Dir_NdotL = saturate(dot(N, L));
+        float3 Dir_Diffuse = (Light.Dir_Color * Dir_NdotL).xyz;
 
-    float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse;
+        float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse;
 
-    lighting = Dir_Lighting * Lights[0].Dir_Intensity;
+        lighting += Dir_Lighting * Light.Dir_Intensity;
 #endif
 
 
 #if LIGHTING_MODEL_PHONG
-    // Blinn-phong 쉐이딩. 라이팅을 Pixel Shader 단계에서 처리. Ambient, Diffuse, Specular.
+        // Blinn-phong 쉐이딩. 라이팅을 Pixel Shader 단계에서 처리. Ambient, Diffuse, Specular.
 
-    float3 V = normalize(CameraPosition - input.worldPosition);
-    float3 N = normalize(input.normal);
-    float3 L = normalize(-Lights[0].Dir_Direction);
-    float3 H = normalize(V + L);
-    float3 lighting = float3(1.0f, 1.0f, 1.0f);
+        float3 V = normalize(CameraPosition - input.worldPosition);
+        float3 N = normalize(input.normal);
+        float3 L = normalize(-Light.Dir_Direction);
+        float3 H = normalize(V + L);
 
-    // Ambient Light
-    float3 Dir_Ambient = Lights[0].Amb_Intensity * Lights[0].Amb_Color.xyz;
-    
-    // Directional Light
-    float Dir_NdotL = saturate(dot(N, L));
-    float3 Dir_Diffuse = (Lights[0].Dir_Color * Dir_NdotL).xyz;
-    float Dir_NDotH = saturate(dot(N, H));
-    float3 Dir_Specular = pow(Dir_NDotH, /*Shininess*/ 16.0f);
+        // Ambient Light
+        float3 Dir_Ambient = Light.Amb_Intensity * Light.Amb_Color.xyz;
+        
+        // Directional Light
+        float Dir_NdotL = saturate(dot(N, L));
+        float3 Dir_Diffuse = (Light.Dir_Color * Dir_NdotL).xyz;
+        float Dir_NDotH = saturate(dot(N, H));
+        float3 Dir_Specular = pow(Dir_NDotH, /*Shininess*/ 16.0f);
 
-    float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse + Dir_Specular;
+        float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse + Dir_Specular;
 
-    lighting = Dir_Lighting * Lights[0].Dir_Intensity;
+        lighting += Dir_Lighting * Light.Dir_Intensity;
 #endif
+
+    }
 
     // Opaque는 알파를 1로 고정한다. 뷰포트 RT를 ImGui가 알파 블렌딩으로 그리므로 알파가 남으면 비쳐 보인다
     float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
