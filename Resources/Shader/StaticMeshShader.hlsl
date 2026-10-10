@@ -30,6 +30,11 @@ cbuffer LightingGlobals : register(b3)
     float4 AmbientRadiance;
 };
 
+cbuffer LightCountConstants : register(b4)
+{
+    uint LightCount;
+    uint3 LightCountPadding;
+}
 #define     LightType_Directional 0
 #define	    LightType_Point 1
 #define	    LightType_Spot 2
@@ -44,6 +49,19 @@ struct FLightData
 {
     uint LightType;
     float3 Position;
+    
+    //Spot Light
+    float3 Direction;
+    float Intensity;
+    
+    float3 Color;
+    float Radius;
+    
+    float InnerConeCos;
+    float OuterConeCos;
+    float AttenuationLinear;
+    float AttenuationQuadratic;
+    
     // ...
     // Undefined
     // 각자 구현하시고 여기에 합치면 될 것 같습니다.
@@ -59,6 +77,49 @@ StructuredBuffer<FLightData> Lights : register(t4);
 StructuredBuffer<FTileLightHeader> TileHeaders : register(t5);
 StructuredBuffer<uint> TileLightIndices : register(t6);
 
+//Spot Light
+float3 EvaluateSpotLight(FLightData Light, float3 WorldPosition, float3 WorldNormal, float3 ViewDirection, float3 Albedo, float3 SpecularColor, float Shininess)
+{
+    float3 ToLight = Light.Position - WorldPosition;
+    float DistanceToLight = length(ToLight);
+    
+    if(DistanceToLight >= Light.Radius)
+        return float3(0, 0, 0);
+    
+    float3 L = ToLight / max(DistanceToLight, 0.0001f);
+    float3 N = normalize(WorldNormal);
+    float3 V = normalize(ViewDirection);
+    
+    // 거리 감쇠
+    float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * DistanceToLight + Light.AttenuationQuadratic * DistanceToLight * DistanceToLight, 1e-4f);
+    
+    //원뿔 감쇠
+    float CosTheta = dot(normalize(Light.Direction), -L);
+    
+    float ConeFactor = saturate((CosTheta - Light.OuterConeCos) / max(Light.InnerConeCos - Light.OuterConeCos, 0.0001f));
+    
+    //부드러운 경계
+    ConeFactor = ConeFactor * ConeFactor * (3.0f - 2.0f * ConeFactor);
+    
+    //Blinn-Phong Diffuse
+    float NdotL = max(dot(N, L), 0.0f);
+    float3 Diffuse = Albedo * NdotL;
+    
+    //Blinn-Phong Specular
+    float3 Specular = float3(0.0f, 0.0f, 0.0f);
+    
+    if (NdotL > 0.0f)
+    {
+        float3 H = normalize(L + V);
+        
+        float SpeculaFactor = pow(max(dot(N, H), 0.0f), Shininess);
+        
+        Specular = SpecularColor * SpeculaFactor;
+    }
+
+    return Light.Color * Light.Intensity * Attenuation * ConeFactor * (Diffuse + Specular);
+}
+
 struct VS_INPUT
 {
     float3 p : POSITION; // Input position from vertex buffer
@@ -73,6 +134,8 @@ struct PS_INPUT
     float3 normal : NORMAL;
     float4 color : COLOR;
     float2 uv : TEXCOORD0;
+    
+    float3 WorldPosition : TEXCOORD1;
 };
 
 Texture2D g_txColor : register(t0);
@@ -84,8 +147,8 @@ SamplerState g_Sample : register(s0);
 
 // 조명 방향 및 색상
 static const float3 LightDir = normalize(float3(0.5f, 0.5f, -1.0f));
-static const float3 LightColor = float3(0.5f, 0.5f, 0.5f);
-static const float3 AmbientColor = float3(0.5f, 0.5f, 0.5f);
+static const float3 LightColor = float3(0.f, 0.f, 0.f);
+static const float3 AmbientColor = float3(0.f, 0.f, 0.f);
 
 PS_INPUT mainVS(VS_INPUT input)
 {
@@ -97,6 +160,7 @@ PS_INPUT mainVS(VS_INPUT input)
     output.normal = mul(float4(input.n, 0.0f), World).xyz;
     output.color = input.c; 
     output.uv = input.t;
+    output.WorldPosition = worldPos.xyz;
     return output;
 }
 
@@ -109,8 +173,22 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float3 N = normalize(input.normal);
     float NdotL = saturate(dot(N, -LightDir));
     float3 lighting = AmbientColor + LightColor * NdotL;
+    
+    
+    float3 FinalColor = albedo.rgb * lighting;
+    
+    float3 ViewDirection = normalize(CameraPosition - input.WorldPosition);
+    
+    for (int i = 0; i < LightCount; ++i)
+    {   
+        if (Lights[i].LightType == LightType_Spot)
+        {
+            FinalColor += EvaluateSpotLight(Lights[i], input.WorldPosition, N, ViewDirection, albedo.rgb, SpecularColor, Shininess);
 
+        }
+    }
+    
     // Opaque는 알파를 1로 고정한다. 뷰포트 RT를 ImGui가 알파 블렌딩으로 그리므로 알파가 남으면 비쳐 보인다
-    float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
-    return float4(albedo.rgb * lighting, alpha);
+        float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
+    return float4(FinalColor, alpha);
 }
