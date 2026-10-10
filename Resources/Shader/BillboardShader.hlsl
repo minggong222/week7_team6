@@ -6,6 +6,10 @@ cbuffer constants : register(b0)
 cbuffer ViewConstants : register(b2)
 {
     row_major matrix ViewProjection;
+    float3 CameraPosition;
+    float ViewSizeX;
+    float ViewSizeY;
+    float3 Padding_noUse;
 };
 
 Texture2D SpriteTexture : register(t0);

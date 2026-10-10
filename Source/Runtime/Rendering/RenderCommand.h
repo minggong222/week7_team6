@@ -36,7 +36,7 @@ public:
 	static TUniquePtr<FRHIIndexBuffer> CreateDynamicIndexBuffer(uint32 MaxIndexCount);
 
 	static TUniquePtr<FRHIUniformBuffer> CreateConstantBuffer(uint32 BufferSize);
-
+	static TUniquePtr<FRHIStructuredBuffer> CreateStructuredBuffer(uint32 ByteSizePerElement, uint32 ElementCount);
 
 	static TUniquePtr<FRHITexture2D> CreateTexture2D(const D3D11_TEXTURE2D_DESC& Desc, const void* InitialData = nullptr);
 	static TUniquePtr<FRHITexture2D> CreateTexture2D(const D3D11_TEXTURE2D_DESC& Desc, const FImageData& Image);
@@ -82,6 +82,9 @@ public:
 		UpdateBufferData(InBuffer, Data, sizeof(T), Context);
 	}
 	static void UpdateBufferData(FRHIBuffer* InBuffer, const void* Data, uint32 DataSize, ID3D11DeviceContext* Context = nullptr);
+	
+	// DataSize is in bytes. The buffer must already have sufficient capacity.
+	static void UpdateStructuredBufferData(FRHIStructuredBuffer* InBuffer, const void* Data, uint32 DataSize, ID3D11DeviceContext* Context = nullptr);
 
 	static void BindVertexBuffer(FRHIVertexBuffer* VertexBuffer, ID3D11DeviceContext* Context = nullptr);
 	static void BindIndexBuffer(FRHIIndexBuffer* IndexBuffer, ID3D11DeviceContext* Context = nullptr);

@@ -44,6 +44,12 @@ TUniquePtr<FRHIUniformBuffer> FRenderCommand::CreateConstantBuffer(uint32 Buffer
 	return RenderDevice->CreateConstantBuffer(BufferSize);
 }
 
+TUniquePtr<FRHIStructuredBuffer> FRenderCommand::CreateStructuredBuffer(uint32 ByteSizePerElement, uint32 ElementCount)
+{
+	assert(RenderDevice);
+	return RenderDevice->CreateStructuredBuffer(ByteSizePerElement, ElementCount);
+}
+
 TUniquePtr<FRHITexture2D> FRenderCommand::CreateTexture2D(const D3D11_TEXTURE2D_DESC& Desc, const FImageData& Image)
 {
 	assert(RenderDevice);
@@ -181,6 +187,32 @@ void FRenderCommand::UpdateBufferData(FRHIBuffer* InBuffer, const void* Data, ui
 	}
 	std::memcpy(MappedData, Data, DataSize);
 	UnmapBuffer(InBuffer, Context);
+}
+
+void FRenderCommand::UpdateStructuredBufferData(FRHIStructuredBuffer* InBuffer, const void* Data, uint32 DataSize, ID3D11DeviceContext* Context)
+{
+	if (DataSize == 0)
+	{
+		return;
+	}
+	if (!InBuffer || !InBuffer->GetBuffer() || !Data || DataSize > InBuffer->GetBufferSize())
+	{
+		LOG(Warning, "Invalid structured buffer update or insufficient capacity.");
+		return;
+	}
+
+	ID3D11DeviceContext* Ctx = Context ? Context : GetContext();
+	if (!Ctx)
+	{
+		LOG(Warning, "Cannot update structured buffer without a device context.");
+		return;
+	}
+
+	D3D11_BOX Box = {};
+	Box.right = DataSize;
+	Box.bottom = 1;
+	Box.back = 1;
+	Ctx->UpdateSubresource(InBuffer->GetBuffer(), 0, &Box, Data, 0, 0);
 }
 
 void FRenderCommand::BindVertexBuffer(FRHIVertexBuffer* VertexBuffer, ID3D11DeviceContext* Context)

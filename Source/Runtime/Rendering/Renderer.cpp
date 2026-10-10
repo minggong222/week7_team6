@@ -10,6 +10,7 @@
 #include "Misc/App.h"
 #include "Camera/CameraComponent.h"
 #include "Tasks/Tasks.h"
+#include "FScene.h"
 
 #include <algorithm>
 #include <functional>
@@ -95,7 +96,9 @@ namespace
 
 bool FRenderer::Init()
 {
-	ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FMatrix));
+	ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FViewConstants));
+	LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));
+	TileLightHeaderSB = FRenderCommand::CreateStructuredBuffer(sizeof(FTileLightHeader), TileCountX * TileCountY);
 	if (FRenderCommand::GetRenderDevice()->SupportsConstantBufferOffsetting())
 	{
 		return EnsureConstantBufferCapacity(Temp, InitialPacketCapacity);
@@ -168,20 +171,29 @@ void FRenderer::EnsureDeferredWorkers()
 }
 
 // 기존 단일 카메라의 ViewProjection으로 렌더 패킷 배열 전체를 그린다.
-void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent)
+void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const FViewportSettings& ViewportSettings, const FScene& Scene)
 {
-	RenderAll(InPackets, CameraComponent->GetViewProjectionMatrix());
+	RenderAll(InPackets, CameraComponent->GetViewProjectionMatrix(), CameraComponent->GetComponentLocation(), ViewportSettings, Scene);
 }
 
 // 불투명 우선·반투명 거리순으로 배열을 정렬해 View 행렬과 Section 범위로 그린다.
-void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection)
+void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene)
 {
-	RenderOpaque(InPackets, ViewProjection);
+	RenderOpaque(InPackets, ViewProjection, CameraPosition, ViewportSettings, Scene);
 	RenderTranslucent(ViewProjection);
 }
 
+void FRenderer::BindLightingResources(ID3D11DeviceContext* Context)
+{
+	FRenderCommand::BindConstantBuffer(3, LightingGlobalsCB.get(), EShaderBindFlagBits::Pixel, Context);
+
+	FRenderCommand::PSSetShaderResource(4, LightDataSB ? LightDataSB->GetSRV() : nullptr, Context);
+	FRenderCommand::PSSetShaderResource(5, TileLightHeaderSB ? TileLightHeaderSB->GetSRV() : nullptr, Context);
+	FRenderCommand::PSSetShaderResource(6, TileLightIndicesSB ? TileLightIndicesSB->GetSRV() : nullptr, Context);
+}
+
 // TArray 기반 불투명 메시 지연 컨텍스트 병렬 렌더링
-void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, bool bWireframe, ELightingModel LightingModel)
+void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene, bool bWireframe, ELightingModel LightingModel)
 {
 	FStatScope SubmitScope(StatIds::RenderSubmit());
 	FBatchStats BatchStats;
@@ -193,9 +205,37 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 
 	if (!ViewCB)
 	{
-		ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FMatrix));
+		ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FViewConstants));
 	}
-	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewProjection, sizeof(FMatrix));
+	const FViewConstants ViewConstants{ViewProjection, CameraPosition, static_cast<float>(ViewportSettings.Width), static_cast<float>(ViewportSettings.Height), {}};
+	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewConstants, sizeof(ViewConstants));
+
+	FLightingGlobals tempGlobal{.AmbientRadiance{1.0f, 1.0f, 1.0f, 0.5f}};
+	if (!LightingGlobalsCB)
+	{
+		LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));
+	}
+	FRenderCommand::UpdateBufferData(LightingGlobalsCB.get(), &tempGlobal, sizeof(tempGlobal));
+
+	const uint32 LightCount = static_cast<uint32>(Scene.LightDatas.Num());
+	const uint32 LightCapacity = (std::max)(1u, LightCount);
+	if (!LightDataSB || LightDataSB->GetElementCount() < LightCapacity)
+	{
+		LightDataSB = FRenderCommand::CreateStructuredBuffer(sizeof(FLightData), LightCapacity);
+	}
+	FRenderCommand::UpdateStructuredBufferData(LightDataSB.get(), Scene.LightDatas.GetData(), Scene.LightDatas.Num() * sizeof(FLightData));
+	if (!TileLightHeaderSB)
+	{
+		TileLightHeaderSB = FRenderCommand::CreateStructuredBuffer(sizeof(FTileLightHeader), TileCountX * TileCountY);
+	}
+	FRenderCommand::UpdateStructuredBufferData(TileLightHeaderSB.get(), Scene.TileLightHeader, TileCountX * TileCountY * sizeof(FTileLightHeader));
+	const uint32 IndexCount = static_cast<uint32>(Scene.TileLightIndices.Num());
+	const uint32 IndexCapacity = (std::max)(1u, IndexCount);
+	if (!TileLightIndicesSB || TileLightIndicesSB->GetElementCount() < IndexCapacity)
+	{
+		TileLightIndicesSB = FRenderCommand::CreateStructuredBuffer(sizeof(uint32), IndexCapacity);
+	}
+	FRenderCommand::UpdateStructuredBufferData(TileLightIndicesSB.get(), Scene.TileLightIndices.GetData(), Scene.TileLightIndices.Num() * sizeof(uint32));
 
 
 
@@ -258,7 +298,8 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 				BatchStats.UploadBytes += static_cast<uint64>(TotalPackets) * sizeof(FPerObjectConstants);
 		}
 
-		FRenderCommand::BindConstantBuffer(2, ViewCB.get(), EShaderBindFlagBits::Vertex);
+		FRenderCommand::BindConstantBuffer(2, ViewCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel);
+		BindLightingResources(nullptr);
 
 		FStatScope DrawScope(StatIds::RenderDrawLoop());
 		for (int32 i = 0; i < TotalPackets; ++i)
@@ -368,7 +409,8 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 
 			Context->OMSetRenderTargets(NumRTVs, RTVs, DSV);
 			Context->RSSetViewports(NumViewports, &Viewport);
-			FRenderCommand::BindConstantBuffer(2, ViewCB.get(), EShaderBindFlagBits::Vertex, Context);
+			FRenderCommand::BindConstantBuffer(2, ViewCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
+			BindLightingResources(Context);
 
 			const UStaticMesh* LastMesh  = nullptr;
 			const UMaterial* LastMaterial = nullptr;

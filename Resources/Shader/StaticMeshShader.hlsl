@@ -22,7 +22,9 @@ cbuffer ViewConstants : register(b2)
 {
     row_major matrix ViewProjection;
     float3 CameraPosition;
-    float padding_;
+    float ViewSizeX;
+    float ViewSizeY;
+    float3 Padding_noUse;
 };
 
 cbuffer LightingGlobals : register(b3)
