@@ -37,7 +37,7 @@ constexpr FPipelineTableEntry PipelineTable[] = {
 	// [Particle_Additive]
 	{EPSOType::Particle_Additive, "Resources/Shader/ParticleSubUVShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidNone, EBlendState::Additive, EDepthStencilState::ReadOnly},
 	// [Skybox]
-	{EPSOType::StaticMesh_Opaque, "Resources/Shader/SkyboxShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidNone, EBlendState::Opaque, EDepthStencilState::ReadOnly},
+	{EPSOType::Skybox, "Resources/Shader/SkyboxShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidNone, EBlendState::Opaque, EDepthStencilState::ReadOnly},
 	// [Grid]
 	{EPSOType::Grid, "Resources/Shader/GridShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidBack, EBlendState::AlphaBlend, EDepthStencilState::Default},
 	// [Outline_Mask]

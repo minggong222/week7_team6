@@ -50,3 +50,9 @@ public:
 private:
 
 };
+
+class FRHIStructuredBuffer : public FRHIBuffer
+{
+	FRHIStructuredBuffer(ID3D11Device* Device, uint32 ByteSizePerItem, uint32 ElementCount);
+	~FRHIStructuredBuffer() override = default;
+};

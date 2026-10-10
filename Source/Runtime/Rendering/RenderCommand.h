@@ -37,6 +37,7 @@ public:
 
 	static TUniquePtr<FRHIUniformBuffer> CreateConstantBuffer(uint32 BufferSize);
 
+
 	static TUniquePtr<FRHITexture2D> CreateTexture2D(const D3D11_TEXTURE2D_DESC& Desc, const void* InitialData = nullptr);
 	static TUniquePtr<FRHITexture2D> CreateTexture2D(const D3D11_TEXTURE2D_DESC& Desc, const FImageData& Image);
 	static TUniquePtr<FRHITextureCube> CreateTextureCube(const D3D11_TEXTURE2D_DESC& Desc, const TArray<const void*>& InitialDatas);

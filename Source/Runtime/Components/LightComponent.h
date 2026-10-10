@@ -1,6 +1,8 @@
 #pragma once
 #include "LightComponentBase.h"
 #include "Math/Sphere.h"
+#include "HAL\Platform.h"
+#include "Rendering\Renderer.h"
 
 enum ELightComponentType
 {
@@ -26,4 +28,9 @@ class ULightComponent : public ULightComponentBase
 		// 빛이 커버하는 영역 전체를 덮게 정의해주세요. 단 디렉셔널/앰비언트는 구현 필요 X
 		return FSphere{};
 	};
+	virtual FLightData CreateLightData() const
+	{
+		// 렌더러가 호출합니다. 정의부탁드립니다
+		return FLightData{};
+	}
 };

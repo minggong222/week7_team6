@@ -197,6 +197,8 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 	}
 	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewProjection, sizeof(FMatrix));
 
+
+
 	EnsureDeferredWorkers();
 
 	{

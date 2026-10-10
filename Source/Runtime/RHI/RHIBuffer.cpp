@@ -39,3 +39,9 @@ FRHIIndexBuffer::FRHIIndexBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& 
 {
 	IndexCount = Count;
 }
+
+
+FRHIStructuredBuffer::FRHIStructuredBuffer(ID3D11Device* Device, uint32 ByteSizePerItem, uint32 ElementCount)
+{
+
+}
