@@ -1,8 +1,6 @@
 cbuffer constants : register(b0)
 {
     row_major matrix World;
-    float3 CameraPosition;
-    float padding_;
 };
 
 cbuffer MaterialParams : register(b1)
@@ -16,6 +14,8 @@ cbuffer MaterialParams : register(b1)
 cbuffer ViewConstants : register(b2)
 {
     row_major matrix ViewProjection;
+    float3 CameraPosition;
+    float padding_;
 };
 
 cbuffer LightingGlobals : register(b3)
