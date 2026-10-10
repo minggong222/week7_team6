@@ -54,6 +54,7 @@ namespace
 	{
 		FPerObjectConstants Constants;
 		Constants.World = Packet.model;
+		Constants.Normal = Packet.Normal;
 		std::memcpy(Dest, &Constants, sizeof(FPerObjectConstants));
 
 		if (Packet.MaterialParamData && Packet.MaterialParamDataSize > 0)
@@ -613,5 +614,6 @@ void FRenderer::UpdatePerObjectConstants(const FRenderPacket& RenderPacket, cons
 {
 	FPerObjectConstants Constants;
 	Constants.World = RenderPacket.model;
+	Constants.Normal = RenderPacket.Normal;
 	FRenderCommand::UpdateBufferData(Temp.get(), &Constants);
 }

@@ -286,6 +286,7 @@ void FObjViewerApp::BuildRenderPackets(TArray<FRenderPacket>& OutPackets, const 
 		FRenderPacket Packet;
 		Packet.mesh = Mesh;
 		Packet.model = FMatrix::Identity;
+		Packet.Normal = FMatrix::Identity;
 		Packet.MVP = Packet.model * ViewProjection;
 		Packet.material = Mesh->GetMaterial(Section.MaterialSlotIndex);
 		Packet.StartIndex = Section.StartIndex;

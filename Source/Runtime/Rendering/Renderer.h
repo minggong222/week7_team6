@@ -23,12 +23,11 @@ static_assert(offsetof(FViewConstants, CameraPosition) == 64);
 static_assert(offsetof(FViewConstants, ViewSizeX) == 76);
 static_assert(offsetof(FViewConstants, ViewSizeY) == 80);
 
-struct FPerObjectConstants
+struct alignas(16) FPerObjectConstants
 {
 	FMatrix World;
+	FMatrix Normal;
 };
-
-static_assert(sizeof(FPerObjectConstants) == sizeof(FMatrix));
 
 struct FLightingGlobals // Constant
 {
