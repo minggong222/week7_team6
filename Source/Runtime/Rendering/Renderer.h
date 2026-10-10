@@ -29,6 +29,9 @@ struct FLightData // StructuredBuffer
 {
 	uint32 LightType;
 	FVector Position;
+	FLinearColor LightColor;
+	float AttenuationRadius;
+	float LightFalloffExponent;
 	// ...
 	// Undefined
 	// 각자 구현하시고 여기에 합치면 될 것 같습니다.

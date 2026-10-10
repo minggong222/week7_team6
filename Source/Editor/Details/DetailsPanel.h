@@ -6,6 +6,7 @@
 #include "Components/RotatingMovementComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/FireballComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Logging/LogMacros.h"
 
 class UWorld;
@@ -64,5 +65,6 @@ class FDetailsPanel : public IEditorPanel
 		UBillboardComponent::StaticClass(),
 		UExponentialHeightFogComponent::StaticClass(),
 		UFireballComponent::StaticClass(),
+		UPointLightComponent::StaticClass(),
 	};
 };
