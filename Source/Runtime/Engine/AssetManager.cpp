@@ -128,9 +128,15 @@ namespace
 				return nullptr;
 			}
 			Material->BaseColor = Slot.BaseColor;
-			if (Material->BaseColor.W < 1.0f)
+			// map_d가 있으면 텍스처 알파가 투명도다. 불투명 PSO는 셰이더가 알파를 1로 고정한다
+			if (Material->BaseColor.W < 1.0f || !Slot.OpacityTexturePath.empty())
 			{
 				Material->PSOType = EPSOType::StaticMesh_Translucent;
+			}
+			// 알파 전용 텍스처 슬롯은 없다. 셰이더는 디퓨즈 텍스처(t0)의 알파를 읽는다
+			if (!Slot.OpacityTexturePath.empty() && Slot.OpacityTexturePath != Slot.DiffuseTexturePath)
+			{
+				LOG(Warning, "[Material] {}: map_d '{}' differs from map_Kd, using map_Kd alpha", Slot.Name, Slot.OpacityTexturePath);
 			}
 
 			if (!Slot.DiffuseTexturePath.empty())
@@ -140,6 +146,28 @@ namespace
 				if (Texture)
 				{
 					Material->Textures[0] = Texture;
+				}
+			}
+
+			Material->SpecularColor = Slot.SpecularColor;
+			Material->EmissiveColor = Slot.EmissiveColor;
+			Material->Shininess = Slot.Shininess;
+			Material->NormalScale = Slot.NormalScale;
+
+			const std::pair<EMaterialTextureSlot, const FString*> ExtraTextures[] = {
+				{ EMaterialTextureSlot::Normal, &Slot.NormalTexturePath },
+				{ EMaterialTextureSlot::Specular, &Slot.SpecularTexturePath },
+				{ EMaterialTextureSlot::Emissive, &Slot.EmissiveTexturePath },
+			};
+			for (const auto& [TextureSlot, TexturePath] : ExtraTextures)
+			{
+				if (TexturePath->empty())
+				{
+					continue;
+				}
+				if (UTexture2D* Texture = UAssetManager::Get().LoadTexture(*TexturePath))
+				{
+					Material->SetTexture(TextureSlot, Texture);
 				}
 			}
 			Mesh->Materials.Add(Material);

@@ -49,9 +49,21 @@ struct FObjSection
 struct FObjMaterialInfo
 {
 	FString Name;
+	FVector Ka = FVector(1.0f, 1.0f, 1.0f);
 	FVector Kd = FVector(1.0f, 1.0f, 1.0f);
-	FString MapKd; // 저장소 루트 기준
+	FVector Ks = FVector(0.0f, 0.0f, 0.0f);
+	FVector Ke = FVector(0.0f, 0.0f, 0.0f);
+	float Ns = 32.0f;
 	float D = 1.0f;
+	float BumpScale = 1.0f; // map_Bump의 -bm 옵션
+	int32 Illum = 2;		// 0, 1: 스페큘러 없음 / 2 이상: 스페큘러 있음
+
+	// 텍스처 경로는 모두 저장소 루트 기준
+	FString MapKd;
+	FString MapKs;
+	FString MapKe;
+	FString MapBump;
+	FString MapD;
 };
 
 struct FObjInfo

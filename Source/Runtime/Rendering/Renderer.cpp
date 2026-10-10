@@ -517,6 +517,11 @@ void FRenderer::BindMaterial(UMaterial* material, ID3D11DeviceContext* Context, 
 	}
 	for (int i = 0; i < material->Textures.size(); i++)
 	{
+		// 빈 슬롯에는 이전 머티리얼의 텍스처가 남는다. 셰이더는 bHas*Map 플래그로 구분한다
+		if (!material->Textures[i])
+		{
+			continue;
+		}
 		FRenderCommand::BindShaderResource(i, material->Textures[i], EShaderBindFlagBits::Pixel, Context);
 	}
 	FRenderCommand::BindSamplerState(0, material->SamplerState, EShaderBindFlagBits::Pixel, Context);
@@ -538,22 +543,21 @@ void FRenderer::UpdateMaterialParams(UMaterial* material)
 	{
 	case EPSOType::StaticMesh_Opaque:
 	case EPSOType::StaticMesh_Wireframe:
-	{
-		const float TotalTime = FApp::GetCurrentTime();
-		FStaticMeshMaterialParams Params{};
-		Params.BaseColor = material->BaseColor;
-		Params.UVOffset = material->UVScrollSpeed * TotalTime;
-		Params.bOpaque = 1.0f;
-		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FStaticMeshMaterialParams));
-		break;
-	}
 	case EPSOType::StaticMesh_Translucent:
 	{
 		const float TotalTime = FApp::GetCurrentTime();
 		FStaticMeshMaterialParams Params{};
 		Params.BaseColor = material->BaseColor;
 		Params.UVOffset = material->UVScrollSpeed * TotalTime;
-		Params.bOpaque = 0.0f;
+		Params.bOpaque = material->PSOType == EPSOType::StaticMesh_Translucent ? 0.0f : 1.0f;
+		Params.bHasNormalMap = material->HasTexture(EMaterialTextureSlot::Normal) ? 1.0f : 0.0f;
+		Params.bHasSpecularMap = material->HasTexture(EMaterialTextureSlot::Specular) ? 1.0f : 0.0f;
+		Params.bHasEmissiveMap = material->HasTexture(EMaterialTextureSlot::Emissive) ? 1.0f : 0.0f;
+		Params.SpecularColor = material->SpecularColor;
+		// pow(x, 0)은 항상 1이라 표면 전체가 하이라이트가 된다
+		Params.Shininess = (std::max)(material->Shininess, 1.0f);
+		Params.EmissiveColor = material->EmissiveColor;
+		Params.NormalScale = material->NormalScale;
 		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FStaticMeshMaterialParams));
 		break;
 	}

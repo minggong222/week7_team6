@@ -8,7 +8,14 @@ cbuffer MaterialParams : register(b1)
     float4 BaseColor;
     float2 UVOffset;
     float bOpaque;
-    float Padding;
+    float bHasNormalMap;
+    float3 SpecularColor;
+    float Shininess;
+    float3 EmissiveColor;
+    float NormalScale;
+    float bHasSpecularMap;
+    float bHasEmissiveMap;
+    float2 MaterialPadding;
 };
 
 cbuffer ViewConstants : register(b2)
@@ -48,9 +55,9 @@ struct FTileLightHeader
     uint Count;
 };
 
-StructuredBuffer<FLightData> Lights : register(t2);
-StructuredBuffer<FTileLightHeader> TileHeaders : register(t3);
-StructuredBuffer<uint> TileLightIndices : register(t4);
+StructuredBuffer<FLightData> Lights : register(t4);
+StructuredBuffer<FTileLightHeader> TileHeaders : register(t5);
+StructuredBuffer<uint> TileLightIndices : register(t6);
 
 struct VS_INPUT
 {
@@ -69,6 +76,10 @@ struct PS_INPUT
 };
 
 Texture2D g_txColor : register(t0);
+// t1~t3은 대응하는 bHas*Map이 1일 때만 유효하다. 0이면 이전 머티리얼의 텍스처가 남아 있다
+Texture2D g_txNormal : register(t1);
+Texture2D g_txSpecular : register(t2); // SpecularColor에 곱한다
+Texture2D g_txEmissive : register(t3); // EmissiveColor에 곱한다
 SamplerState g_Sample : register(s0);
 
 // 조명 방향 및 색상
