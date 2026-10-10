@@ -55,11 +55,16 @@ private:
 
 class FRHIStructuredBuffer : public FRHIBuffer
 {
+public:
 	FRHIStructuredBuffer(ID3D11Device* Device, uint32 ByteSizePerElement, uint32 ElementCount);
 	~FRHIStructuredBuffer() override = default;
-
+	inline ID3D11ShaderResourceView* GetSRV() const{return SRV.Get();}
+	inline uint32 GetElementCount() const
+	{
+		return ElementCount;
+	}
   private:
-	UINT ElementSize;
-	UINT ElementCount;
+	uint32 ElementSize = 0;
+	uint32 ElementCount = 0;
 	ComPtr<ID3D11ShaderResourceView> SRV = nullptr;
 };
