@@ -171,15 +171,15 @@ void FRenderer::EnsureDeferredWorkers()
 }
 
 // 기존 단일 카메라의 ViewProjection으로 렌더 패킷 배열 전체를 그린다.
-void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const FScene& Scene)
+void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const FViewportSettings& ViewportSettings, const FScene& Scene)
 {
-	RenderAll(InPackets, CameraComponent->GetViewProjectionMatrix(), CameraComponent->GetComponentLocation(), Scene);
+	RenderAll(InPackets, CameraComponent->GetViewProjectionMatrix(), CameraComponent->GetComponentLocation(), ViewportSettings, Scene);
 }
 
 // 불투명 우선·반투명 거리순으로 배열을 정렬해 View 행렬과 Section 범위로 그린다.
-void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FScene& Scene)
+void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene)
 {
-	RenderOpaque(InPackets, ViewProjection, CameraPosition, Scene);
+	RenderOpaque(InPackets, ViewProjection, CameraPosition, ViewportSettings, Scene);
 	RenderTranslucent(ViewProjection);
 }
 
@@ -193,7 +193,7 @@ void FRenderer::BindLightingResources(ID3D11DeviceContext* Context)
 }
 
 // TArray 기반 불투명 메시 지연 컨텍스트 병렬 렌더링
-void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FScene& Scene, bool bWireframe)
+void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene, bool bWireframe)
 {
 	FStatScope SubmitScope(StatIds::RenderSubmit());
 	FBatchStats BatchStats;
@@ -207,7 +207,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 	{
 		ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FViewConstants));
 	}
-	const FViewConstants ViewConstants{ViewProjection, CameraPosition, 0.0f};
+	const FViewConstants ViewConstants{ViewProjection, CameraPosition, static_cast<float>(ViewportSettings.Width), static_cast<float>(ViewportSettings.Height), {}};
 	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewConstants, sizeof(ViewConstants));
 
 	FLightingGlobals tempGlobal{.AmbientRadiance{1.0f, 1.0f, 1.0f, 0.5f}};

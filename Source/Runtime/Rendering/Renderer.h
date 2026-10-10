@@ -14,10 +14,14 @@ struct FViewConstants
 {
 	FMatrix ViewProjection;
 	FVector CameraPosition;
-	float Padding = 0.0f;
+	float ViewSizeX;
+	float ViewSizeY; // 현재 렌더타겟의 Width, Height
+	FVector Padding_noUse;
 };
-static_assert(sizeof(FViewConstants) == 80);
+static_assert(sizeof(FViewConstants) == 96);
 static_assert(offsetof(FViewConstants, CameraPosition) == 64);
+static_assert(offsetof(FViewConstants, ViewSizeX) == 76);
+static_assert(offsetof(FViewConstants, ViewSizeY) == 80);
 
 struct FPerObjectConstants
 {
@@ -60,14 +64,14 @@ public:
 	bool Init();
 
 	// 기존 단일 카메라의 ViewProjection으로 렌더 패킷 배열 전체를 그린다.
-	void RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const FScene& Scene);
+	void RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const FViewportSettings& ViewportSettings, const FScene& Scene);
 
 	// Adapter가 계산한 ViewProjection을 직접 받아 View별 렌더 패킷 배열을 그린다.
-	void RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FScene& Scene);
+	void RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene);
 
 	// 배열을 정렬해 불투명 패킷만 그린다. 반투명은 RenderTranslucent 호출 전까지 보관한다.
 	// 연속 배열 기반 불투명 패킷 고속 렌더링
-	void RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FScene& Scene, bool bWireframe = false); // TODO: FScene 참조 안하게
+	void RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene, bool bWireframe = false); // TODO: FScene 참조 안하게
 
 	// RenderOpaque가 보관한 반투명 패킷을 먼 것부터 그린다.
 	void RenderTranslucent(const FMatrix& ViewProjection);
