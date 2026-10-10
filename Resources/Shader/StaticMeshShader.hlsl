@@ -105,26 +105,6 @@ Texture2D g_txSpecular : register(t2); // SpecularColor에 곱한다
 Texture2D g_txEmissive : register(t3); // EmissiveColor에 곱한다
 SamplerState g_Sample : register(s0);
 
-static const FLightData Light = 
-{
-    /* LightType */ LightType_Directional,
-    /* Position */ float3(0.0f, 0.0f, 0.0f),
-    // ...
-    // Undefined
-    // 각자 구현하시고 여기에 합치면 될 것 같습니다.
-
-    // Ambient Light
-    /* float4 Amb_Color */ float4(1.0f, 1.0f, 1.0f, 1.0f),
-    /*float Amb_Intensity*/ 0.5f,
-    /*float3 Amb_Padding*/ float3(0.0f, 0.0f, 0.0f),
-
-    // Directional Light
-    /*float4 Dir_Direction*/ float3(-1.0f, -1.0f, -1.0f),
-    /*float4 Dir_Color*/ float4(1.0f, 1.0f, 1.0f, 1.0f),
-    /*float Dir_Intensity*/ 0.6f,
-    /*float Dir_Padding*/ float3(0.0f, 0.0f, 0.0f),
-};
-
 PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
@@ -150,16 +130,16 @@ PS_INPUT mainVS(VS_INPUT input)
     
     float3 V = normalize(CameraPosition - output.worldPosition);
     float3 N = normalize(output.normal);
-    float3 L = normalize(-Light.Dir_Direction);
+    float3 L = normalize(-Lights[0].Dir_Direction);
     float3 H = normalize(V + L);
     float3 lighting = float3(1.0f, 1.0f, 1.0f);
 
     // Ambient Light
-    float3 Dir_Ambient = Light.Amb_Intensity * Light.Amb_Color.xyz;
+    float3 Dir_Ambient = Lights[0].Amb_Intensity * Lights[0].Amb_Color.xyz;
     
     // Directional Light
     float Dir_NdotL = saturate(dot(N, L));
-    float3 Dir_Diffuse = (Light.Dir_Color * Dir_NdotL).xyz;
+    float3 Dir_Diffuse = (Lights[0].Dir_Color * Dir_NdotL).xyz;
     float Dir_NDotH = saturate(dot(N, H));
     float3 Dir_Specular = pow(Dir_NDotH, /*Shininess*/ 16.0f);
 
@@ -167,18 +147,18 @@ PS_INPUT mainVS(VS_INPUT input)
 
 
     // float3 N = normalize(output.normal);
-    // float3 L = normalize(-Light.Dir_Direction);
+    // float3 L = normalize(-Lights[0].Dir_Direction);
     
     // // Ambient Light
-    // float3 Dir_Ambient = Light.Amb_Intensity * Light.Amb_Color.xyz;
+    // float3 Dir_Ambient = Lights[0].Amb_Intensity * Lights[0].Amb_Color.xyz;
 
     // // Directional Light
     // float Dir_NdotL = saturate(dot(N, L));
-    // float3 Dir_Diffuse = Light.Dir_Intensity * (Light.Dir_Color * Dir_NdotL).xyz;
+    // float3 Dir_Diffuse = Lights[0].Dir_Intensity * (Lights[0].Dir_Color * Dir_NdotL).xyz;
 
     // float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse;
 
-    output.lighting = Dir_Lighting * Light.Dir_Intensity;
+    output.lighting = Dir_Lighting * Lights[0].Dir_Intensity;
 
 #endif
 
@@ -198,19 +178,19 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     // Lambert 쉐이딩. 라이팅을 Pixel Shader 단계에서 처리. Diffuse Only. 따라서 Ambient Light는 없음
 
     float3 N = normalize(input.normal);
-    float3 L = normalize(-Light.Dir_Direction);
+    float3 L = normalize(-Lights[0].Dir_Direction);
     float3 lighting = float3(1.0f, 1.0f, 1.0f);
 
     // Ambient Light
-    float3 Dir_Ambient = Light.Amb_Intensity * Light.Amb_Color.xyz;
+    float3 Dir_Ambient = Lights[0].Amb_Intensity * Lights[0].Amb_Color.xyz;
     
     // Directional Light
     float Dir_NdotL = saturate(dot(N, L));
-    float3 Dir_Diffuse = (Light.Dir_Color * Dir_NdotL).xyz;
+    float3 Dir_Diffuse = (Lights[0].Dir_Color * Dir_NdotL).xyz;
 
     float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse;
 
-    lighting = Dir_Lighting * Light.Dir_Intensity;
+    lighting = Dir_Lighting * Lights[0].Dir_Intensity;
 #endif
 
 
@@ -219,22 +199,22 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
     float3 V = normalize(CameraPosition - input.worldPosition);
     float3 N = normalize(input.normal);
-    float3 L = normalize(-Light.Dir_Direction);
+    float3 L = normalize(-Lights[0].Dir_Direction);
     float3 H = normalize(V + L);
     float3 lighting = float3(1.0f, 1.0f, 1.0f);
 
     // Ambient Light
-    float3 Dir_Ambient = Light.Amb_Intensity * Light.Amb_Color.xyz;
+    float3 Dir_Ambient = Lights[0].Amb_Intensity * Lights[0].Amb_Color.xyz;
     
     // Directional Light
     float Dir_NdotL = saturate(dot(N, L));
-    float3 Dir_Diffuse = (Light.Dir_Color * Dir_NdotL).xyz;
+    float3 Dir_Diffuse = (Lights[0].Dir_Color * Dir_NdotL).xyz;
     float Dir_NDotH = saturate(dot(N, H));
     float3 Dir_Specular = pow(Dir_NDotH, /*Shininess*/ 16.0f);
 
     float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse + Dir_Specular;
 
-    lighting = Dir_Lighting * Light.Dir_Intensity;
+    lighting = Dir_Lighting * Lights[0].Dir_Intensity;
 #endif
 
     // Opaque는 알파를 1로 고정한다. 뷰포트 RT를 ImGui가 알파 블렌딩으로 그리므로 알파가 남으면 비쳐 보인다

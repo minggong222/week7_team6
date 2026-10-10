@@ -4,6 +4,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Engine/TextRenderActor.h"
 #include "Components/RotatingMovementComponent.h"
+#include "Components/DirectionalLightComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/FireballComponent.h"
 #include "Logging/LogMacros.h"
@@ -48,10 +49,11 @@ class FDetailsPanel : public IEditorPanel
 	int32 SelectedIndex = 0;
 
 	// TODO: 나중에 TObjectIterator로 변경
-	const char* ComponentList[6] = {
+	const char* ComponentList[7] = {
 		"StaticMeshComponent",
 		"TextRenderComponent",
 		"RotatingMovementComponent",
+		"UDirectionalLightComponent",
 		"BillboardComponent",
 		"ExponentialHeightFogComponent",
 		"FireballComponent",
@@ -61,6 +63,7 @@ class FDetailsPanel : public IEditorPanel
 		UStaticMeshComponent::StaticClass(),
 		UTextRenderComponent::StaticClass(),
 		URotatingMovementComponent::StaticClass(),
+		UDirectionalLightComponent::StaticClass(),
 		UBillboardComponent::StaticClass(),
 		UExponentialHeightFogComponent::StaticClass(),
 		UFireballComponent::StaticClass(),

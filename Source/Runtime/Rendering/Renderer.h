@@ -45,6 +45,16 @@ struct FLightData // StructuredBuffer
 	// ...
 	// Undefined
 	// 각자 구현하시고 여기에 합치면 될 것 같습니다.
+
+    FVector4 AmbientColor;
+	float AmbientIntensity;
+	FVector Padding;
+
+	// Directional Light
+	FVector DirectionalDirection;
+	FVector4 DirectionalColor;
+	float DirectionalIntensity;
+	FVector DirectionalPadding;
 };
 
 struct FTileLightHeader // StructuredBuffer
