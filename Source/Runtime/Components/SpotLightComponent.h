@@ -51,9 +51,9 @@ public:
 	{
 		FLightData LightData{};
 		LightData.LightType = static_cast<uint32>(LightType_Spot);
-		LightData.Position = GetRelativeLocation();
+		LightData.Position = GetOwner()->GetActorLocation();
 
-		LightData.Direction = GetRelativeTransform().GetForward();
+		LightData.Direction = {1, 0, 0};
 		LightData.Intensity = Intensity;
 		FLinearColor Color = GetLightColor();
 		LightData.Color = {Color.R, Color.G, Color.B};

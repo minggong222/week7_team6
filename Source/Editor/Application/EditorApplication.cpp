@@ -20,6 +20,7 @@
 
 #include "Engine/Level.h"
 #include "Engine/World.h"
+#include "Components/LightComponent.h"
 
 #include "Rendering/Renderer.h"
 
@@ -492,6 +493,9 @@ void FEditorApplication::RenderMultipleViewports()
 			continue;
 		
 		ViewportsPanel->GetViewportAdapter()->BuildRenderPackets(ViewIndex, SceneRenderPackets);
+
+		SceneData.BuildTileLightData();
+
 		RenderFrame(ViewIndex,
 			ViewportsPanel->GetRenderingInfo(ViewIndex),
 			ViewportsPanel->GetViewportAdapter()->GetEngineViewProjection(ViewIndex),
@@ -642,7 +646,7 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 		if (bDrawPrimitives)
 		{
 			const bool bWireframe = MultipleViewportsAdapter.IsViewWireframe(ViewIndex);
-			Renderer->RenderOpaque(RenderPackets, ViewProjection, bWireframe);
+			Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, SceneData, bWireframe);
 		}
 	}
 	// HZB+ 렌더링
@@ -782,6 +786,8 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	const FVector& ViewCameraForward,
 	TArray<FRenderPacket>& RenderPackets)
 {
+	FScene SceneData = GetPIEWorld()->GetScene();
+	SceneData.BuildTileLightData();
 	FRenderCommand::BeginRenderPass(ViewRenderingInfo);
 
 	const FEditorSettings& EditorSettings = SettingsPanel ? SettingsPanel->GetSettings() : FEditorSettings{};
@@ -797,7 +803,7 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	if (bDrawPrimitives)
 	{
 		const bool bWireframe = false;
-		Renderer->RenderOpaque(RenderPackets, ViewProjection, bWireframe);
+		Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, SceneData, bWireframe);
 	}
 
 	PIEViewAdapter.PostRenderOpaque(0, ViewRenderingInfo.DepthSteincil.Texture);
@@ -807,8 +813,6 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	{
 		DepthSceneRenderer->OnRender(ViewRenderingInfo.DepthSteincil.Texture, PIEViewAdapter.GetEnginePerspectiveProjection(0));
 	}
-	FScene SceneData = GetPIEWorld()->GetScene();
-
 	if (!SceneData.Fireballs.IsEmpty())
 	{
 		FireballRenderer->OnRender(ViewRenderingInfo.DepthSteincil.Texture, ViewProjection, SceneData.Fireballs, ViewRenderingInfo.ViewportSetting, ViewCameraLocation);

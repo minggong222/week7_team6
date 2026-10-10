@@ -26,6 +26,7 @@
 #include "Rendering/FireballRenderer.h"
 #include "Rendering/AntiAliasingRenderer.h"
 #include "Engine/WorldContext.h"
+
 //Temp
 #include "Engine/Font.h"
 #include "Rendering/TextRenderer.h"
@@ -156,6 +157,7 @@ class FEditorApplication : public FApplication
 	FPIEViewAdapter PIEViewAdapter;
 	// 프레임마다 Reset해 기존 capacity를 재사용하는 연속 RenderPacket 버퍼.
 	TArray<FRenderPacket> SceneRenderPackets;
+	TArray<FLightData> LightDatas;
 	FOutlinerPanel* OutlinerPanel = nullptr;
 	FContentDrawerPanel* ContentDrawerPanel = nullptr;
 

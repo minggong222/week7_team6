@@ -196,6 +196,11 @@ TUniquePtr<FRHIUniformBuffer> FDynamicRHI::CreateConstantBuffer(uint32 BufferSiz
 	return Buffer;
 }
 
+TUniquePtr<FRHIStructuredBuffer> FDynamicRHI::CreateStructuredBuffer(uint32 ByteSizePerElement, uint32 ElementCount)
+{
+	return MakeUnique<FRHIStructuredBuffer>(Device.Get(), ByteSizePerElement, ElementCount);
+}
+
 TUniquePtr<FRHITexture2D> FDynamicRHI::CreateTexture2D(const D3D11_TEXTURE2D_DESC& Desc, const FImageData& Image)
 {
 	return MakeUnique<FRHITexture2D>(Device.Get(), Desc, Image);

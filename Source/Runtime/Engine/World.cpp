@@ -430,6 +430,7 @@ void UWorld::DuplicateSubObjects()
 	// 포그가 없는 월드면 UpdateSceneData가 갱신하지 않으므로 원본 값을 끈다.
 	SceneData.FogSceneData.FogType = FFogSceneData::EFogType::None;
 	FireballComponents.Reset();
+	LightComponents.Reset();
 
 	if (MainCamera)
 	{

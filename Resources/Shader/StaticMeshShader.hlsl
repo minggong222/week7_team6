@@ -179,14 +179,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     
     float3 ViewDirection = normalize(CameraPosition - input.WorldPosition);
     
-    for (int i = 0; i < LightCount; ++i)
-    {   
-        if (Lights[i].LightType == LightType_Spot)
-        {
-            FinalColor += EvaluateSpotLight(Lights[i], input.WorldPosition, N, ViewDirection, albedo.rgb, SpecularColor, Shininess);
-
-        }
-    }
+    FinalColor += EvaluateSpotLight(Lights[0], input.WorldPosition, N, ViewDirection, albedo.rgb, SpecularColor, Shininess);
     
     // Opaque는 알파를 1로 고정한다. 뷰포트 RT를 ImGui가 알파 블렌딩으로 그리므로 알파가 남으면 비쳐 보인다
         float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
