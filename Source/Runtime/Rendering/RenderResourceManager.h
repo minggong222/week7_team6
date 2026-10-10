@@ -19,6 +19,21 @@ enum class EPSOType : uint8
 	Count
 };
 
+enum class ELightingModel : uint8
+{
+	Unlit,
+	Gouraud,
+	Lambert,
+	Phong,
+	Count
+};
+
+struct FLightingMacros
+{
+	const char* Macro;
+	ELightingModel LightingModel;
+};
+
 
 class FRenderResourceManager
 {
@@ -37,21 +52,29 @@ public:
 
 	void ScanShaders(const fs::path& ShaderRoot);
 
+	void CompileLightingVariants(FString Path);
+
 	static void Shutdown();
 
 	static FShaderProgram* GetShaderProgram(const FString& InPath);
 
-	static FPipelineState* GetPSO(const EPSOType& Intype);
+	static uint32 MakePSOKey(EPSOType Type, ELightingModel Model);
+
+	static FPipelineState* GetPSO(const EPSOType& Intype, const ELightingModel InModel = ELightingModel::Unlit);
 
 private:
-	void LoadOrCompileShader(const FString& Path);
+	void LoadOrCompileShader(const FString& Path, D3D_SHADER_MACRO* defines);
 	void InitPipelineStates();
 
 	TMap<FString, TUniquePtr<FRHIVertexShader>> VertexShaderMap;
 	TMap<FString, TUniquePtr<FRHIPixelShader>>  PixelShaderMap;
 	TMap<FString, TUniquePtr<FShaderProgram>> ShaderProgramMap;
+	TMap<uint32, TUniquePtr<FPipelineState>> PipelineStateMap;
 
-
-	TMap<EPSOType, TUniquePtr<FPipelineState>> PipelineStateMap;
-
+	inline static const FLightingMacros LightingMacros[3] = 
+	{
+		"LIGHTING_MODEL_GOURAUD", ELightingModel::Gouraud, 
+		"LIGHTING_MODEL_LAMBERT", ELightingModel::Lambert, 
+		"LIGHTING_MODEL_PHONG", ELightingModel::Phong
+	};
 }; 

@@ -90,6 +90,12 @@ static const float3 AmbientColor = float3(0.5f, 0.5f, 0.5f);
 PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
+    
+#if     LIGHTING_MODEL_GOURAUD
+#elif   LIGHTING_MODEL_LAMBERT
+#elif   LIGHTING_MODEL_PHONG
+#else // Unlit 매크로를 넘기지 않은 경우
+#endif
 
     // 월드 변환 후 카메라 투영 변환
     float4 worldPos = mul(float4(input.p, 1.0f), World);
@@ -105,6 +111,18 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float4 texColor = g_txColor.Sample(g_Sample, input.uv + UVOffset);
     float4 albedo = texColor * BaseColor;
 
+#if     LIGHTING_MODEL_GOURAUD
+    albedo = float4(1,0,0,1);
+#elif   LIGHTING_MODEL_LAMBERT
+    albedo = float4(0,1,0,1);
+#elif   LIGHTING_MODEL_PHONG
+    albedo = float4(0,0,1,1);
+#else // Unlit 매크로를 넘기지 않은 경우
+    albedo = float4(1, 1, 1, 1);
+#endif
+    
+    
+    
     // 보간되면 길이가 틀어지므로 다시 정규화한다
     float3 N = normalize(input.normal);
     float NdotL = saturate(dot(N, -LightDir));

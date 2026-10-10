@@ -642,7 +642,8 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 		if (bDrawPrimitives)
 		{
 			const bool bWireframe = MultipleViewportsAdapter.IsViewWireframe(ViewIndex);
-			Renderer->RenderOpaque(RenderPackets, ViewProjection, bWireframe);
+			const ELightingModel LightingModel = MultipleViewportsAdapter.GetViewLightMode(ViewIndex);
+			Renderer->RenderOpaque(RenderPackets, ViewProjection, bWireframe, LightingModel);
 		}
 	}
 	// HZB+ 렌더링
@@ -790,7 +791,8 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	if (bDrawPrimitives)
 	{
 		const bool bWireframe = false;
-		Renderer->RenderOpaque(RenderPackets, ViewProjection, bWireframe);
+		const ELightingModel LightingModel = MultipleViewportsAdapter.GetViewLightMode(MultipleViewportsAdapter.GetEditorViewIndex());
+		Renderer->RenderOpaque(RenderPackets, ViewProjection, bWireframe, LightingModel);
 	}
 
 	PIEViewAdapter.PostRenderOpaque(0, ViewRenderingInfo.DepthSteincil.Texture);
