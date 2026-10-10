@@ -72,6 +72,11 @@ AActor* UWorld::SpawnActor(UClass* Class, FName InName, const FTransform* Transf
 
 	}
 
+	for (UActorComponent* Component : NewActor->GetComponents())
+	{
+		AddComponent(Cast<ULightComponent>(Component));
+	}
+
 	// 4. Level->Actors에 등록
 	Level->AddActor(NewActor);
 	RefreshActorTickRegistration(NewActor);
@@ -138,6 +143,7 @@ void UWorld::ClearWorld()
 	DirtyRenderPrimitiveComponents.Reset();
 	FogComponents.Reset();
 	FireballComponents.Reset();
+	LightComponents.Reset();
 	SceneData.FogSceneData.FogType = FFogSceneData::EFogType::None;
 	TickActors.Reset();
 	++PrimitiveTopologyRevision;
@@ -277,6 +283,22 @@ bool UWorld::DestroyActor(AActor* Actor)
 			{
 				FireballComponents.RemoveAt(Index, 1);
 				break;
+			}
+		}
+	}
+
+	// Light Destroy
+	for (UActorComponent* Component : Actor->GetComponents())
+	{
+		ULightComponent* Light = Cast<ULightComponent>(Component);
+		if (!Light)
+			continue;
+
+		for (int32 Index = LightComponents.Num() - 1; Index >= 0; --Index)
+		{
+			if (LightComponents[Index].Get() == Light)
+			{
+				LightComponents.RemoveAt(Index, 1);
 			}
 		}
 	}
@@ -445,6 +467,10 @@ void UWorld::DuplicateSubObjects()
 				else if (UFireballComponent* Fireball = Cast<UFireballComponent>(Comp))
 				{
 					AddComponent(Fireball);
+				}
+				else if (ULightComponent* LightComponent = Cast<ULightComponent>(Comp))
+				{
+					AddComponent(LightComponent);
 				}
 			}
 		}

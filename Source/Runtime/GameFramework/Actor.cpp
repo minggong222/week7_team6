@@ -138,6 +138,7 @@ UActorComponent* AActor::AddComponentByClass(UClass* Class, FName Name)
 
 	GetWorld()->AddComponent(Cast<UPrimitiveComponent>(Component));
 	GetWorld()->AddComponent(Cast<UFireballComponent>(Component));
+	GetWorld()->AddComponent(Cast<ULightComponent>(Component));
 
 	if (BeginPlayState == EActorBeginPlayState::BeginningPlay)
 	{

@@ -30,8 +30,8 @@ cbuffer LightingGlobals : register(b3)
 #define	    LightType_Ambient 4 // 언리얼엔 미존재
 #define	    LightType_MAX 5
 
-#define TileCountX = 8
-#define TileCountY = 8
+#define TileCountX 8
+#define TileCountY 8
 
 struct FLightData
 {
