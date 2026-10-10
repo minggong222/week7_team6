@@ -46,9 +46,10 @@ struct FLightData // StructuredBuffer
 {
 	uint32 LightType;
 	FVector Position;
-	FLinearColor LightColor;
+	FVector4 LightColor;
 	float AttenuationRadius;
 	float LightFalloffExponent;
+	float Padding[2];
 	// ...
 	// Undefined
 	// 각자 구현하시고 여기에 합치면 될 것 같습니다.
@@ -77,7 +78,7 @@ public:
 
 	// 배열을 정렬해 불투명 패킷만 그린다. 반투명은 RenderTranslucent 호출 전까지 보관한다.
 	// 연속 배열 기반 불투명 패킷 고속 렌더링
-	void RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene, bool bWireframe = false, , ELightingModel LightingModel = ELightingModel::Unlit); // TODO: FScene 참조 안하게
+	void RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene, bool bWireframe = false, ELightingModel LightingModel = ELightingModel::Unlit); // TODO: FScene 참조 안하게
 
 	// RenderOpaque가 보관한 반투명 패킷을 먼 것부터 그린다.
 	void RenderTranslucent(const FMatrix& ViewProjection);

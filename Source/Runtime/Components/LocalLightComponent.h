@@ -8,7 +8,7 @@ class ULocalLightComponent : public ULightComponent
 	PROPERTY(AttenuationRadius)
 	REFLECT_END()
   public:
-	float AttenuationRadius; // 감쇠반경 (빛이 가시적으로 미치는 영향의 범위)
+	float AttenuationRadius = 10.0f; // 감쇠반경 (빛이 가시적으로 미치는 영향의 범위)
 
 	void SetAttenuationRadius(float InRadius) { AttenuationRadius = InRadius; }
 };

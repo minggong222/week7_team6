@@ -49,13 +49,14 @@ class FDetailsPanel : public IEditorPanel
 	int32 SelectedIndex = 0;
 
 	// TODO: 나중에 TObjectIterator로 변경
-	const char* ComponentList[6] = {
+	const char* ComponentList[7] = {
 		"StaticMeshComponent",
 		"TextRenderComponent",
 		"RotatingMovementComponent",
 		"BillboardComponent",
 		"ExponentialHeightFogComponent",
 		"FireballComponent",
+		"PointLightComponent",
 	};
 
 	TArray<UClass*> Classes{

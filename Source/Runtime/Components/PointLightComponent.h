@@ -12,7 +12,7 @@ class UPointLightComponent : public ULocalLightComponent
 	virtual FSphere GetBoundingSphere() const override;
 	virtual FLightData CreateLightData() const override;
 
-	float LightFalloffExponent; // 빛 감쇠 지수(빛이 닿는 범위 내 분포)
+	float LightFalloffExponent = 5.0f; // 빛 감쇠 지수(빛이 닿는 범위 내 분포)
 
 	void SetLightFalloffExponent(float InLightFalloffExponent) { LightFalloffExponent = InLightFalloffExponent; }
 	
