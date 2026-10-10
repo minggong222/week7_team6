@@ -104,10 +104,12 @@ void UStaticMeshComponent::SubmitToRenderPackets(TArray<FRenderPacket>& OutPacke
 	}
 
     const FMatrix WorldMatrix = GetWorldMatrix();
+    const FMatrix NormalMatrix = GetNormalMatrix();
 
 	for (FRenderPacket RenderPacket : CachedRenderPackets)
 	{
 		RenderPacket.model = WorldMatrix;
+		RenderPacket.Normal = NormalMatrix;
 		OutPackets.Add(RenderPacket);
 	}
 }
