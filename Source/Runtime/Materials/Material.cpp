@@ -21,6 +21,22 @@ namespace
 	}
 }
 
+void UMaterial::SetTexture(EMaterialTextureSlot Slot, UTexture2D* Texture)
+{
+	const int32 Index = static_cast<int32>(Slot);
+	while (static_cast<int32>(Textures.Num()) <= Index)
+	{
+		Textures.Add(nullptr);
+	}
+	Textures[Index] = Texture;
+}
+
+bool UMaterial::HasTexture(EMaterialTextureSlot Slot) const
+{
+	const int32 Index = static_cast<int32>(Slot);
+	return Index < static_cast<int32>(Textures.Num()) && Textures[Index] != nullptr;
+}
+
 UMaterial* UMaterial::CreateInstance(const UMaterial* Source)
 {
 	if (Source == nullptr)
@@ -34,6 +50,10 @@ UMaterial* UMaterial::CreateInstance(const UMaterial* Source)
 	Instance->Textures = Source->Textures;
 	Instance->SamplerState = Source->SamplerState;
 	Instance->BaseColor = Source->BaseColor;
+	Instance->SpecularColor = Source->SpecularColor;
+	Instance->EmissiveColor = Source->EmissiveColor;
+	Instance->Shininess = Source->Shininess;
+	Instance->NormalScale = Source->NormalScale;
 	Instance->UVScrollSpeed = Source->UVScrollSpeed;
 
 	// 원본에 파라미터 버퍼가 있으면 동일 크기로 새로 생성
@@ -76,6 +96,10 @@ json UMaterial::SaveMaterial(const UMaterial* Material)
 	Out["Base"] = Base ? Base->GetPath() : FString("DefaultMaterial");
 	Out["PSOType"] = static_cast<uint8>(Material->PSOType);
 	Out["BaseColor"] = Material->BaseColor;
+	Out["SpecularColor"] = Material->SpecularColor;
+	Out["EmissiveColor"] = Material->EmissiveColor;
+	Out["Shininess"] = Material->Shininess;
+	Out["NormalScale"] = Material->NormalScale;
 	Out["UVScrollSpeed"] = {
 		Material->UVScrollSpeed.X,
 		Material->UVScrollSpeed.Y
@@ -135,6 +159,22 @@ UMaterial* UMaterial::LoadMaterial(const json& In)
 	if (In.contains("BaseColor"))
 	{
 		In["BaseColor"].get_to(Instance->BaseColor);
+	}
+	if (In.contains("SpecularColor"))
+	{
+		In["SpecularColor"].get_to(Instance->SpecularColor);
+	}
+	if (In.contains("EmissiveColor"))
+	{
+		In["EmissiveColor"].get_to(Instance->EmissiveColor);
+	}
+	if (In.contains("Shininess"))
+	{
+		Instance->Shininess = In["Shininess"].get<float>();
+	}
+	if (In.contains("NormalScale"))
+	{
+		Instance->NormalScale = In["NormalScale"].get<float>();
 	}
 
 	if (In.contains("Textures"))

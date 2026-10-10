@@ -74,7 +74,15 @@ struct FStaticMaterial
 {
 	FString Name;
 	FVector4 BaseColor = FVector4(1, 1, 1, 1);
+	FVector SpecularColor = FVector(0.0f, 0.0f, 0.0f);
+	FVector EmissiveColor = FVector(0.0f, 0.0f, 0.0f);
+	float Shininess = 32.0f;
+	float NormalScale = 1.0f;
 	FString DiffuseTexturePath;
+	FString NormalTexturePath;
+	FString SpecularTexturePath;
+	FString EmissiveTexturePath;
+	FString OpacityTexturePath; // map_d. 비어 있지 않으면 텍스처 알파로 투명도를 정한다
 };
 
 // 메시 로컬 공간에서 피킹 Ray가 통과할 삼각형만 찾기 위한 가속 노드다.

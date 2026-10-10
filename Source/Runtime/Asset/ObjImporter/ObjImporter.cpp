@@ -121,6 +121,59 @@ namespace
 		return true;
 	}
 
+	// 아래 Parse 함수들은 실패하면 Out을 건드리지 않는다. 잘못된 줄을 건너뛰어도 이전 값(또는 기본값)이 남는다
+	bool ParseFloat(std::istringstream& Stream, float& Out)
+	{
+		float Value = 0.0f;
+		if (!(Stream >> Value))
+		{
+			return false;
+		}
+		Out = Value;
+		return true;
+	}
+
+	bool ParseColor(std::istringstream& Stream, FVector& Out)
+	{
+		FVector Value;
+		if (!(Stream >> Value.X >> Value.Y >> Value.Z))
+		{
+			return false;
+		}
+		Out = Value;
+		return true;
+	}
+
+	// "map_Bump -bm 2.0 file.png"처럼 경로 앞에 옵션이 붙을 수 있으므로 마지막 토큰을 경로로 본다
+	bool ParseTextureMap(const FString& MtlPath, std::istringstream& Stream, FString& OutPath, float* OutBumpScale = nullptr)
+	{
+		FString Token;
+		FString Last;
+		float BumpScale = OutBumpScale ? *OutBumpScale : 1.0f;
+		while (Stream >> Token)
+		{
+			if (OutBumpScale && Token == "-bm")
+			{
+				if (!(Stream >> BumpScale))
+				{
+					return false;
+				}
+				continue;
+			}
+			Last = std::move(Token);
+		}
+
+		if (!TransformPath(MtlPath, Last, OutPath))
+		{
+			return false;
+		}
+		if (OutBumpScale)
+		{
+			*OutBumpScale = BumpScale;
+		}
+		return true;
+	}
+
 	bool ParseMaterial(const FString& Path, TArray<FObjMaterialInfo>& Out)
 	{
 		std::ifstream File(Path);
@@ -151,6 +204,7 @@ namespace
 				continue; // 빈 줄 || 주석
 			}
 
+			bool bValid = true;
 			if (Keyword == "newmtl")
 			{
 				if (!MtlInfo.Name.empty())
@@ -165,30 +219,74 @@ namespace
 					return false;
 				}
 			}
+			else if (Keyword == "Ka")
+			{
+				bValid = ParseColor(Stream, MtlInfo.Ka);
+			}
 			else if (Keyword == "Kd")
 			{
-				if (!(Stream >> MtlInfo.Kd.X >> MtlInfo.Kd.Y >> MtlInfo.Kd.Z))
+				bValid = ParseColor(Stream, MtlInfo.Kd);
+			}
+			else if (Keyword == "Ks")
+			{
+				bValid = ParseColor(Stream, MtlInfo.Ks);
+			}
+			else if (Keyword == "Ke")
+			{
+				bValid = ParseColor(Stream, MtlInfo.Ke);
+			}
+			else if (Keyword == "Ns")
+			{
+				bValid = ParseFloat(Stream, MtlInfo.Ns);
+			}
+			else if (Keyword == "d")
+			{
+				bValid = ParseFloat(Stream, MtlInfo.D);
+			}
+			else if (Keyword == "Tr")
+			{
+				// d의 반대 표기 (0이 불투명)
+				float Tr = 0.0f;
+				bValid = ParseFloat(Stream, Tr);
+				if (bValid)
 				{
-					LOG(Warning, "[MTL] {}:{}: invalid Kd '{}'", Path, LineNumber, Line);
-					return false;
+					MtlInfo.D = 1.0f - Tr;
+				}
+			}
+			else if (Keyword == "illum")
+			{
+				int32 Illum = 0;
+				bValid = static_cast<bool>(Stream >> Illum);
+				if (bValid)
+				{
+					MtlInfo.Illum = Illum;
 				}
 			}
 			else if (Keyword == "map_Kd")
 			{
-				FString MapKd;
-				if (!(Stream >> MapKd) || !TransformPath(Path, MapKd, MtlInfo.MapKd))
-				{
-					LOG(Warning, "[MTL] {}:{}: invalid map_Kd '{}'", Path, LineNumber, Line);
-					return false;
-				}
+				bValid = ParseTextureMap(Path, Stream, MtlInfo.MapKd);
 			}
-			else if (Keyword == "d")
+			else if (Keyword == "map_Ks")
 			{
-				if (!(Stream >> MtlInfo.D))
-				{
-					LOG(Warning, "[MTL] {}:{}: invalid d '{}'", Path, LineNumber, Line);
-					return false;
-				}
+				bValid = ParseTextureMap(Path, Stream, MtlInfo.MapKs);
+			}
+			else if (Keyword == "map_Ke")
+			{
+				bValid = ParseTextureMap(Path, Stream, MtlInfo.MapKe);
+			}
+			else if (Keyword == "map_Bump" || Keyword == "map_bump" || Keyword == "bump" || Keyword == "norm")
+			{
+				bValid = ParseTextureMap(Path, Stream, MtlInfo.MapBump, &MtlInfo.BumpScale);
+			}
+			else if (Keyword == "map_d")
+			{
+				bValid = ParseTextureMap(Path, Stream, MtlInfo.MapD);
+			}
+
+			// 한 줄이 잘못됐다고 파일의 머티리얼을 전부 버리지 않는다
+			if (!bValid)
+			{
+				LOG(Warning, "[MTL] {}:{}: invalid {} '{}', skipped", Path, LineNumber, Keyword, Line);
 			}
 		}
 		if (!MtlInfo.Name.empty())
@@ -398,7 +496,29 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 		FStaticMaterial CookedMtl;
 		CookedMtl.Name = RawMtl.Name;
 		CookedMtl.BaseColor.Set(RawMtl.Kd, RawMtl.D);
+		// 익스포터가 "광택 없음"을 Ks는 켠 채 Ns 0으로 내보내는 경우가 있다 (Concert 등)
+		// illum 0, 1은 스페큘러를 쓰지 않는 조명 모델이다
+		const bool bNoSpecular = RawMtl.Ns < 1.0f || RawMtl.Illum < 2;
+		CookedMtl.SpecularColor = bNoSpecular ? FVector(0.0f, 0.0f, 0.0f) : RawMtl.Ks;
+		CookedMtl.EmissiveColor = RawMtl.Ke;
+		CookedMtl.Shininess = RawMtl.Ns;
+		CookedMtl.NormalScale = RawMtl.BumpScale;
 		CookedMtl.DiffuseTexturePath = RawMtl.MapKd;
+		CookedMtl.NormalTexturePath = RawMtl.MapBump;
+		CookedMtl.SpecularTexturePath = bNoSpecular ? FString() : RawMtl.MapKs;
+		CookedMtl.EmissiveTexturePath = RawMtl.MapKe;
+
+		// 셰이더는 색 x 텍스처로 계산한다. 텍스처만 지정하고 색을 생략한 머티리얼은 색이 기본값 0이라 결과가 검정이 되므로 1로 올린다
+		const auto IsBlack = [](const FVector& Color) { return Color.X == 0.0f && Color.Y == 0.0f && Color.Z == 0.0f; };
+		if (!CookedMtl.SpecularTexturePath.empty() && IsBlack(CookedMtl.SpecularColor))
+		{
+			CookedMtl.SpecularColor = FVector(1.0f, 1.0f, 1.0f);
+		}
+		if (!CookedMtl.EmissiveTexturePath.empty() && IsBlack(CookedMtl.EmissiveColor))
+		{
+			CookedMtl.EmissiveColor = FVector(1.0f, 1.0f, 1.0f);
+		}
+		CookedMtl.OpacityTexturePath = RawMtl.MapD;
 		Cooked.MaterialSlots.Add(std::move(CookedMtl));
 	}
 
