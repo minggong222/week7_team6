@@ -619,6 +619,12 @@ void FRenderer::UpdateMaterialParams(UMaterial* material)
 		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FStaticMeshMaterialParams));
 		break;
 	}
+	case EPSOType::Billboard:
+	{
+		FBillboardMaterialParams Params{};
+		Params.BaseColor = material->BaseColor;
+		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FBillboardMaterialParams));
+	}
 	default:
 		break;
 	}

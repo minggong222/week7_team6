@@ -2,6 +2,8 @@
 
 #include "LightComponent.h"
 #include "GameFramework/Actor.h"
+#include "Math/Quat.h"
+#include "Materials/Material.h"
 class FLineBatcher;
 
 class USpotLightComponent : public ULightComponent
@@ -53,10 +55,11 @@ public:
 		LightData.LightType = static_cast<uint32>(LightType_Spot);
 		LightData.Position = GetOwner()->GetActorLocation();
 
-		LightData.Direction = {1, 0, 0};
+		LightData.Direction = GetOwner()->GetActorTransform().GetForward();
 		LightData.Intensity = Intensity;
 		FLinearColor Color = GetLightColor();
 		LightData.Color = {Color.R, Color.G, Color.B};
+		Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->GetMaterial(0)->BaseColor = {Color.R, Color.G, Color.B, Color.A};
 		LightData.Radius = GetAttenuationRadius();
 		LightData.InnerConeCos = cosf(GetInnerConeAngle() * PI / 180);
 		LightData.OuterConeCos = cosf(GetOuterConeAngle() * PI / 180);

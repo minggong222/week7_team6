@@ -77,9 +77,7 @@ void USpotLightComponent::DrawDebug(FLineBatcher* LineBatcher) const
 		return;
 	}
 
-	FTransform WorldTransform;
-	WorldTransform.Location = GetComponentLocation();
-	WorldTransform.Rotation = GetComponentRotation();
+	FTransform WorldTransform = GetOwner()->GetActorTransform();
 
 	FVector Apex = WorldTransform.Location;
 	FVector Forward = WorldTransform.GetForward();
