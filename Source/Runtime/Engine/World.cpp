@@ -558,4 +558,13 @@ void UWorld::UpdateSceneData()
 		);
 	} 
 
+	SceneData.Lights.Reset();
+	for (const auto& LightComp : LightComponents)
+	{
+		if (!LightComp.IsValid())
+			continue;
+
+
+		SceneData.Lights.Add(LightComp);
+	}
 }

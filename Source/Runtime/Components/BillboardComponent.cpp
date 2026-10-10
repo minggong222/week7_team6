@@ -95,6 +95,7 @@ void UBillboardComponent::AddRenderPacket(TArray<FRenderPacket>& OutPackets, con
 	Packet.mesh = QuadMesh;
 	Packet.material = Material;
 	Packet.model = BillboardWorldMatrix;
+	Packet.Normal = BillboardWorldMatrix.Inverse().GetTransposed();
 	Packet.CameraDistanceSquared = CameraDistanceSquared;
 	OutPackets.Add(Packet);
 }

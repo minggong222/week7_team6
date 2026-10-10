@@ -16,6 +16,30 @@ struct FPerObjectConstants
 
 static_assert(sizeof(FPerObjectConstants) == sizeof(FMatrix));
 
+struct FLightingGlobals // Constant
+{
+	FVector4 AmbientRadiance;
+};
+static_assert(sizeof(FLightingGlobals) % 16 == 0);
+
+#define TileCountX 8
+#define TileCountY 8
+
+struct FLightData // StructuredBuffer
+{
+	uint32 LightType;
+	FVector Position;
+	// ...
+	// Undefined
+	// 각자 구현하시고 여기에 합치면 될 것 같습니다.
+};
+
+struct FTileLightHeader // StructuredBuffer
+{
+	uint32 Offset;
+	uint32 Count;
+};
+
 class UCameraComponent;
 
 class FRenderer
@@ -44,6 +68,7 @@ private:
 	TUniquePtr<FRHIUniformBuffer> CB;
 	TUniquePtr<FRHIUniformBuffer> Temp;
 	TUniquePtr<FRHIUniformBuffer> ViewCB;
+	TUniquePtr<FRHIUniformBuffer> FLightingGlobalsCB;
 
 	D3D11_VIEWPORT ViewportInfo;
 

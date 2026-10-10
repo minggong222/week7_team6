@@ -23,6 +23,29 @@ FRHIBuffer::FRHIBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& Desc, cons
 	}
 }
 
+void FRHIBuffer::ReCreateBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& Desc, const void* InitialData)
+{
+	Buffer->Release();
+	BufferSize = Desc.ByteWidth;
+	
+	HRESULT hr;
+	if (InitialData)
+	{
+		D3D11_SUBRESOURCE_DATA Data;
+		Data.pSysMem = InitialData;
+
+		hr = Device->CreateBuffer(&Desc, &Data, Buffer.GetAddressOf());
+	}
+	else
+	{
+		hr = Device->CreateBuffer(&Desc, nullptr, Buffer.GetAddressOf());
+	}
+	if (FAILED(hr))
+	{
+		LOG(Warning, "Failed To Create Buffer!");
+	}
+}
+
 FRHIUniformBuffer::FRHIUniformBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& Desc)
 	:FRHIBuffer(Device, Desc)
 {
@@ -38,4 +61,25 @@ FRHIIndexBuffer::FRHIIndexBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& 
 	:FRHIBuffer(Device, Desc, InitialData)
 {
 	IndexCount = Count;
+}
+
+
+FRHIStructuredBuffer::FRHIStructuredBuffer(ID3D11Device* Device, uint32 ByteSizePerElement, uint32 ElementCount)
+{
+	D3D11_BUFFER_DESC StructuredBufferDesc = {};
+	StructuredBufferDesc.ByteWidth = ByteSizePerElement * ElementCount;
+	StructuredBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	StructuredBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	StructuredBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	StructuredBufferDesc.StructureByteStride = ByteSizePerElement;
+	ReCreateBuffer(Device, StructuredBufferDesc, nullptr);
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc = {};
+	SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+	SRVDesc.Buffer.FirstElement = 0;
+	SRVDesc.Buffer.NumElements = ElementCount;
+	Device->CreateShaderResourceView(Buffer.Get(), &SRVDesc, SRV.GetAddressOf());
+	ElementSize = ByteSizePerElement;
+	this->ElementCount = ElementCount;
 }

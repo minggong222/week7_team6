@@ -7,6 +7,7 @@ class UMaterial;
 
 struct FRenderPacket {
   FMatrix model;
+  FMatrix Normal;
   FMatrix MVP;
   UStaticMesh *mesh = nullptr;
   UMaterial *material = nullptr;

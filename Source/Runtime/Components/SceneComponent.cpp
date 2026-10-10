@@ -141,12 +141,33 @@ FMatrix USceneComponent::GetWorldMatrix() const
 {
 	if (bWorldMatrixDirty)
 	{
-		CachedWorldMatrix = Transform.GetLocalMatrix();
-		if (AttachParent)
-			CachedWorldMatrix = CachedWorldMatrix * AttachParent->GetWorldMatrix();
-		bWorldMatrixDirty = false;
+		UpdateWorldMatrix();
 	}
+
 	return CachedWorldMatrix;
+}
+
+FMatrix USceneComponent::GetNormalMatrix() const
+{
+	if (bWorldMatrixDirty)
+	{
+		UpdateWorldMatrix();
+	}
+
+	return CachedNormalMatrix;
+}
+
+void USceneComponent::UpdateWorldMatrix() const
+{
+	bWorldMatrixDirty = false;
+
+	CachedWorldMatrix = Transform.GetLocalMatrix();
+	if (AttachParent)
+	{
+		CachedWorldMatrix = CachedWorldMatrix * AttachParent->GetWorldMatrix();
+	}
+
+	CachedNormalMatrix = CachedWorldMatrix.Inverse().GetTransposed();
 }
 
 void USceneComponent::DuplicateSubObjects()

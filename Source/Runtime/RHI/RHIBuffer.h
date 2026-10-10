@@ -3,13 +3,15 @@
 class FRHIBuffer
 {
 public:
+	FRHIBuffer() = default;
 	FRHIBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& Desc, const void* InitialData = nullptr);
 	virtual ~FRHIBuffer() = default;
 
 	inline uint32 GetBufferSize() const { return BufferSize; }
 	inline ID3D11Buffer* GetBuffer() const { return Buffer.Get(); }
+	void ReCreateBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& Desc, const void* InitialData = nullptr);
 
-protected:
+  protected:
 	uint32 BufferSize = 0;
 	ComPtr<ID3D11Buffer> Buffer = nullptr;
 private:
@@ -49,4 +51,15 @@ public:
 
 private:
 
+};
+
+class FRHIStructuredBuffer : public FRHIBuffer
+{
+	FRHIStructuredBuffer(ID3D11Device* Device, uint32 ByteSizePerElement, uint32 ElementCount);
+	~FRHIStructuredBuffer() override = default;
+
+  private:
+	UINT ElementSize;
+	UINT ElementCount;
+	ComPtr<ID3D11ShaderResourceView> SRV = nullptr;
 };
