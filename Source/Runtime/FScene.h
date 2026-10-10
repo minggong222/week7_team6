@@ -6,6 +6,8 @@
 #include "Components/LightComponent.h"
 #include "Rendering/Renderer.h"
 #include "UObject\WeakObjectPtrTemplates.h"
+//#include "Viewports\MultipleViewports.h"
+
 // World에 배치된 것 중, 화면 결과에 영향을 주고, 모든 뷰에서 똑같은 것. 렌더에 넘기기 위함.
 // ex) fog, skybox
 struct FScene
@@ -42,4 +44,10 @@ struct FScene
 			Header.Count = static_cast<uint32>(TileLightIndices.Num());
 		}
 	}
+
+	//void BuildTileLightData() // 미완성. 실컬링용
+	//{
+	//	LightDatas.Reset();
+	//	TileLightIndices.Reset();
+	//}
 };
