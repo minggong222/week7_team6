@@ -791,7 +791,7 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	if (bDrawPrimitives)
 	{
 		const bool bWireframe = false;
-		const ELightingModel LightingModel = MultipleViewportsAdapter.GetViewLightMode(MultipleViewportsAdapter.GetEditorViewIndex());
+		const ELightingModel LightingModel = MultipleViewportsAdapter.GetViewLightMode(0);
 		Renderer->RenderOpaque(RenderPackets, ViewProjection, bWireframe, LightingModel);
 	}
 
