@@ -91,7 +91,13 @@ class USceneComponent : public UActorComponent
 	FVector GetComponentLocation() const;
 	FRotator GetComponentRotation() const;
 	FVector GetComponentScale() const;
+
 	FMatrix GetWorldMatrix() const;
+	
+	// 쉐이더에서 Normal Transformation에 쓰이는 행렬
+	FMatrix GetNormalMatrix() const;
+
+	void UpdateWorldMatrix() const;
 
 	// Bounds 또는 Transform 변경을 현재 컴포넌트와 모든 자식 캐시에 전파한다.
 	void MarkBoundsDirty()
@@ -139,4 +145,5 @@ protected:
 	uint64 BoundsRevision = 1;
 	FBox CachedWorldBounds;
 	mutable FMatrix CachedWorldMatrix;
+	mutable FMatrix CachedNormalMatrix;
 };

@@ -171,6 +171,7 @@ void UParticleSubUVComponent::SubmitToRenderPackets(TArray<FRenderPacket>& OutPa
 
 		FRenderPacket Packet;
 		Packet.model = WorldMatrix;
+		Packet.Normal = WorldMatrix.Inverse().GetTransposed();
 		Packet.mesh = QuadMesh;
 		Packet.material = Material;
 
@@ -213,6 +214,7 @@ void UParticleSubUVComponent::SubmitToRenderPacketsForView(TArray<FRenderPacket>
 
 		FRenderPacket Packet;
 		Packet.model = View.BuildMatrix(Particle.Location, Particle.Scale, Particle.Scale);
+		Packet.Normal = Packet.model.Inverse().GetTransposed();
 		Packet.mesh = QuadMesh;
 		Packet.material = Material;
 		Packet.MaterialParamData = &Constants[i];
