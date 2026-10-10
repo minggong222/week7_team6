@@ -482,6 +482,14 @@ void UWorld::AddComponent(UFireballComponent* FireballComp)
 		FireballComponents.Add(FireballComp);
 	}
 }
+void UWorld::AddComponent(ULightComponent* LightComp)
+{
+	if (LightComp)
+	{
+		LightComponents.Add(LightComp);
+	}
+}
+
 void UWorld::UpdateSceneData()
 {
 

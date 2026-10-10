@@ -8,6 +8,7 @@
 #include "Components/TextRenderComponent.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/FireballComponent.h"
+#include "Components/LightComponent.h"
 
 #include "Math/Transform.h"
 #include "Rendering/Renderer.h"
@@ -96,6 +97,7 @@ class UWorld : public UObject
 	void AddComponent(UPrimitiveComponent* PrimComp);
 	void AddComponent(UExponentialHeightFogComponent* FogComp);
 	void AddComponent(UFireballComponent* FireballComp);
+	void AddComponent(ULightComponent* LightComp);
 
 	const FScene& GetScene() const
 	{
@@ -124,6 +126,7 @@ class UWorld : public UObject
 	TArray<TWeakObjectPtr<UPrimitiveComponent>> DirtyRenderPrimitiveComponents;
 	TArray<TWeakObjectPtr<UExponentialHeightFogComponent>> FogComponents;
 	TArray<TWeakObjectPtr<UFireballComponent>> FireballComponents;
+	TArray<TWeakObjectPtr<ULightComponent>> LightComponents;
 
 	uint64 PrimitiveTopologyRevision = 1;
 	FPrimitiveBVH PrimitiveBVH;

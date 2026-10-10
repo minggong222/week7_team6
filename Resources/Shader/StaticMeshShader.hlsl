@@ -1,6 +1,8 @@
 cbuffer constants : register(b0)
 {
     row_major matrix World;
+    float3 CameraPosition;
+    float padding_;
 };
 
 cbuffer MaterialParams : register(b1)
@@ -15,6 +17,40 @@ cbuffer ViewConstants : register(b2)
 {
     row_major matrix ViewProjection;
 };
+
+cbuffer LightingGlobals : register(b3)
+{
+    float4 AmbientRadiance;
+};
+
+#define     LightType_Directional 0
+#define	    LightType_Point 1
+#define	    LightType_Spot 2
+#define	    LightType_Rect 3
+#define	    LightType_Ambient 4 // 언리얼엔 미존재
+#define	    LightType_MAX 5
+
+#define TileCountX = 8
+#define TileCountY = 8
+
+struct FLightData
+{
+    uint LightType;
+    float3 Position;
+    // ...
+    // Undefined
+    // 각자 구현하시고 여기에 합치면 될 것 같습니다.
+};
+
+struct FTileLightHeader
+{
+    uint Offset;
+    uint Count;
+};
+
+StructuredBuffer<FLightData> Lights : register(t2);
+StructuredBuffer<FTileLightHeader> TileHeaders : register(t3);
+StructuredBuffer<uint> TileLightIndices : register(t4);
 
 struct VS_INPUT
 {
