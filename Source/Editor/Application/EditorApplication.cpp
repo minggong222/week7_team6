@@ -26,7 +26,7 @@
 
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
-#include "Engine/SpotLight.h"
+#include "Engine/Light.h"
 
 #include "Engine/AssetManager.h"
 #include "Rendering/RenderResourceManager.h"

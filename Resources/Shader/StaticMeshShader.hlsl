@@ -93,7 +93,7 @@ float3 EvaluateSpotLight(FLightData Light, float3 WorldPosition, float3 WorldNor
     float3 V = normalize(ViewDirection);
     
     // 거리 감쇠
-    float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * DistanceToLight + Light.AttenuationQuadratic * DistanceToLight * DistanceToLight, 1e-4f);
+    float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * DistanceToLight, 1e-4f);
     
     //원뿔 감쇠
     float CosTheta = dot(normalize(Light.Direction), -L);
@@ -184,6 +184,6 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     FinalColor += EvaluateSpotLight(Lights[0], input.WorldPosition, N, ViewDirection, albedo.rgb, SpecularColor, Shininess);
     
     // Opaque는 알파를 1로 고정한다. 뷰포트 RT를 ImGui가 알파 블렌딩으로 그리므로 알파가 남으면 비쳐 보인다
-        float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
+    float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
     return float4(FinalColor, alpha);
 }

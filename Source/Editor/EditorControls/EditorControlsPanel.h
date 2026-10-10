@@ -5,6 +5,7 @@
 
 #include "Particles/Emitter.h"
 #include "Engine/StaticMeshActor.h"
+#include "Engine/Light.h"
 #include "Engine/SpotLight.h"
 #include "Engine/TextRenderActor.h"
 #include "Components/ExponentialHeightFog.h"
@@ -31,7 +32,7 @@ public:
 
 	int32 SelectedIndex = 0;
 
-	const char* Items[6] = {"StaticMesh", "Particle", "Text", "Light", "Fog", "PlayerStart"};
+	const char* Items[6] = {"StaticMesh", "Particle", "Text", "SpotLight", "Fog", "PlayerStart"};
 
 	const char* PIEMode[2] = {"Selected", "NewEditor"};
 	int32 SelectedPIEModIndex = 0;
@@ -48,7 +49,7 @@ public:
 		AStaticMeshActor::StaticClass(),
 		AEmitter::StaticClass(),
 		ATextRenderActor::StaticClass(),
-		ASpotLight::StaticClass(), 
+		ASpotLight::StaticClass(),
 		AExponentialHeightFog::StaticClass(),
 		APlayerStart::StaticClass()
 	};
