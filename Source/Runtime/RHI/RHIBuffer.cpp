@@ -25,7 +25,7 @@ FRHIBuffer::FRHIBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& Desc, cons
 
 void FRHIBuffer::ReCreateBuffer(ID3D11Device* Device, const D3D11_BUFFER_DESC& Desc, const void* InitialData)
 {
-	Buffer->Release();
+	Buffer.Reset();
 	BufferSize = Desc.ByteWidth;
 	
 	HRESULT hr;

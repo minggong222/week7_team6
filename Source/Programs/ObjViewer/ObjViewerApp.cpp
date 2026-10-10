@@ -1,4 +1,5 @@
 #include "EnginePCH.h"
+#include "FScene.h"
 #include "Engine/StaticMesh.h"
 #include "ObjViewerApp.h"
 
@@ -228,7 +229,9 @@ void FObjViewerApp::RenderFrame()
 	FRenderCommand::SetBlendState(EBlendState::Opaque);
 	FRenderCommand::SetDepthStencilState(EDepthStencilState::Default);
 	FRenderCommand::SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	Renderer->RenderAll(RenderPackets, ViewProjection);
+	FScene SceneData;
+	SceneData.BuildTileLightData();
+	Renderer->RenderAll(RenderPackets, ViewProjection, GetCameraEye(), SceneData);
 
 	FRenderCommand::EndRenderPass(Info);
 

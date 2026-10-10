@@ -39,6 +39,7 @@ public:
 	TUniquePtr<FRHIIndexBuffer> CreateDynamicIndexBuffer(uint32 MaxIndexCount);
 
 	TUniquePtr<FRHIUniformBuffer> CreateConstantBuffer(uint32 BufferSize);
+	TUniquePtr<FRHIStructuredBuffer> CreateStructuredBuffer(uint32 ByteSizePerElement, uint32 ElementCount);
 
 	TUniquePtr<FRHITexture2D> CreateTexture2D(const D3D11_TEXTURE2D_DESC& Desc, const void* InitialData);
 	TUniquePtr<FRHITexture2D> CreateTexture2D(const D3D11_TEXTURE2D_DESC& Desc, const FImageData& Image);
