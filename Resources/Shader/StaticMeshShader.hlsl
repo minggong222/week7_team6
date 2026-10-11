@@ -32,6 +32,8 @@ cbuffer ViewConstants : register(b2)
 cbuffer LightingGlobals : register(b3)
 {
     float4 AmbientRadiance;
+    uint LightCount;
+    float3 LightingGlobalsPadding;
 };
 
 #define     LightType_Directional 0
@@ -104,29 +106,56 @@ static const float3 AmbientColor = float3(0.5f, 0.5f, 0.5f);
 
 
 
+FTileLightHeader GetTileLightHeader(float2 pixel)
+{
+    uint TileX = min((uint) (pixel.x / (ViewSizeX / TileCountX)), TileCountX - 1u);
+    uint TileY = min((uint) (pixel.y / (ViewSizeY / TileCountY)), TileCountY - 1u);
+    return (TileHeaders[TileY * TileCountX + TileX]);
+}
+
+void GetLightIncoming(FLightData Light, float3 world, out float3 L, out float3 Radiance)
+{
+    float3 ToLight = Light.Position - world;
+    float Dist = length(ToLight);
+    L = ToLight / max(Dist, 0.000001f);
+
+    float glow = DistanceAttenuation(Dist, Light.AttenuationRadius, Light.LightFalloffExponent);
+    Radiance = Light.LightColor.rgb * glow;
+}
+
+float3 LightDiffuse(FLightData Light, float3 N, float3 world)
+{
+    float3 L;
+    float3 Radiance;
+    GetLightIncoming(Light, world, L, Radiance);
+
+    return (Radiance * saturate(dot(N, L)));
+}
+
+// 버텍스쉐이더에서 진행하기 때문에 정점이 ndc밖에 있을 수 있어서 전체 라이트 순회
+float3 GouraudLighting(float3 normal, float3 world)
+{
+    float3 N = normalize(normal);
+    float3 Diffuse = 0;
+
+    for (uint i = 0; i < LightCount; i++)
+    {
+        Diffuse += LightDiffuse(Lights[i], N, world);
+    }
+
+    return (Diffuse);
+}
+
 float3 LambertLighting(float3 normal, float3 position, float3 world)
 {
     float3 N = normalize(normal);
     float3 Diffuse = 0;
 
-    uint TileX = min((uint) (position.x / (ViewSizeX / TileCountX)), TileCountX - 1u);
-    uint TileY = min((uint) (position.y / (ViewSizeY / TileCountY)), TileCountY - 1u);
-    uint TileLightIndex = TileY * TileCountX + TileX;
-    uint LightNum = TileHeaders[TileLightIndex].Count;
-    uint Offset = TileHeaders[TileLightIndex].Offset;
-    for (uint i = 0; i < LightNum; i++)
+    FTileLightHeader Tile = GetTileLightHeader(position.xy);
+    for (uint i = 0; i < Tile.Count; i++)
     {
-        uint LightIndex = TileLightIndices[Offset + i];
-        FLightData Light = Lights[LightIndex];
-
-        float3 ToLight = Light.Position - world;
-        float Dist = length(ToLight);
-        float3 L = ToLight / max(Dist, 0.000001f);
-        float NdotL = saturate(dot(N, L));
-
-        float glow = DistanceAttenuation(Dist, Light.AttenuationRadius, Light.LightFalloffExponent);
-
-        Diffuse += Light.LightColor.rgb * NdotL * glow;
+        uint LightIndex = TileLightIndices[Tile.Offset + i];
+        Diffuse += LightDiffuse(Lights[LightIndex], N, world);
     }
     
     return (Diffuse);
@@ -144,7 +173,7 @@ PS_INPUT mainVS(VS_INPUT input)
     output.uv = input.t;
 
 #if     LIGHTING_MODEL_GOURAUD
-    output.diffuse = LambertLighting(mul(float4(input.n, 0.0f), World).xyz, output.position, worldPos.xyz);
+    output.diffuse = GouraudLighting(mul(float4(input.n, 0.0f), World).xyz, worldPos.xyz);
     output.specular = 0.0f;
 #elif   LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
     output.normal = mul(float4(input.n, 0.0f), World).xyz;
@@ -163,7 +192,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 #if     LIGHTING_MODEL_GOURAUD
     float3 lighting = AmbientRadiance.rgb * AmbientRadiance.a + input.diffuse;
 #elif   LIGHTING_MODEL_LAMBERT
-    float3 lighting = AmbientRadiance.rgb * AmbientRadiance.a + LambertLighting(input.normal, input.position, input.world);
+    float3 lighting = AmbientRadiance.rgb * AmbientRadiance.a + LambertLighting(input.normal, input.position.xyz, input.world);
 #elif   LIGHTING_MODEL_PHONG
     albedo = float4(0,0,1,1);
     float3 lighting = 1.0f;

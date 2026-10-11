@@ -36,6 +36,8 @@ static_assert(sizeof(FPerObjectConstants) == sizeof(FMatrix));
 struct FLightingGlobals // Constant
 {
 	FVector4 AmbientRadiance;
+	uint32 LightCount;
+	float Padding[3];
 };
 static_assert(sizeof(FLightingGlobals) % 16 == 0);
 

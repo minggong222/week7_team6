@@ -1,6 +1,8 @@
 #pragma once
 #include "LocalLightComponent.h"
 
+class FLineBatcher;
+
 class UPointLightComponent : public ULocalLightComponent
 {
 	DECLARE_CLASS(UPointLightComponent, ULocalLightComponent)
@@ -11,6 +13,8 @@ class UPointLightComponent : public ULocalLightComponent
 	virtual ELightComponentType GetLightType() const override;
 	virtual FSphere GetBoundingSphere() const override;
 	virtual FLightData CreateLightData() const override;
+
+	void DrawDebug(FLineBatcher* LineBatcher) const;
 
 	float LightFalloffExponent = 5.0f; // 빛 감쇠 지수(빛이 닿는 범위 내 분포)
 

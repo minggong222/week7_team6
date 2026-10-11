@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "PointLightComponent.h"
 
+#include "Rendering/LineBatcher.h"
+
 ELightComponentType UPointLightComponent::GetLightType() const
 {
 	//필수구현
@@ -27,4 +29,16 @@ FLightData UPointLightComponent::CreateLightData() const
 	LightData.LightFalloffExponent = LightFalloffExponent;
 
 	return LightData;
+}
+
+void UPointLightComponent::DrawDebug(FLineBatcher* LineBatcher) const
+{
+	if (LineBatcher == nullptr)
+	{
+		return;
+	}
+
+	const float SafeRadius = (AttenuationRadius > 0.0f) ? AttenuationRadius : 0.0f;
+
+	LineBatcher->AddWireSphere(GetComponentLocation(), SafeRadius, FVector4(LightColor.R, LightColor.G, LightColor.B, 1.0f));
 }

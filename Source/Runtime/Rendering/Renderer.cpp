@@ -185,8 +185,9 @@ void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewP
 
 void FRenderer::BindLightingResources(ID3D11DeviceContext* Context)
 {
-	FRenderCommand::BindConstantBuffer(3, LightingGlobalsCB.get(), EShaderBindFlagBits::Pixel, Context);
+	FRenderCommand::BindConstantBuffer(3, LightingGlobalsCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
 
+	FRenderCommand::VSSetShaderResource(4, LightDataSB ? LightDataSB->GetSRV() : nullptr, Context);
 	FRenderCommand::PSSetShaderResource(4, LightDataSB ? LightDataSB->GetSRV() : nullptr, Context);
 	FRenderCommand::PSSetShaderResource(5, TileLightHeaderSB ? TileLightHeaderSB->GetSRV() : nullptr, Context);
 	FRenderCommand::PSSetShaderResource(6, TileLightIndicesSB ? TileLightIndicesSB->GetSRV() : nullptr, Context);
@@ -210,7 +211,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 	const FViewConstants ViewConstants{ViewProjection, CameraPosition, static_cast<float>(ViewportSettings.Width), static_cast<float>(ViewportSettings.Height), {}};
 	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewConstants, sizeof(ViewConstants));
 
-	FLightingGlobals tempGlobal{.AmbientRadiance{1.0f, 1.0f, 1.0f, 0.5f}};
+	FLightingGlobals tempGlobal{.AmbientRadiance{1.0f, 1.0f, 1.0f, 0.5f}, .LightCount = static_cast<uint32>(Scene.LightDatas.Num())};
 	if (!LightingGlobalsCB)
 	{
 		LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));

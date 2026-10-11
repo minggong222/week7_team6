@@ -21,6 +21,7 @@
 #include "Engine/Level.h"
 #include "Engine/World.h"
 #include "Components/LightComponent.h"
+#include "Components/PointLightComponent.h"
 
 #include "Rendering/Renderer.h"
 
@@ -708,9 +709,24 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 	{
 		FGPUStatScope EditorScope(StatIds::GpuEditor(), L"Editor Overlays");
 		const bool bDrawOcclusionBounds = MultipleViewportsAdapter.GetSoftwareOcclusionSettings().bDebugBounds;
-		if (EditorSettings.bDrawBoundingBox || bDrawOcclusionBounds)
+		TArray<UPointLightComponent*> SelectedPointLights;
+		if (!PIEPanel->IsPlay() && Gizmo->GetTarget() && CurrentWorld == Gizmo->GetTarget()->GetOwner()->GetWorld())
+		{
+			for (UActorComponent* Component : Gizmo->GetTarget()->GetOwner()->GetComponents())
+			{
+				if (UPointLightComponent* PointLight = Cast<UPointLightComponent>(Component))
+				{
+					SelectedPointLights.Add(PointLight);
+				}
+			}
+		}
+		if (EditorSettings.bDrawBoundingBox || bDrawOcclusionBounds || !SelectedPointLights.IsEmpty())
 		{
 			LineBatcher->BeginFrame();
+			for (const UPointLightComponent* PointLight : SelectedPointLights)
+			{
+				PointLight->DrawDebug(LineBatcher.get());
+			}
 			if (EditorSettings.bDrawBoundingBox && !PIEPanel->IsPlay())
 			{
 				LineBatcher->BuildVertexBuffer();

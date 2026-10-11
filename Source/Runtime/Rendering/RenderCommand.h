@@ -62,6 +62,7 @@ public:
 	static void CSSetSampler(uint32 Slot, ESamplerState SamplerState, ID3D11DeviceContext* Context = nullptr);
 	static void CopyResource(ID3D11Resource* Dst, ID3D11Resource* Src, ID3D11DeviceContext* Context = nullptr);
 	static void PSSetShaderResource(uint32 Slot, ID3D11ShaderResourceView* SRV, ID3D11DeviceContext* Context = nullptr);
+	static void VSSetShaderResource(uint32 Slot, ID3D11ShaderResourceView* SRV, ID3D11DeviceContext* Context = nullptr);
 
 	static void BindPipelineState(const FPipelineState* PipelineState, ID3D11DeviceContext* Context = nullptr);
 

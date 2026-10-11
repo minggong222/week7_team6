@@ -488,6 +488,11 @@ void FRenderCommand::PSSetShaderResource(uint32 Slot, ID3D11ShaderResourceView* 
 	ID3D11DeviceContext* Ctx = Context ? Context : RenderDevice->GetContext();
 	Ctx->PSSetShaderResources(Slot, 1, &SRV);
 }
+void FRenderCommand::VSSetShaderResource(uint32 Slot, ID3D11ShaderResourceView* SRV, ID3D11DeviceContext* Context)
+{
+	ID3D11DeviceContext* Ctx = Context ? Context : RenderDevice->GetContext();
+	Ctx->VSSetShaderResources(Slot, 1, &SRV);
+}
 void FRenderCommand::SetRenderTarget(FRHITexture2D* ColorTarget, FRHITexture2D* DepthStencil, ID3D11DeviceContext* Context)
 {
 	ID3D11DeviceContext* Ctx = Context ? Context : RenderDevice->GetContext();
