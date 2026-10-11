@@ -59,11 +59,10 @@ struct FLightData
     float3 Color;
     float Radius;
     
+    float LightFalloffExponent;
     float InnerConeCos;
     float OuterConeCos;
-    float AttenuationLinear;
-    float AttenuationQuadratic;
-    
+    float padding;
     // ...
     // Undefined
     // 각자 구현하시고 여기에 합치면 될 것 같습니다.
@@ -85,23 +84,23 @@ float3 EvaluateSpotLight(FLightData Light, float3 WorldPosition, float3 WorldNor
     float3 ToLight = Light.Position - WorldPosition;
     float DistanceToLight = length(ToLight);
     
-    if(DistanceToLight >= Light.Radius)
-        return float3(0, 0, 0);
+    if (Light.LightType != LightType_Directional)
+    {
+        if (DistanceToLight >= Light.Radius)
+            return float3(0, 0, 0);
+    }
     
-    float3 L = ToLight / max(DistanceToLight, 0.0001f);
+    float3 L;
+    if (Light.LightType == LightType_Directional)
+    {
+        L = normalize(-Light.Direction);
+    }
+    else
+    {
+        L = ToLight / max(DistanceToLight, 0.0001f);
+    }
     float3 N = normalize(WorldNormal);
     float3 V = normalize(ViewDirection);
-    
-    // 거리 감쇠
-    float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * DistanceToLight, 1e-4f);
-    
-    //원뿔 감쇠
-    float CosTheta = dot(normalize(Light.Direction), -L);
-    
-    float ConeFactor = saturate((CosTheta - Light.OuterConeCos) / max(Light.InnerConeCos - Light.OuterConeCos, 0.0001f));
-    
-    //부드러운 경계
-    ConeFactor = ConeFactor * ConeFactor * (3.0f - 2.0f * ConeFactor);
     
     //Blinn-Phong Diffuse
     float NdotL = max(dot(N, L), 0.0f);
@@ -118,8 +117,30 @@ float3 EvaluateSpotLight(FLightData Light, float3 WorldPosition, float3 WorldNor
         
         Specular = SpecularColor * SpeculaFactor;
     }
-
-    return Light.Color * Light.Intensity * Attenuation * ConeFactor * (Diffuse + Specular);
+    
+    if (Light.LightType == LightType_Directional)
+    {
+        return Light.Color * Light.Intensity * (Diffuse + Specular);
+    }
+    
+    // 거리 감쇠
+    float Attenuation = pow(1 - DistanceToLight / Light.Radius, Light.LightFalloffExponent);
+    //float Attenuation = pow(max(1 - pow(DistanceToLight / Light.Radius, 4), 0), 2) / (pow(DistanceToLight, 2) + 1);
+    //float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * DistanceToLight, 1e-4f);
+    if (Light.LightType == LightType_Spot)
+    {
+        //원뿔 감쇠
+        float CosTheta = dot(normalize(Light.Direction), -L);
+    
+        float ConeFactor = saturate((CosTheta - Light.OuterConeCos) / max(Light.InnerConeCos - Light.OuterConeCos, 0.0001f));
+    
+        //부드러운 경계
+        ConeFactor = ConeFactor * ConeFactor * (3.0f - 2.0f * ConeFactor);
+        return Light.Color * Light.Intensity * Attenuation * ConeFactor * (Diffuse + Specular);
+    }
+        
+    return Light.Color * Light.Intensity * Attenuation * (Diffuse + Specular);
+    
 }
 
 struct VS_INPUT
@@ -180,9 +201,15 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float3 FinalColor = albedo.rgb * lighting;
     
     float3 ViewDirection = normalize(CameraPosition - input.WorldPosition);
-    
-    FinalColor += EvaluateSpotLight(Lights[0], input.WorldPosition, N, ViewDirection, albedo.rgb, SpecularColor, Shininess);
-    
+    uint X = (uint) floor((input.position.x / ViewSizeX) * TileCountX);
+    uint Y = (uint) floor((input.position.y / ViewSizeY) * TileCountY);
+    X = min(X, TileCountX - 1);
+    Y = min(Y, TileCountY - 1);
+    FTileLightHeader Header = TileHeaders[Y * TileCountX + X];
+    for (int i = 0; i < Header.Count; ++i)
+    {
+        FinalColor += EvaluateSpotLight(Lights[Header.Offset + i], input.WorldPosition, N, ViewDirection, albedo.rgb, SpecularColor, Shininess);
+    }
     // Opaque는 알파를 1로 고정한다. 뷰포트 RT를 ImGui가 알파 블렌딩으로 그리므로 알파가 남으면 비쳐 보인다
     float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
     return float4(FinalColor, alpha);

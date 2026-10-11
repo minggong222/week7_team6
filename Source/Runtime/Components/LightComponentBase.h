@@ -11,7 +11,11 @@ class ULightComponentBase : public USceneComponent
 	PROPERTY(bVisible)
 	REFLECT_END()
   public:
-	float Intensity = 0;
-	FLinearColor LightColor = {0.0f,0.0f,0.0f,1.0f};
+
+	const FLinearColor& GetLightColor() const { return LightColor; }
+	void SetLightColor(const FLinearColor& InColor) { LightColor = InColor; }
+
+	float Intensity = 1;
+	FLinearColor LightColor = {1.0f,1.0f,1.0f,1.0f};
 	bool bVisible = true;
 };

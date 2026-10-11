@@ -51,11 +51,10 @@ struct FLightData // StructuredBuffer
 	FVector Color;
 	float Radius;
 
+	float LightFalloffExponent;
 	float InnerConeCos;
 	float OuterConeCos;
-	float AttenuationLinear;
-	float AttenuationQuadratic;
-
+	float padding;
 
 	// ...
 	// Undefined
