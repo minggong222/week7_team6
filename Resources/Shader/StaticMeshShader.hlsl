@@ -220,7 +220,7 @@ float3 EvaluateShading(FShadingData Data)
         return float3(0.0f, 0.0f, 0.0f);
     }
     
-    float3 Diffuse = Data.Albedo * NdotL;
+    float3 Diffuse = float3(1.0f, 1.0f, 1.0f) * NdotL;
 
 #if LIGHTING_MODEL_LAMBERT
     float3 Specular = float3(0.0f, 0.0f, 0.0f);
@@ -248,8 +248,6 @@ float3 EvaluateShading(FShadingData Data)
 
         // 거리 감쇠
         Attenuation = pow(1 - Distance / Light.Radius, Light.LightFalloffExponent);
-        //float Attenuation = pow(max(1 - pow(Distance / Light.Radius, 4), 0), 2) / (pow(Distance, 2) + 1);
-        //float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * Distance, EPSLION);
 
         if (Light.LightType == LightType_Spot)
         {
