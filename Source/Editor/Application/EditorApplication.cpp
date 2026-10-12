@@ -724,12 +724,18 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 		
 		for (TObjectIterator<USpotLightComponent> Itr; Itr; ++Itr)
 		{
-			Itr->DrawDebug(LineBatcher.get());
+			if (Itr->GetOwner()->GetRootComponent() == Outline->GetTarget())
+			{
+				Itr->DrawDebug(LineBatcher.get());
+			}
 		}
 		
 		for (TObjectIterator<UPointLightComponent> Itr(false); Itr; ++Itr)
 		{
-			Itr->DrawDebug(LineBatcher.get());
+			if (Itr->GetOwner()->GetRootComponent() == Outline->GetTarget())
+			{
+				Itr->DrawDebug(LineBatcher.get());
+			}
 		}
 
 		LineBatcher->OnRender(ViewProjection);
