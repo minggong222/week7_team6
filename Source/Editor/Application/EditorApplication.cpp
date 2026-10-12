@@ -727,7 +727,7 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			Itr->DrawDebug(LineBatcher.get());
 		}
 		
-		for (TObjectIterator<UPointLightComponent> Itr; Itr; ++Itr)
+		for (TObjectIterator<UPointLightComponent> Itr(false); Itr; ++Itr)
 		{
 			Itr->DrawDebug(LineBatcher.get());
 		}
