@@ -721,20 +721,16 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			}
 			
 		}
-		
-		for (TObjectIterator<USpotLightComponent> Itr; Itr; ++Itr)
+
+		if (Outline->GetTarget())
 		{
-			if (Itr->GetOwner()->GetRootComponent() == Outline->GetTarget())
+			// DrawDebug가 있는 LightComponent가 선택되면 Visualizer 그리기
+			// Note: Spotlight가 PointLight를 상속받으니 지금은 PointLight인지만 체크하면 됨
+			UPointLightComponent* LightComponent = Cast<UPointLightComponent>(Outline->GetTarget());
+
+			if (LightComponent)
 			{
-				Itr->DrawDebug(LineBatcher.get());
-			}
-		}
-		
-		for (TObjectIterator<UPointLightComponent> Itr(false); Itr; ++Itr)
-		{
-			if (Itr->GetOwner()->GetRootComponent() == Outline->GetTarget())
-			{
-				Itr->DrawDebug(LineBatcher.get());
+				LightComponent->DrawDebug(LineBatcher.get());
 			}
 		}
 
