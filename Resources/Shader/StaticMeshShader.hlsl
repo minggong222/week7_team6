@@ -400,7 +400,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
             Light,
             CameraPosition,
             input.WorldPosition,
-            input.normal,
+            mappedNormal,
             albedo.xyz,  
             SpecularColor,  
             Shininess,
