@@ -16,6 +16,7 @@ enum class EPSOType : uint8
 	Outline_Mask,
 	Outline_Draw,
 	Billboard,
+	StaticMesh_ViewDepth,
 	Count
 };
 
@@ -79,4 +80,4 @@ private:
 		"LIGHTING_MODEL_PHONG", ELightingModel::Phong,
 		"NormalMap", ELightingModel::Normal};
 
-}; 
+};

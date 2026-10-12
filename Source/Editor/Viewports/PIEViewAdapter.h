@@ -40,6 +40,7 @@ class FPIEViewAdapter : public IViewportAdapter
 
 	// View 카메라의 ViewProjection을 반환한다.
 	FMatrix GetEngineViewProjection(int32 ViewIndex) const override;
+	FMatrix GetEngineView(int32 ViewIndex) const override { return BuildViewMatrix(GetRenderCamera().Transform); }
 
 	FMatrix GetEnginePerspectiveProjection(const int32 ViewIndex) const override;
 

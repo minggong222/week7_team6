@@ -320,6 +320,9 @@ void FDynamicRHI::CreateStates()
 
 		Desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 		Device->CreateDepthStencilState(&Desc, DepthStencilStates[(uint8)EDepthStencilState::ReadOnly].GetAddressOf());
+		Desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+		Device->CreateDepthStencilState(&Desc, DepthStencilStates[(uint8)EDepthStencilState::ReadOnlyLessEqual].GetAddressOf());
+		Desc.DepthFunc = D3D11_COMPARISON_LESS;
 
 		Desc.DepthEnable = FALSE;
 		Device->CreateDepthStencilState(&Desc, DepthStencilStates[(uint8)EDepthStencilState::Disabled].GetAddressOf());

@@ -231,7 +231,7 @@ void FObjViewerApp::RenderFrame()
 	FRenderCommand::SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	FScene SceneData;
 	SceneData.BuildTileLightData();
-	Renderer->RenderAll(RenderPackets, ViewProjection, GetCameraEye(), Info.ViewportSetting, SceneData);
+	Renderer->RenderAll(RenderPackets, View, ViewProjection, GetCameraEye(), Info.ViewportSetting, SceneData);
 
 	FRenderCommand::EndRenderPass(Info);
 

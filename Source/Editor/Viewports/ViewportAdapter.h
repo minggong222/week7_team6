@@ -21,6 +21,7 @@ class IViewportAdapter
 	virtual void SetViewRect(int32 ViewIndex, const FRect& Rect) = 0;
 	virtual const FRect& GetViewRect(int32 ViewIndex = 0) const = 0;
 	virtual FMatrix GetEngineViewProjection(int32 ViewIndex = 0) const = 0;
+	virtual FMatrix GetEngineView(int32 ViewIndex = 0) const = 0;
 	virtual FMatrix GetEnginePerspectiveProjection(const int32 ViewIndex) const = 0;
 	virtual FVector GetEngineCameraLocation(int32 ViewIndex = 0) const = 0;
 	virtual FVector GetEngineCameraForward(int32 ViewIndex = 0) const = 0;

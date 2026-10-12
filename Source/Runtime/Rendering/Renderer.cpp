@@ -18,6 +18,31 @@
 
 namespace
 {
+	struct FScopedRenderTargets
+	{
+		ID3D11DeviceContext* Context = FRenderCommand::GetContext();
+		ID3D11RenderTargetView* RTVs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT]{};
+		ID3D11DepthStencilView* DSV = nullptr;
+		D3D11_VIEWPORT Viewport{};
+		UINT NumRTVs = 0;
+		UINT NumViewports = 1;
+		FScopedRenderTargets()
+		{
+			Context->OMGetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, RTVs, &DSV);
+			Context->RSGetViewports(&NumViewports, &Viewport);
+			for (UINT Index = 0; Index < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++Index)
+				if (RTVs[Index]) NumRTVs = Index + 1;
+		}
+		~FScopedRenderTargets()
+		{
+			Context->OMSetRenderTargets(NumRTVs, RTVs, DSV);
+			Context->RSSetViewports(NumViewports, &Viewport);
+			for (ID3D11RenderTargetView* RTV : RTVs)
+				if (RTV) RTV->Release();
+			if (DSV) DSV->Release();
+		}
+	};
+
 	struct FBatchCounters
 	{
 		uint64 Draws = 0;
@@ -183,13 +208,13 @@ void FRenderer::EnsureDeferredWorkers()
 // 기존 단일 카메라의 ViewProjection으로 렌더 패킷 배열 전체를 그린다.
 void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const FViewportSettings& ViewportSettings, const FScene& Scene)
 {
-	RenderAll(InPackets, CameraComponent->GetViewProjectionMatrix(), CameraComponent->GetComponentLocation(), ViewportSettings, Scene);
+	RenderAll(InPackets, CameraComponent->GetViewMatrix(), CameraComponent->GetViewProjectionMatrix(), CameraComponent->GetComponentLocation(), ViewportSettings, Scene);
 }
 
 // 불투명 우선·반투명 거리순으로 배열을 정렬해 View 행렬과 Section 범위로 그린다.
-void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene)
+void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& View, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene)
 {
-	RenderOpaque(InPackets, ViewProjection, CameraPosition, ViewportSettings, Scene);
+	RenderOpaque(InPackets, View, ViewProjection, CameraPosition, ViewportSettings, Scene);
 	RenderTranslucent(ViewProjection);
 }
 
@@ -209,6 +234,7 @@ void FRenderer::BindLightingResources(ID3D11DeviceContext* Context)
 
 // TArray 기반 불투명 메시 지연 컨텍스트 병렬 렌더링
 void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
+	const FMatrix& View,
 	const FMatrix& ViewProjection,
 	const FVector& CameraPosition,
 	const FViewportSettings& ViewportSettings,
@@ -217,7 +243,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 	ELightingModel LightingModel)
 {
 	FStatScope SubmitScope(StatIds::RenderSubmit());
-	FBatchStats BatchStats;
+	bViewDepthValid = false;
 	const int32 TotalPackets = InPackets.Num();
 	if (TotalPackets == 0)
 	{
@@ -230,6 +256,63 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 	}
 	const FViewConstants ViewConstants{ViewProjection, CameraPosition, static_cast<float>(ViewportSettings.Width), static_cast<float>(ViewportSettings.Height), {}};
 	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewConstants, sizeof(ViewConstants));
+
+	EnsureDeferredWorkers();
+
+	{
+		FStatScope MaterialScope(StatIds::RenderMaterials());
+		// 머티리얼 파라미터 사전 일괄 갱신
+		TArray<UMaterial*> UniqueMaterials;
+		UniqueMaterials.Reserve(8);
+		for (const FRenderPacket& Packet : InPackets)
+		{
+			if (Packet.material && std::find(UniqueMaterials.begin(), UniqueMaterials.end(), Packet.material) == UniqueMaterials.end())
+			{
+				UniqueMaterials.Add(Packet.material);
+			}
+		}
+		for (UMaterial* Mat : UniqueMaterials)
+		{
+			UpdateMaterialParams(Mat);
+		}
+
+	}
+
+	{
+		FScopedRenderTargets Targets;
+		if (Targets.DSV && ViewportSettings.Width > 0 && ViewportSettings.Height > 0)
+		{
+			ComPtr<ID3D11Resource> DepthResource;
+			ComPtr<ID3D11Texture2D> DepthTexture;
+			Targets.DSV->GetResource(DepthResource.GetAddressOf());
+			DepthResource.As(&DepthTexture);
+			D3D11_TEXTURE2D_DESC Desc{};
+			DepthTexture->GetDesc(&Desc);
+			if (!ViewDepthTexture || ViewDepthTexture->GetWidth() != Desc.Width || ViewDepthTexture->GetHeight() != Desc.Height)
+			{
+				Desc.MipLevels = 1;
+				Desc.ArraySize = 1;
+				Desc.Format = DXGI_FORMAT_R32_FLOAT;
+				Desc.Usage = D3D11_USAGE_DEFAULT;
+				Desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+				Desc.CPUAccessFlags = 0;
+				Desc.MiscFlags = 0;
+				ViewDepthTexture = FRenderCommand::CreateTexture2D(Desc);
+			}
+			if (!ViewDepthCB) ViewDepthCB = FRenderCommand::CreateConstantBuffer(sizeof(FMatrix));
+			if (ViewDepthTexture && ViewDepthTexture->GetRTV() && ViewDepthTexture->GetSRV() && ViewDepthCB && ViewDepthCB->GetBuffer())
+			{
+				FRenderCommand::UpdateBufferData(ViewDepthCB.get(), &View, sizeof(View));
+				const float ClearDepth[4]{(std::numeric_limits<float>::max)(), 0.0f, 0.0f, 0.0f};
+				Targets.Context->ClearRenderTargetView(ViewDepthTexture->GetRTV(), ClearDepth);
+				Targets.Context->ClearDepthStencilView(Targets.DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+				ID3D11RenderTargetView* DepthRTV = ViewDepthTexture->GetRTV();
+				Targets.Context->OMSetRenderTargets(1, &DepthRTV, Targets.DSV);
+				bViewDepthValid = DrawPacketBatch(InPackets, true, bWireframe, LightingModel);
+				if (!bViewDepthValid) Targets.Context->ClearDepthStencilView(Targets.DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+			}
+		}
+	}
 
 	FLightingGlobals tempGlobal{.AmbientRadiance{1.0f, 1.0f, 1.0f, 0.5f}};
 	if (!LightingGlobalsCB)
@@ -265,40 +348,19 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 	}
 	FRenderCommand::UpdateStructuredBufferData(TileLightIndicesSB.get(), Scene.TileLightIndices.GetData(), Scene.TileLightIndices.Num() * sizeof(uint32));
 
+	DrawPacketBatch(InPackets, false, bWireframe, LightingModel);
+}
 
-
-	EnsureDeferredWorkers();
-
-	{
-		//FStatScope SortScope(StatIds::RenderSort());
-		//std::sort(InPackets.begin(), InPackets.end(), CompareStateThenDepth);
-	}
-
-	{
-		FStatScope MaterialScope(StatIds::RenderMaterials());
-		// 머티리얼 파라미터 사전 일괄 갱신
-		TArray<UMaterial*> UniqueMaterials;
-		UniqueMaterials.Reserve(8);
-		for (const FRenderPacket& Packet : InPackets)
-		{
-			if (Packet.material && std::find(UniqueMaterials.begin(), UniqueMaterials.end(), Packet.material) == UniqueMaterials.end())
-			{
-				UniqueMaterials.Add(Packet.material);
-			}
-		}
-		for (UMaterial* Mat : UniqueMaterials)
-		{
-			UpdateMaterialParams(Mat);
-		}
-
-	}
-
+bool FRenderer::DrawPacketBatch(const TArray<FRenderPacket>& InPackets, bool bViewDepthPass, bool bWireframe, ELightingModel LightingModel)
+{
+	FBatchStats BatchStats;
+	const int32 TotalPackets = InPackets.Num();
 	const int32 NumWorkers = DeferredWorkers.Num();
 	const bool bUseOffsets = FRenderCommand::GetRenderDevice()->SupportsConstantBufferOffsetting();
 
 	if (TotalPackets <= 500 || NumWorkers <= 1)
 	{
-		FGPUStatScope OpaqueScope(StatIds::GpuOpaque(), L"Opaque Immediate");
+		FGPUStatScope OpaqueScope(StatIds::GpuOpaque(), bViewDepthPass ? L"View Depth Immediate" : L"Opaque Immediate");
 		const UStaticMesh* LastMesh = nullptr;
 		uint8 LastLOD = 0xFF;
 		const UMaterial* LastMaterial = nullptr;
@@ -309,12 +371,12 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 			FStatScope UploadScope(StatIds::RenderUpload());
 			if (!EnsureConstantBufferCapacity(Temp, TotalPackets))
 			{
-				return;
+				return false;
 			}
 			void* MappedData = FRenderCommand::MapBufferWriteDiscard(Temp.get());
 			if (!MappedData)
 			{
-				return;
+				return false;
 			}
 			uint8* Base = static_cast<uint8*>(MappedData);
 			for (int32 i = 0; i < TotalPackets; ++i)
@@ -326,15 +388,14 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 				BatchStats.UploadBytes += static_cast<uint64>(TotalPackets) * sizeof(FPerObjectConstants);
 		}
 
-		FRenderCommand::BindConstantBuffer(2, ViewCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel);
-		BindLightingResources(nullptr);
+		BindPacketPass(nullptr, bViewDepthPass);
 
 		FStatScope DrawScope(StatIds::RenderDrawLoop());
 		for (int32 i = 0; i < TotalPackets; ++i)
 		{
 			const FRenderPacket& RenderPacket = InPackets[i];
 
-			if (RenderPacket.mesh == nullptr || RenderPacket.material == nullptr)
+			if (RenderPacket.mesh == nullptr || RenderPacket.material == nullptr || (bViewDepthPass && !IsOpaquePSO(GetPacketPSO(RenderPacket))))
 			{
 				continue;
 			}
@@ -349,7 +410,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 			if (LastMaterial != RenderPacket.material)
 			{
 				const bool bPSOChanged = LastPSO != RenderPacket.material->PSOType;
-				BindMaterial(RenderPacket.material, nullptr, bPSOChanged, bWireframe, LightingModel);
+				BindPacketMaterial(RenderPacket.material, nullptr, bPSOChanged, bViewDepthPass, bWireframe, LightingModel);
 				LastMaterial = RenderPacket.material;
 				LastPSO = RenderPacket.material->PSOType;
 			}
@@ -366,7 +427,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 				void* MappedData = FRenderCommand::MapBufferWriteDiscard(Temp.get());
 				if (!MappedData)
 				{
-					return;
+					return false;
 				}
 				WritePerObjectSlot(static_cast<uint8*>(MappedData), RenderPacket, PerObjectSlotSize);
 				FRenderCommand::UnmapBuffer(Temp.get());
@@ -382,7 +443,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 			if (BatchStats.bCountTriangles)
 				BatchStats.Triangles += IndexCount / 3;
 		}
-		return;
+		return true;
 	}
 
 	const int32 ChunkSize = 1 + (TotalPackets - 1) / NumWorkers;
@@ -392,27 +453,11 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 		const int32 PacketCount = (std::min)(ChunkSize, TotalPackets - Index * ChunkSize);
 		if (!EnsureConstantBufferCapacity(DeferredWorkers[Index].PerObjectCB, PacketCount))
 		{
-			return;
+			return false;
 		}
 	}
 
-	// 현재 바인딩된 렌더 타깃과 뷰포트 정보 획득
-	ID3D11RenderTargetView* RTVs[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT] = { nullptr };
-	ID3D11DepthStencilView* DSV = nullptr;
-	FRenderCommand::GetRenderDevice()->GetContext()->OMGetRenderTargets(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, RTVs, &DSV);
-
-	UINT NumRTVs = 0;
-	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
-	{
-		if (RTVs[i])
-		{
-			NumRTVs = i + 1;
-		}
-	}
-
-	UINT NumViewports = 1;
-	D3D11_VIEWPORT Viewport{};
-	FRenderCommand::GetRenderDevice()->GetContext()->RSGetViewports(&NumViewports, &Viewport);
+	FScopedRenderTargets Targets;
 
 	std::vector<ComPtr<ID3D11CommandList>> CommandLists(NumJobs);
 	std::vector<FBatchCounters> WorkerCounters;
@@ -436,12 +481,9 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 			FRHIUniformBuffer* WorkerCB = DeferredWorkers[JobIndex].PerObjectCB.get();
 			ID3D11DeviceContext1* Context1 = DeferredWorkers[JobIndex].Context1.Get();
 
-			Context->OMSetRenderTargets(NumRTVs, RTVs, DSV);
-			Context->RSSetViewports(NumViewports, &Viewport);
-			FRenderCommand::BindConstantBuffer(2, ViewCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
-			BindLightingResources(Context);
-
-			/*FRenderCommand::BindConstantBuffer(4, LightCountCB.get(), EShaderBindFlagBits::Pixel, Context);*/
+			Context->OMSetRenderTargets(Targets.NumRTVs, Targets.RTVs, Targets.DSV);
+			Context->RSSetViewports(Targets.NumViewports, &Targets.Viewport);
+			BindPacketPass(Context, bViewDepthPass);
 
 			const UStaticMesh* LastMesh  = nullptr;
 			const UMaterial* LastMaterial = nullptr;
@@ -474,7 +516,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 		for (int32 i = Start; i < End; ++i)
 		{
 			const FRenderPacket& RenderPacket = InPackets[i];
-			if (RenderPacket.mesh != nullptr && RenderPacket.material != nullptr)
+			if (RenderPacket.mesh != nullptr && RenderPacket.material != nullptr && (!bViewDepthPass || IsOpaquePSO(GetPacketPSO(RenderPacket))))
 			{
 				if (LastMesh != RenderPacket.mesh || LastLOD != RenderPacket.LODIndex)
 				{
@@ -486,7 +528,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 				if (LastMaterial != RenderPacket.material)
 				{
 					const bool bPSOChanged = LastPSO != RenderPacket.material->PSOType;
-					BindMaterial(RenderPacket.material, Context, bPSOChanged, bWireframe, LightingModel);
+					BindPacketMaterial(RenderPacket.material, Context, bPSOChanged, bViewDepthPass, bWireframe, LightingModel);
 					LastMaterial = RenderPacket.material;
 					LastPSO = RenderPacket.material->PSOType;
 				}
@@ -536,7 +578,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 	}
 	{
 		FStatScope ExecuteScope(StatIds::RenderExecute());
-		FGPUStatScope OpaqueScope(StatIds::GpuOpaque(), L"Opaque Command Lists");
+		FGPUStatScope OpaqueScope(StatIds::GpuOpaque(), bViewDepthPass ? L"View Depth Command Lists" : L"Opaque Command Lists");
 		for (int32 i = 0; bAllJobsSucceeded && i < NumJobs; ++i)
 		{
 			if (CommandLists[i])
@@ -550,21 +592,33 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 		}
 	}
 
-	// 실행 후 메인 즉시 컨텍스트의 렌더 타깃과 뷰포트 상태 복구
-	FRenderCommand::GetRenderDevice()->GetContext()->OMSetRenderTargets(NumRTVs, RTVs, DSV);
-	FRenderCommand::GetRenderDevice()->GetContext()->RSSetViewports(NumViewports, &Viewport);
+	return bAllJobsSucceeded;
+}
 
-	// 획득한 렌더 타깃 참조 해제
-	for (UINT i = 0; i < D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+void FRenderer::BindPacketPass(ID3D11DeviceContext* Context, bool bViewDepthPass)
+{
+	FRenderCommand::BindConstantBuffer(2, ViewCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
+	if (bViewDepthPass)
 	{
-		if (RTVs[i])
-		{
-			RTVs[i]->Release();
-		}
+		FRenderCommand::BindPipelineState(FRenderResourceManager::GetPSO(EPSOType::StaticMesh_ViewDepth), Context);
+		FRenderCommand::BindConstantBuffer(5, ViewDepthCB.get(), EShaderBindFlagBits::Vertex, Context);
 	}
-	if (DSV)
+	else
 	{
-		DSV->Release();
+		BindLightingResources(Context);
+	}
+}
+
+void FRenderer::BindPacketMaterial(UMaterial* Material, ID3D11DeviceContext* Context, bool bPSOChanged, bool bViewDepthPass, bool bWireframe, ELightingModel LightingModel)
+{
+	if (bViewDepthPass)
+	{
+		FRenderCommand::SetRasterizerState(bWireframe || Material->PSOType == EPSOType::StaticMesh_Wireframe ? ERasterizerState::Wireframe : ERasterizerState::SolidBack, Context);
+	}
+	else
+	{
+		BindMaterial(Material, Context, bPSOChanged, bWireframe, LightingModel);
+		if (bViewDepthValid && IsOpaquePSO(Material->PSOType)) FRenderCommand::SetDepthStencilState(EDepthStencilState::ReadOnlyLessEqual, Context);
 	}
 }
 

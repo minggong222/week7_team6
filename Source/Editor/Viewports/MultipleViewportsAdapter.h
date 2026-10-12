@@ -165,6 +165,7 @@ class FMultipleViewportsAdapter : public IViewportAdapter
 	const FRect& GetViewRect(int32 ViewIndex) const override;
 	// Native View·Projection을 row-vector 순서로 합성한 엔진 행렬을 반환한다.
 	FMatrix GetEngineViewProjection(int32 ViewIndex) const override;
+	FMatrix GetEngineView(int32 ViewIndex) const override { return BuildViewMatrix(GetRenderCamera(ViewIndex).Transform); }
 	// Native Projection을 row-vector 순서로 합성한 엔진 행렬을 반환한다.
 	FMatrix GetEnginePerspectiveProjection(const int32 ViewIndex) const override;
 	// 지정 View 카메라 위치를 엔진 FVector 그대로 반환한다.

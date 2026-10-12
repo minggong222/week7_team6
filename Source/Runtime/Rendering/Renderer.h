@@ -83,11 +83,12 @@ public:
 	void RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const FViewportSettings& ViewportSettings, const FScene& Scene);
 
 	// Adapter가 계산한 ViewProjection을 직접 받아 View별 렌더 패킷 배열을 그린다.
-	void RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene);
+	void RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& View, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene);
 
 	// 배열을 정렬해 불투명 패킷만 그린다. 반투명은 RenderTranslucent 호출 전까지 보관한다.
 	// 연속 배열 기반 불투명 패킷 고속 렌더링
 	void RenderOpaque(TArray<FRenderPacket>& InPackets,
+		const FMatrix& View,
 		const FMatrix& ViewProjection,
 		const FVector& CameraPosition,
 		const FViewportSettings& ViewportSettings,
@@ -97,6 +98,7 @@ public:
 
 	// RenderOpaque가 보관한 반투명 패킷을 먼 것부터 그린다.
 	void RenderTranslucent(const FMatrix& ViewProjection);
+	FRHITexture2D* GetViewDepthTexture() const { return bViewDepthValid ? ViewDepthTexture.get() : nullptr; }
 
 	void SetWorldLights(const TArray<FLightData>& InLights);
 
@@ -106,6 +108,9 @@ public:
 	TUniquePtr<FRHIUniformBuffer> CB;
 	TUniquePtr<FRHIUniformBuffer> Temp;
 	TUniquePtr<FRHIUniformBuffer> ViewCB;
+	TUniquePtr<FRHIUniformBuffer> ViewDepthCB;
+	TUniquePtr<FRHITexture2D> ViewDepthTexture;
+	bool bViewDepthValid = false;
 	TUniquePtr<FRHIUniformBuffer> LightingGlobalsCB;
 	TUniquePtr<FRHIUniformBuffer> LightCountCB;
 	TUniquePtr<FRHIStructuredBuffer> LightDataSB;
@@ -133,6 +138,9 @@ public:
 	bool bDeferredWorkersInitialized = false;
 
 	void EnsureDeferredWorkers();
+	bool DrawPacketBatch(const TArray<FRenderPacket>& InPackets, bool bViewDepthPass, bool bWireframe, ELightingModel LightingModel);
+	void BindPacketPass(ID3D11DeviceContext* Context, bool bViewDepthPass);
+	void BindPacketMaterial(UMaterial* Material, ID3D11DeviceContext* Context, bool bPSOChanged, bool bViewDepthPass, bool bWireframe, ELightingModel LightingModel);
 	bool EnsureConstantBufferCapacity(TUniquePtr<FRHIUniformBuffer>& Buffer, uint32 PacketCount);
 	void DrawPackets(uint32 Begin, uint32 End, const FMatrix& ViewProjection);
 	void BindMaterial(UMaterial* material, ID3D11DeviceContext* Context = nullptr, bool bBindPipelineState = true, bool bWireframe = false, ELightingModel LightModel = ELightingModel::Unlit);

@@ -45,6 +45,7 @@ constexpr FPipelineTableEntry PipelineTable[] = {
 	// [Outline_Draw]
 	{EPSOType::Outline_Draw, "Resources/Shader/OutlineShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidNone, EBlendState::Opaque, EDepthStencilState::StencilOutline},
 	{EPSOType::Billboard, "Resources/Shader/BillboardShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidNone, EBlendState::Opaque, EDepthStencilState::Default},
+	{EPSOType::StaticMesh_ViewDepth, "Resources/Shader/ViewDepthShader.hlsl", D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, ERasterizerState::SolidBack, EBlendState::Opaque, EDepthStencilState::Default},
 };
 
 void FRenderResourceManager::ScanShaders(const fs::path& ShaderRoot)

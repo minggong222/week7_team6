@@ -649,7 +649,7 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			const ELightingModel LightingModel = ViewportsPanel->IsPIEMode()
 				? PIEViewAdapter.GetViewLightMode(0)
 				: MultipleViewportsAdapter.GetViewLightMode(ViewIndex);
-			Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
+			Renderer->RenderOpaque(RenderPackets, ViewportsPanel->GetViewportAdapter()->GetEngineView(ViewIndex), ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
 		}
 	}
 	// HZB+ 렌더링
@@ -812,7 +812,7 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	{
 		const bool bWireframe = false;
 		const ELightingModel LightingModel = PIEViewAdapter.GetViewLightMode(0);
-		Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
+		Renderer->RenderOpaque(RenderPackets, PIEViewAdapter.GetEngineView(0), ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
 	}
 
 	PIEViewAdapter.PostRenderOpaque(0, ViewRenderingInfo.DepthSteincil.Texture);
