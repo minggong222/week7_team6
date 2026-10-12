@@ -184,6 +184,8 @@ void FViewportsPanel::SetPIE()
 	RequestedLayoutMode = ELayoutMode::Single;
 	RequestedSingleViewIndex = 0;
 	bHasLayoutRequest = true;
+	//ViewportAdapter->SetViewLightMode(0, ELightingModel::Phong);
+	//ViewportAdapter->SetViewWireframe(0, false);
 }
 
 // View Texture와 Splitter·Layout·Preset UI를 그리고 요청을 기록한다.
