@@ -19,7 +19,7 @@ public:
 	UPointLightComponent() = default;
   virtual ~UPointLightComponent() override = default;
 
-	void DrawDebug(FLineBatcher* LineBatcher) const;
+	virtual void DrawDebug(FLineBatcher* LineBatcher) const;
 
 	float GetFalloff() const { return LightFalloffExponent; }
 	void SetFalloff(float InFalloff) { LightFalloffExponent = InFalloff; }

@@ -726,11 +726,20 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 		{
 			// DrawDebug가 있는 LightComponent가 선택되면 Visualizer 그리기
 			// Note: Spotlight가 PointLight를 상속받으니 지금은 PointLight인지만 체크하면 됨
-			UPointLightComponent* LightComponent = Cast<UPointLightComponent>(Outline->GetTarget());
 
-			if (LightComponent)
+			// 피킹은 빌보드가 선택되었을 것
+			UPrimitiveComponent* SelectedComponent = Outline->GetTarget();
+
+			if (SelectedComponent)
 			{
-				LightComponent->DrawDebug(LineBatcher.get());
+				// light 컴포넌트 찾기
+				UPointLightComponent* LightComponent = SelectedComponent->GetOwner()->FindComponentByClass<UPointLightComponent>();
+
+				// 있으면 DrawDebug
+				if (LightComponent)
+				{
+					LightComponent->DrawDebug(LineBatcher.get());
+				}
 			}
 		}
 
