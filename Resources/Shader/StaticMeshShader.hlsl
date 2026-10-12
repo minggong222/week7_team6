@@ -47,9 +47,9 @@ cbuffer LightCountConstants : register(b4)
 
 
 // 테스트
-#define	    LIGHTING_MODEL_GOURAUD 0
+#define	    LIGHTING_MODEL_GOURAUD 1
 #define	    LIGHTING_MODEL_LAMBERT 0
-#define	    LIGHTING_MODEL_PHONG 1
+#define	    LIGHTING_MODEL_PHONG 0
 
 #define TileCountX 8
 #define TileCountY 8
@@ -261,14 +261,10 @@ PS_INPUT mainVS(VS_INPUT input)
 #if LIGHTING_MODEL_GOURAUD
     float3 ViewDirection = normalize(CameraPosition - output.WorldPosition);
 
-    uint Count;
-    uint Stride;
-    Lights.GetDimensions(Count, Stride);
-
-    for (uint i = 0; i < 1; ++i)
+    for (uint i = 0; i < LightCount; ++i)
     {
         FLightData Light = Lights[i];
-        output.color = float4(EvaluateDirectionalLight(Light, output.WorldPosition, output.normal, ViewDirection, float3(1.0f, 1.0f, 1.0f), SpecularColor, Shininess), 1.0f);
+        output.lighting = float4(EvaluatePhongShading(Light, output.WorldPosition, output.normal, ViewDirection, float3(1.0f, 1.0f, 1.0f), SpecularColor, Shininess), 1.0f);
     }
 #endif
 
@@ -284,7 +280,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float3 lighting = AmbientColor;
     
 #if LIGHTING_MODEL_GOURAUD
-    lighting += input.color.xyz;
+    lighting += input.lighting;
 #else
     float3 ViewDirection = normalize(CameraPosition - input.WorldPosition);
 
