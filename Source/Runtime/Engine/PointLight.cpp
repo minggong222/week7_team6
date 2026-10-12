@@ -21,4 +21,5 @@ APointLight::APointLight()
 
 void APointLight::DuplicateSubObjects()
 {
+	Super::DuplicateSubObjects();
 }

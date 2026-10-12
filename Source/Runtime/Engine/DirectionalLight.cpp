@@ -21,4 +21,5 @@ ADirectionalLight::ADirectionalLight()
 
 void ADirectionalLight::DuplicateSubObjects()
 {
+	Super::DuplicateSubObjects();
 }

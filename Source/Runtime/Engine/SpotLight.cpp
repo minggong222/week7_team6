@@ -20,4 +20,5 @@ ASpotLight::ASpotLight()
 
 void ASpotLight::DuplicateSubObjects()
 {
+	Super::DuplicateSubObjects();
 }
