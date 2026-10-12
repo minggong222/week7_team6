@@ -570,7 +570,6 @@ float3 GetNormalFromMap(PS_INPUT input, float3 baseNormal, float2 uv)
     // 단, N은 이미 단위 벡터여야 한다.
     T = normalize(T - N * dot(N, T));
 
-
     // ============================================================
     // 12. Bitangent의 방향과 좌우 반전 보정
     // ============================================================
@@ -603,8 +602,7 @@ float3 GetNormalFromMap(PS_INPUT input, float3 baseNormal, float2 uv)
     //
     // 결과적으로 N, T, B를 노멀 맵의 좌표계를 월드 공간으로
     // 변환하기 위한 기저 벡터로 사용할 수 있다.
-    B = normalize(cross(N, T)) * handedness;
-
+    B = normalize(cross(T, N)) * handedness;
 
     // ============================================================
     // 13. Tangent Space 노멀을 월드 공간으로 변환
