@@ -9,6 +9,8 @@ ADirectionalLight::ADirectionalLight()
 
 	// Root: Billboard
 	UBillboardComponent* Billboard = CreateDefaultSubobject<UBillboardComponent>("UBillboardComponent");
+	Billboard->SetIsEditorOnly(true);
+	Billboard->SetIsVisualizationComponent(true);
 	SetRootComponent(Billboard);
 
 	UMaterial* BillboardMat = UMaterial::CreateInstance(UAssetManager::GetAssetByKey<UMaterial>("BillboardMaterial"));

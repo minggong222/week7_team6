@@ -6,7 +6,10 @@
 ASpotLight::ASpotLight()
 {
 	UBillboardComponent* Billboard = CreateDefaultSubobject<UBillboardComponent>("UBillboardComponent");
+	Billboard->SetIsEditorOnly(true);
+	Billboard->SetIsVisualizationComponent(true);
 	SetRootComponent(Billboard);
+
 	UMaterial* BillboardMat = UMaterial::CreateInstance(UAssetManager::GetAssetByKey<UMaterial>("BillboardMaterial"));
 	BillboardMat->Textures[0] = UAssetManager::GetAssetByKey<UTexture2D>("Assets/S_LightSpot.png");
 	BillboardMat->ParamBuffer = FRenderCommand::CreateConstantBuffer(256);

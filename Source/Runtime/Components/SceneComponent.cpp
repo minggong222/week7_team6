@@ -101,7 +101,7 @@ void USceneComponent::Serialize(json& Handle, const bool bIsLoading)
 
 FRotator USceneComponent::GetComponentRotation() const
 {
-	if (AttachParent)
+	if (AttachParent && !bIsEditorOnly)
 	{
 		FQuat ParentQuat = AttachParent->GetComponentRotation().Quaternion();
 		FQuat LocalQuat = Transform.GetOrientation();
@@ -127,7 +127,7 @@ FVector USceneComponent::GetComponentLocation() const
 
 FVector USceneComponent::GetComponentScale() const
 {
-	if (AttachParent)
+	if (AttachParent && !bIsEditorOnly)
 	{
 		FVector ParentScale = AttachParent->GetComponentScale();
 
@@ -164,7 +164,14 @@ void USceneComponent::UpdateWorldMatrix() const
 	CachedWorldMatrix = Transform.GetLocalMatrix();
 	if (AttachParent)
 	{
-		CachedWorldMatrix = CachedWorldMatrix * AttachParent->GetWorldMatrix();
+		if (bIsEditorOnly)
+		{
+			CachedWorldMatrix = CachedWorldMatrix * AttachParent->GetWorldMatrix().GetMatrixWithoutScale();
+		}
+		else
+		{
+			CachedWorldMatrix = CachedWorldMatrix * AttachParent->GetWorldMatrix();
+		}
 	}
 
 	CachedNormalMatrix = CachedWorldMatrix.Inverse().GetTransposed();
@@ -198,4 +205,14 @@ bool USceneComponent::MoveComponent(const FVector& Delta, const FQuat& NewRotati
 	Transform.Rotation = NewRelativeRotation.ToFRotator();
 	MarkTransformDirtyRecursive();
 	return true;
+}
+
+void USceneComponent::SetIsEditorOnly(bool Value)
+{
+	bIsEditorOnly = Value;
+}
+
+void USceneComponent::SetIsVisualizationComponent(bool Value)
+{
+	bIsVisualizationComponent = Value;
 }

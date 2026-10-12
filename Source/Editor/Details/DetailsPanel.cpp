@@ -801,6 +801,16 @@ void FDetailsPanel::OnRender()
 		// (예: 라이트는 빌보드를 클릭해서 고르지만 수치는 SpotLight 쪽에 있다)
 		for (UActorComponent* Component : TargetActor->GetComponents())
 		{
+			// 에디터 전용 컴포넌트는 스킵
+			USceneComponent* SceneComponent = Cast<USceneComponent>(Component);
+			if (SceneComponent)
+			{
+				if (SceneComponent->GetIsVisualizationComponent())
+				{
+					continue;
+				}
+			}
+
 			// 같은 클래스를 상속한 컴포넌트가 여럿이면 헤더 ID가 겹치므로 분리한다
 			ImGui::PushID(Component);
 			DrawProperties(Component);
