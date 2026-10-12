@@ -239,7 +239,7 @@ float3 EvaluateShading(FShadingData Data)
     float ConeFactor = 1.0f;
 
     if (
-        Light.LightType == LightType_Point &&
+        Light.LightType == LightType_Point ||
         Light.LightType == LightType_Spot
     )
     {
