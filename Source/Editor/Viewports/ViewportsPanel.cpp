@@ -323,6 +323,22 @@ void FViewportsPanel::OnRender()
 					ImGui::EndCombo();
 				}
 
+				const char* LightLabels[] = {"Unlit", "Lit_Gouraud", "Lit_Lambert", "Lit_Phong"};
+
+				const uint32 CurrentLightMode = static_cast<uint32>(ViewportAdapter->GetViewLightMode(ViewIndex));
+				ImGui::SameLine();
+				ImGui::SetNextItemWidth(170.0f);
+				if (ImGui::BeginCombo("##LightMode", LightLabels[CurrentLightMode]))
+				{
+					for (uint32 LightMode = 0; LightMode < static_cast<uint32>(ELightingModel::Count); ++LightMode)
+					{
+						if (ImGui::Selectable(LightLabels[LightMode], LightMode == CurrentLightMode))
+							ViewportAdapter->SetViewLightMode(ViewIndex, static_cast<ELightingModel>(LightMode));
+					}
+
+					ImGui::EndCombo();
+				}
+
 				ImGui::SameLine();
 			}
         }

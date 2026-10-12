@@ -14,11 +14,11 @@ struct FShaderByteCode
 class FRenderUtil
 {
 public:
-	static FShaderByteCode CompileShader(FString Path, const char* EntryPoint, EShaderType ShaderType);
+	static FShaderByteCode CompileShader(FString Path, D3D_SHADER_MACRO* defines, const char* EntryPoint, EShaderType ShaderType);
 	static void SaveByteCode(FString TargetPath, const FShaderByteCode& ByteCode);
 	static FShaderByteCode LoadByteCode(const FString& CsoPath);
 
-	static FString GetCsoPath(const FString& ShaderPath, EShaderType ShaderType);
+	static FString GetCsoPath(const FString& ShaderPath, EShaderType ShaderType, D3D_SHADER_MACRO* defines);
 	static bool IsCsoUpToDate(const FString& ShaderPath, const FString& CsoPath);
-	static FShaderByteCode GetOrCompile(const FString& ShaderPath, const char* EntryPoint, EShaderType ShaderType, FString& OutCSOPath);
+	static FShaderByteCode GetOrCompile(const FString& ShaderPath, D3D_SHADER_MACRO* defines, const char* EntryPoint, EShaderType ShaderType, FString& OutCSOPath);
 };

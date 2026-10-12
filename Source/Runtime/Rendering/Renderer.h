@@ -7,6 +7,7 @@
 #include "Engine/Font.h"
 
 #include "RenderingInfo.h"
+#include "Rendering/RenderResourceManager.h"
 
 struct FScene;
 
@@ -86,7 +87,13 @@ public:
 
 	// 배열을 정렬해 불투명 패킷만 그린다. 반투명은 RenderTranslucent 호출 전까지 보관한다.
 	// 연속 배열 기반 불투명 패킷 고속 렌더링
-	void RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene, bool bWireframe = false); // TODO: FScene 참조 안하게
+	void RenderOpaque(TArray<FRenderPacket>& InPackets,
+		const FMatrix& ViewProjection,
+		const FVector& CameraPosition,
+		const FViewportSettings& ViewportSettings,
+		const FScene& Scene,
+		bool bWireframe = false,
+		ELightingModel LightingModel = ELightingModel::Unlit); // TODO: FScene 참조 안하게
 
 	// RenderOpaque가 보관한 반투명 패킷을 먼 것부터 그린다.
 	void RenderTranslucent(const FMatrix& ViewProjection);
@@ -128,7 +135,7 @@ public:
 	void EnsureDeferredWorkers();
 	bool EnsureConstantBufferCapacity(TUniquePtr<FRHIUniformBuffer>& Buffer, uint32 PacketCount);
 	void DrawPackets(uint32 Begin, uint32 End, const FMatrix& ViewProjection);
-	void BindMaterial(UMaterial* material, ID3D11DeviceContext* Context = nullptr, bool bBindPipelineState = true, bool bWireframe = false);
+	void BindMaterial(UMaterial* material, ID3D11DeviceContext* Context = nullptr, bool bBindPipelineState = true, bool bWireframe = false, ELightingModel LightModel = ELightingModel::Unlit);
 	void UpdateMaterialParams(UMaterial* material);
 	void UpdatePerObjectConstants(const FRenderPacket& RenderPacket, const FMatrixRegister& ViewProjection);
 	void BindLightingResources(ID3D11DeviceContext* Context);

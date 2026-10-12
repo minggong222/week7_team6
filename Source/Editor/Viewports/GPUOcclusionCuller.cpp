@@ -31,6 +31,7 @@ bool FGPUOcclusionCuller::Init()
     FString CSOPath;
     FShaderByteCode ByteCode = FRenderUtil::GetOrCompile(
         "Resources/Shader/OcclusionCullingCS.hlsl",
+		nullptr,
         "mainCS",
         EShaderType::Compute,
         CSOPath);
@@ -58,6 +59,7 @@ bool FGPUOcclusionCuller::Init()
     FString HZBCSOPath;
     FShaderByteCode HZBByteCode = FRenderUtil::GetOrCompile(
         "Resources/Shader/HZBBuildCS.hlsl",
+		nullptr,
         "mainCS",
         EShaderType::Compute,
         HZBCSOPath);

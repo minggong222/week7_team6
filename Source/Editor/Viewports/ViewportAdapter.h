@@ -5,6 +5,7 @@
 
 #include "Math/Matrix.h"
 #include "Rendering/RenderPacket.h"
+#include "Rendering/RenderResourceManager.h"
 
 class UWorld;
 
@@ -62,5 +63,17 @@ class IViewportAdapter
 	{
 		(void)Index;
 		return false;
+	}
+
+	virtual void SetViewLightMode(int32 Index, ELightingModel Value)
+	{
+		(void)Index;
+		(void)Value;
+	}
+
+	virtual ELightingModel GetViewLightMode(int32 Index) const
+	{
+		(void)Index;
+		return (ELightingModel::Unlit);
 	}
 };
