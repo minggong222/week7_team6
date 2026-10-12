@@ -91,7 +91,8 @@ cbuffer MaterialParams : register(b1)
     float NormalScale;
     float bHasSpecularMap;
     float bHasEmissiveMap;
-    float2 MaterialPadding;
+    float bDisableShading;
+    float MaterialPadding;
 };
 
 cbuffer ViewConstants : register(b2)
@@ -179,7 +180,7 @@ void CalculateLightVector(
         {
             if (Distance < EPSLION)
             {
-                // PointLight에서 Vertex와 Light의 Position이 겹치면 Divide by zero가 발생하게 되므로 직접 지정
+                // PointLight에서 Vertex와 Light의 Position이 겹치면 Division by zero가 발생하게 되므로 직접 지정
                 L = float3(0.0f, 0.0f, 0.0f);
             }
             else
@@ -226,7 +227,7 @@ float3 EvaluateShading(FShadingData Data)
 #else
 
     float3 SpecularFactor = pow(NdotH, Data.MaterialShininess);
-    float3 Specular = Data.MaterialSpecularColor * SpecularFactor;
+    float3 Specular = Data.MaterialSpecularColor * SpecularFactor * pow(NdotL, 0.7f);
 
     // Cone 범위를 벗어나면 Spotlight 적용 안되게..?
     if (NdotL <= 0.0f)
@@ -660,6 +661,11 @@ PS_INPUT mainVS(VS_INPUT input)
     output.lighting = float3(0.0f, 0.0f, 0.0f);
     output.WorldPosition = worldPos.xyz;
 
+    if (bDisableShading == 1.0f)
+    {
+        return output;
+    }
+
 #if LIGHTING_MODEL_GOURAUD
     output.lighting = AmbientColor;
 
@@ -675,7 +681,7 @@ PS_INPUT mainVS(VS_INPUT input)
             output.normal,
             float3(1.0f, 1.0f, 1.0f),  
             float3(1.0f, 1.0f, 1.0f),  
-            32.0f,
+            16.0f,
         };
 
         output.lighting += EvaluateShading(Data);
@@ -687,46 +693,51 @@ PS_INPUT mainVS(VS_INPUT input)
 
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
+
     float4 texColor = g_txColor.Sample(g_Sample, input.uv + UVOffset);
     float4 albedo = texColor * BaseColor;
 
-    float3 lighting = AmbientColor;
+    float3 lighting = float3(1.0f, 1.0f, 1.0f);
     
-    float3 mappedNormal = GetNormalFromMap(input, input.normal, input.uv);
+    if (bDisableShading != 1.0f)
+    {
+        float3 mappedNormal = GetNormalFromMap(input, input.normal, input.uv);
     
 #if NormalMap
-    return float4(mappedNormal*0.5 + 0.5,1.0f);
+        return float4(mappedNormal * 0.5 + 0.5, 1.0f);
 #endif
     
 #if LIGHTING_MODEL_GOURAUD
-    lighting = input.lighting;
+        lighting = input.lighting;
 #elif LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
-    uint X = (uint) floor((input.position.x / ViewSizeX) * TileCountX);
-    uint Y = (uint) floor((input.position.y / ViewSizeY) * TileCountY);
-    X = min(X, TileCountX - 1);
-    Y = min(Y, TileCountY - 1);
+        lighting = AmbientColor;
+        uint X = (uint) floor((input.position.x / ViewSizeX) * TileCountX);
+        uint Y = (uint) floor((input.position.y / ViewSizeY) * TileCountY);
+        X = min(X, TileCountX - 1);
+        Y = min(Y, TileCountY - 1);
 
-    FTileLightHeader Header = TileHeaders[Y * TileCountX + X];
-    for (uint i = 0; i < Header.Count; ++i)
-    {
-        uint LightIndex = TileLightIndices[Header.Offset + i];
-        FLightData Light = Lights[LightIndex];
-        FShadingData Data = 
+        FTileLightHeader Header = TileHeaders[Y * TileCountX + X];
+        for (uint i = 0; i < Header.Count; ++i)
         {
-            Light,
-            CameraPosition,
-            input.WorldPosition,
-            mappedNormal,
-            albedo.xyz,  
-            SpecularColor,  
-            Shininess,
-        };
+            uint LightIndex = TileLightIndices[Header.Offset + i];
+            FLightData Light = Lights[LightIndex];
+            FShadingData Data = 
+            {
+                Light,
+                CameraPosition,
+                input.WorldPosition,
+                mappedNormal,
+                albedo.xyz,  
+                /*Specular*/ float3(1.0f, 1.0f, 1.0f),  
+                /*Shininess*/ 16.0f,
+            };
 
-        lighting += EvaluateShading(Data);
-    }
+            lighting += EvaluateShading(Data);
+        }
 #else
     
 #endif
+    }
 
     float3 FinalColor = albedo.rgb * lighting;
 
