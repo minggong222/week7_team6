@@ -18,8 +18,10 @@ public:
 
 	UBillboardComponent* GetBillboardComponent() const { return BillboardComponent; }
 	void SetBillboardComponent(UBillboardComponent* InComponent) { BillboardComponent = InComponent; }
+
 	ULightComponent* GetLightComponent() const { return LightComponent; }
 	void SetLightComponent(ULightComponent* InComponent) { LightComponent = InComponent; }
+
 	virtual void DuplicateSubObjects() override;
 
   private:

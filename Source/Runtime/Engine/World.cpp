@@ -65,16 +65,15 @@ AActor* UWorld::SpawnActor(UClass* Class, FName InName, const FTransform* Transf
 	if (NewActor->GetRootComponent())
 	{
 		NewActor->GetRootComponent()->SetRelativeTransform(SpawnTransform);
-
-		AddComponent(Cast<UPrimitiveComponent>(NewActor->GetRootComponent()));
-		AddComponent(Cast<UExponentialHeightFogComponent>(NewActor->GetRootComponent()));
-		AddComponent(Cast<UFireballComponent>(NewActor->GetRootComponent()));
-
 	}
 
 	for (UActorComponent* Component : NewActor->GetComponents())
 	{
+		// 여기 나열된 클래스들만 Component로 등록된다... 왜?
 		AddComponent(Cast<ULightComponent>(Component));
+		AddComponent(Cast<UPrimitiveComponent>(Component));
+		AddComponent(Cast<UExponentialHeightFogComponent>(Component));
+		AddComponent(Cast<UFireballComponent>(Component));
 	}
 
 	// 4. Level->Actors에 등록

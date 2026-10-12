@@ -70,10 +70,6 @@ public:
 		return Data ? Data->AABB : Super::CalcLocalBounds();
 	}
 
-	
-
-	
-
 protected:
 	virtual void OnBoundsMarkedDirty() override;
 	bool TraceMesh(const FRay& WorldRay, const FStaticMeshRenderData& Mesh, const FMatrix& WorldMatrix, FHitResult& OutResult, float MaxT = FLT_MAX);

@@ -17,6 +17,7 @@ public:
   virtual ~UDirectionalLightComponent() override = default;
 
 	void DrawDebug(FLineBatcher* LineBatcher) const;
+
 	virtual ELightComponentType GetLightType() const override
 	{
 		return LightType_Directional;
