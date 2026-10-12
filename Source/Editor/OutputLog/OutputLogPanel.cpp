@@ -50,7 +50,7 @@ void FOutputLogPanel::OnRender()
 	ImGui::TextDisabled("Filter");
 	ImGui::SameLine();
 
-	Filter.Draw("##Filter", 180.0f);
+	Filter.Draw("##Filter", 320.0f);
 
 	ImGui::SameLine();
 	ImGui::TextDisabled("[?]");

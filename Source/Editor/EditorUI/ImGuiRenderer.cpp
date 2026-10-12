@@ -17,10 +17,14 @@ namespace
 		return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam) != 0;
 	}
 
-	void ApplyDefaultStyle()
+	void ApplyDefaultStyle(float Scale)
 	{
-		ImGuiStyle* style = &ImGui::GetStyle();
-		ImVec4* colors = style->Colors;
+		ImGuiStyle& style = ImGui::GetStyle();
+		ImVec4* colors = style.Colors;
+
+		// HiDPI Test
+		style.ScaleAllSizes(Scale);
+		style.FontScaleDpi = Scale;   
 
 		colors[ImGuiCol_Text] = ImVec4(1.000f, 1.000f, 1.000f, 1.000f);
 		colors[ImGuiCol_TextDisabled] = ImVec4(0.500f, 0.500f, 0.500f, 1.000f);
@@ -74,16 +78,16 @@ namespace
 		colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.000f, 0.000f, 0.000f, 0.586f);
 		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.000f, 0.000f, 0.000f, 0.586f);
 
-		style->ChildRounding = 4.0f;
-		style->FrameBorderSize = 1.0f;
-		style->FrameRounding = 2.0f;
-		style->GrabMinSize = 7.0f;
-		style->PopupRounding = 2.0f;
-		style->ScrollbarRounding = 12.0f;
-		style->ScrollbarSize = 13.0f;
-		style->TabBorderSize = 1.0f;
-		style->TabRounding = 0.0f;
-		style->WindowRounding = 4.0f;
+		style.ChildRounding = 4.0f;
+		style.FrameBorderSize = 1.0f;
+		style.FrameRounding = 2.0f;
+		style.GrabMinSize = 7.0f;
+		style.PopupRounding = 2.0f;
+		style.ScrollbarRounding = 12.0f;
+		style.ScrollbarSize = 13.0f;
+		style.TabBorderSize = 1.0f;
+		style.TabRounding = 0.0f;
+		style.WindowRounding = 4.0f;
 	}
 }
 
@@ -92,7 +96,7 @@ FImGuiRenderer::~FImGuiRenderer()
 
 }
 
-bool FImGuiRenderer::Init(HWND WindowHandle, ID3D11Device* Device, ID3D11DeviceContext* DeviceContext)
+bool FImGuiRenderer::Init(FWindowsWindow* Window, ID3D11Device* Device, ID3D11DeviceContext* DeviceContext)
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -102,11 +106,13 @@ bool FImGuiRenderer::Init(HWND WindowHandle, ID3D11Device* Device, ID3D11DeviceC
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	ImGui_ImplWin32_Init(WindowHandle);
+	io.Fonts->AddFontFromFileTTF("Assets/Fonts/IBMPlexSansKR-Regular.ttf");
+
+	ImGui_ImplWin32_Init(Window->GetHandle());
 	ImGui_ImplDX11_Init(Device, DeviceContext);
 	FWindowsWindow::SetWndProcHook(&ImGuiWndProcHook);
 
-	ApplyDefaultStyle();
+	ApplyDefaultStyle(Window->GetScale());
 
 	return true;
 }

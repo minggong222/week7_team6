@@ -284,7 +284,7 @@ void FViewportsPanel::OnRender()
 			ContentOrigin.y + Slots[ViewIndex].Rect.Y + 8.0f});
 		ImGui::PushID(100 + ViewIndex);
 		int SelectedPreset = static_cast<int>(CurrentCameraPresets[ViewIndex]);
-		ImGui::SetNextItemWidth(120.0f);
+		ImGui::SetNextItemWidth(240.0f);
 		if (ImGui::Combo("##CameraPreset", &SelectedPreset, CameraPresetLabels, IM_ARRAYSIZE(CameraPresetLabels)))
 		{
 			PendingCameraPresetViewIndex = ViewIndex;
@@ -300,7 +300,7 @@ void FViewportsPanel::OnRender()
 				bool SceneDepthMode = ViewportAdapter->IsViewSceneDepthMode(ViewIndex);
 
 				const char* Labels[] = {"Solid", "Wireframe", "Buffer Visualization"};
-				ImGui::SetNextItemWidth(170.0f);
+				ImGui::SetNextItemWidth(240.0f);
 
 				if (ImGui::BeginCombo("##FillMode", Labels[Mode]))
 				{
@@ -327,7 +327,7 @@ void FViewportsPanel::OnRender()
 
 				const uint32 CurrentLightMode = static_cast<uint32>(ViewportAdapter->GetViewLightMode(ViewIndex));
 				ImGui::SameLine();
-				ImGui::SetNextItemWidth(170.0f);
+				ImGui::SetNextItemWidth(240.0f);
 				if (ImGui::BeginCombo("##LightMode", LightLabels[CurrentLightMode]))
 				{
 					for (uint32 LightMode = 0; LightMode < static_cast<uint32>(ELightingModel::Count); ++LightMode)

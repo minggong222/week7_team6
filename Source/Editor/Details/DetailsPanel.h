@@ -36,15 +36,9 @@ class FDetailsPanel : public IEditorPanel
 		World = InWorld;
 	}
 
-	ImFont* GetCustomFont()
-	{
-		return CustomFont;
-	}
-
   private:
 	UWorld* World = nullptr;
 	UObject* Target = nullptr;
-	ImFont* CustomFont = nullptr;
 
 	int32 SelectedIndex = 0;
 

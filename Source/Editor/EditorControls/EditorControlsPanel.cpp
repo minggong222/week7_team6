@@ -13,6 +13,8 @@
 #include <cmath>
 #include <imgui_internal.h>
 
+constexpr float GRID_WIDTH = 150.0f;
+
 // 패널 초기화 성공을 반환한다.
 bool FEditorControlsPanel::Init()
 {
@@ -98,7 +100,7 @@ void FEditorControlsPanel::OnRender()
 	//ImGui::TextDisabled("%s", FpsText);
 
 	//////////////////////////////////////////////////////
-	float icon_size = 24.0f;
+	float icon_size = 36.0f;
 	ImGui::SameLine();
 	ImGui::BeginDisabled(PIEPanel->IsPlay() && !PIEPanel->IsPause());
 	if (DrawStartButton("##StartBtn", icon_size))
@@ -146,7 +148,7 @@ void FEditorControlsPanel::OnRender()
 	}
 
 	// Actor 종류 ComboBox로 골라 하나씩 스폰
-	const float SpawnButtonWidth = 70.0f;
+	const float SpawnButtonWidth = 100.0f;
 
 	char CountText[32];
 	std::snprintf(CountText, sizeof(CountText), "%d Actors", World ? World->GetActorCount() : 0);
@@ -177,7 +179,7 @@ void FEditorControlsPanel::OnRender()
 	{
 		if (ImGui::BeginTable("GridSpawnSettings", 2))
 		{
-			ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+			ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GRID_WIDTH);
 			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 			ImGui::TableNextRow();
@@ -240,7 +242,7 @@ void FEditorControlsPanel::OnRender()
 
 	if (Gizmo && ImGui::BeginTable("GizmoControls", 2))
 	{
-		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GRID_WIDTH);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 		ImGui::TableNextRow();
@@ -318,7 +320,7 @@ void FEditorControlsPanel::DrawCameraProperties()
 	// Camera Projection Table
 	if (ImGui::BeginTable("Camera Projection", 2))
 	{
-		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GRID_WIDTH);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 		// FOV 또는 Ortho Width
@@ -415,7 +417,7 @@ void FEditorControlsPanel::DrawCameraProperties()
 
 	if (ImGui::BeginTable("Camera Transform", 2))
 	{
-		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GRID_WIDTH);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 		ImGui::TableNextRow();
