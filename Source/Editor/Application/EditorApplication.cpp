@@ -646,7 +646,9 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 		if (bDrawPrimitives)
 		{
 			const bool bWireframe = MultipleViewportsAdapter.IsViewWireframe(ViewIndex);
-			const ELightingModel LightingModel = MultipleViewportsAdapter.GetViewLightMode(ViewIndex);
+			const ELightingModel LightingModel = ViewportsPanel->IsPIEMode()
+				? PIEViewAdapter.GetViewLightMode(0)
+				: MultipleViewportsAdapter.GetViewLightMode(ViewIndex);
 			Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
 		}
 	}
@@ -820,7 +822,7 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	if (bDrawPrimitives)
 	{
 		const bool bWireframe = false;
-		const ELightingModel LightingModel = MultipleViewportsAdapter.GetViewLightMode(MultipleViewportsAdapter.GetEditorViewIndex());
+		const ELightingModel LightingModel = PIEViewAdapter.GetViewLightMode(0);
 		Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
 	}
 
@@ -956,9 +958,12 @@ void FEditorApplication::StartPIE()
 	PIEViewAdapter.InitializeFromWorld(*PIEWorld);
 	if (PIEPanel->GetMode() == ETypePIEMode::Selected)
 	{
+		PIEViewAdapter.SetViewLightMode(0, MultipleViewportsAdapter.GetViewLightMode(MultipleViewportsAdapter.GetEditorViewIndex()));
+		PIEViewAdapter.SetViewWireframe(0, MultipleViewportsAdapter.IsViewWireframe(MultipleViewportsAdapter.GetEditorViewIndex()));
 		ViewportsPanel->SetViewportAdapter(&PIEViewAdapter);
 		ViewportsPanel->SetViewportMode(EViewportMode::PIE);
 		ViewportsPanel->SetPIE();
+		
 		OutlinerPanel->SelectActor(nullptr);
 	}
 	OutlinerPanel->SetWorld(PIEWorld);
