@@ -93,12 +93,21 @@ namespace
 			: A.CameraDistanceSquared > B.CameraDistanceSquared;
 	}
 
+/*	struct FLightCountConstants
+	{
+		uint32 LightCount = 0;
+		uint32 Padding[3]{};
+	};
+	static_assert(sizeof(FLightCountConstants) == 16);
+
+	constexpr UINT LightSRVSlot = 4;*/
 }
 
 bool FRenderer::Init()
 {
 	ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FViewConstants));
 	LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));
+	LightCountCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightCountConstants));
 	TileLightHeaderSB = FRenderCommand::CreateStructuredBuffer(sizeof(FTileLightHeader), TileCountX * TileCountY);
 	if (FRenderCommand::GetRenderDevice()->SupportsConstantBufferOffsetting())
 	{
@@ -187,6 +196,11 @@ void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& ViewP
 void FRenderer::BindLightingResources(ID3D11DeviceContext* Context)
 {
 	FRenderCommand::BindConstantBuffer(3, LightingGlobalsCB.get(), EShaderBindFlagBits::Pixel, Context);
+	FRenderCommand::BindConstantBuffer(4, LightCountCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
+
+	ID3D11DeviceContext* Ctx = Context ? Context : FRenderCommand::GetRenderDevice()->GetContext();
+	ID3D11ShaderResourceView* LightDataSRV = LightDataSB ? LightDataSB->GetSRV() : nullptr;
+	Ctx->VSSetShaderResources(4, 1, &LightDataSRV);
 
 	FRenderCommand::PSSetShaderResource(4, LightDataSB ? LightDataSB->GetSRV() : nullptr, Context);
 	FRenderCommand::PSSetShaderResource(5, TileLightHeaderSB ? TileLightHeaderSB->GetSRV() : nullptr, Context);
@@ -219,6 +233,13 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 	FRenderCommand::UpdateBufferData(LightingGlobalsCB.get(), &tempGlobal, sizeof(tempGlobal));
 
 	const uint32 LightCount = static_cast<uint32>(Scene.LightDatas.Num());
+	if (!LightCountCB)
+	{
+		LightCountCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightCountConstants));
+	}
+	const FLightCountConstants LightCountConstants{LightCount, {}};
+	FRenderCommand::UpdateBufferData(LightCountCB.get(), &LightCountConstants, sizeof(LightCountConstants));
+
 	const uint32 LightCapacity = (std::max)(1u, LightCount);
 	if (!LightDataSB || LightDataSB->GetElementCount() < LightCapacity)
 	{
@@ -347,6 +368,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 					BatchStats.UploadBytes += sizeof(FPerObjectConstants);
 				FRenderCommand::BindConstantBuffer(0, Temp.get(), PerObjectStages);
 			}
+
 			const uint32 IndexCount = RenderPacket.IndexCount ? RenderPacket.IndexCount : RenderPacket.mesh->GetIndexCount(RenderPacket.LODIndex);
 			FRenderCommand::DrawIndexed(IndexCount, RenderPacket.StartIndex);
 			if (BatchStats.bCountDraws)
@@ -412,6 +434,8 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 			Context->RSSetViewports(NumViewports, &Viewport);
 			FRenderCommand::BindConstantBuffer(2, ViewCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
 			BindLightingResources(Context);
+
+			/*FRenderCommand::BindConstantBuffer(4, LightCountCB.get(), EShaderBindFlagBits::Pixel, Context);*/
 
 			const UStaticMesh* LastMesh  = nullptr;
 			const UMaterial* LastMaterial = nullptr;
@@ -543,6 +567,11 @@ void FRenderer::RenderTranslucent(const FMatrix& ViewProjection)
 {
 }
 
+/*void FRenderer::SetWorldLights(const TArray<FLightData>& InLights)
+{
+	WorldLights = InLights;
+}*/
+
 // 기존 인터페이스 호환용 함수
 void FRenderer::DrawPackets(uint32 Begin, uint32 End, const FMatrix& ViewProjection)
 {
@@ -604,6 +633,12 @@ void FRenderer::UpdateMaterialParams(UMaterial* material)
 		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FStaticMeshMaterialParams));
 		break;
 	}
+	case EPSOType::Billboard:
+	{
+		FBillboardMaterialParams Params{};
+		Params.BaseColor = material->BaseColor;
+		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FBillboardMaterialParams));
+	}
 	default:
 		break;
 	}
@@ -617,3 +652,95 @@ void FRenderer::UpdatePerObjectConstants(const FRenderPacket& RenderPacket, cons
 	Constants.Normal = RenderPacket.Normal;
 	FRenderCommand::UpdateBufferData(Temp.get(), &Constants);
 }
+
+/*bool FRenderer::UpdateWorldLightResources()
+{
+	auto* RenderDevice = FRenderCommand::GetRenderDevice();
+	if (!RenderDevice || !LightCountCB)
+		return false;
+
+	ID3D11DeviceContext* Context = RenderDevice->GetContext();
+
+	if (!Context)
+		return false;
+
+	const uint32 NumLights = static_cast<uint32>(WorldLights.Num());
+
+	const uint32 RequiredCapacity = (std::max)(1u, NumLights);
+
+	if (!LightsBuffer || RequiredCapacity > LightsBufferCapacity)
+	{
+		uint32 NewCapacity = (std::max)(1u, LightsBufferCapacity);
+
+		while (NewCapacity < RequiredCapacity)
+		{
+			if (NewCapacity > (std::numeric_limits<uint32>::max)() / 2)
+			{
+				NewCapacity = RequiredCapacity;
+				break;
+			}
+
+			NewCapacity *= 2;
+		}
+
+		const uint64 ByteWidth = static_cast<uint64>(NewCapacity) * sizeof(FLightData);
+
+		if (ByteWidth > (std::numeric_limits<UINT>::max)())
+			return false;
+
+		ComPtr<ID3D11Device> Device;
+		Context->GetDevice(Device.GetAddressOf());
+
+		if (!Device)
+			return false;
+
+		D3D11_BUFFER_DESC Desc{};
+
+		Desc.ByteWidth = static_cast<UINT>(ByteWidth);
+		Desc.Usage = D3D11_USAGE_DEFAULT;
+		Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		Desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+		Desc.StructureByteStride = sizeof(FLightData);
+
+		ComPtr<ID3D11Buffer> NewBuffer;
+
+		HRESULT hr = Device->CreateBuffer(&Desc, nullptr, NewBuffer.GetAddressOf());
+		if (FAILED(hr))
+			return false;
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc{};
+		SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
+		SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+		SRVDesc.Buffer.FirstElement = 0;
+		SRVDesc.Buffer.NumElements = NewCapacity;
+
+		ComPtr<ID3D11ShaderResourceView> NewSRV;
+
+		hr = Device->CreateShaderResourceView(NewBuffer.Get(), &SRVDesc, NewSRV.GetAddressOf());
+		if (FAILED(hr))
+			return false;
+
+		LightsBuffer = std::move(NewBuffer);
+		LightsSRV = std::move(NewSRV);
+		LightsBufferCapacity = NewCapacity;
+	}
+
+	if (NumLights > 0)
+	{
+		D3D11_BOX UpdateBox{};
+		UpdateBox.left = 0;
+		UpdateBox.right = NumLights * sizeof(FLightData);
+		UpdateBox.top = 0;
+		UpdateBox.bottom = 1;
+		UpdateBox.front = 0;
+		UpdateBox.back = 1;
+
+		Context->UpdateSubresource(LightsBuffer.Get(), 0, &UpdateBox, &WorldLights[0], 0, 0);
+
+		FLightCountConstants CountConstants{};
+		CountConstants.LightCount = NumLights;
+
+		FRenderCommand::UpdateBufferData(LightCountCB.get(), &CountConstants, sizeof(CountConstants));
+		return true;
+	}
+}*/

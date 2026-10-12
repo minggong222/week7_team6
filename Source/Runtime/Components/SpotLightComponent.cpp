@@ -20,8 +20,7 @@ namespace
 		const FVector& Right,
 		const FVector& Up,
 		float HalfAngleDegrees,
-		float Range,
-		const FVector4& Color)
+		float Range, const FVector4& Color)
 	{
 		const float HalfAngle = FMath::DegreesToRadians(HalfAngleDegrees);
 		const float BaseRadius = std::tanf(HalfAngle) * Range;
@@ -78,9 +77,7 @@ void USpotLightComponent::DrawDebug(FLineBatcher* LineBatcher) const
 		return;
 	}
 
-	FTransform WorldTransform;
-	WorldTransform.Location = GetComponentLocation();
-	WorldTransform.Rotation = GetComponentRotation();
+	FTransform WorldTransform = GetOwner()->GetActorTransform();
 
 	FVector Apex = WorldTransform.Location;
 	FVector Forward = WorldTransform.GetForward();
@@ -91,12 +88,13 @@ void USpotLightComponent::DrawDebug(FLineBatcher* LineBatcher) const
 	// tan(90도)는 무한대라 원뿔 정점이 NaN이 되므로 여기서 막는다.
 	const float SafeOuterAngle = FMath::Clamp(OuterConeAngle, 0.0f, 89.0f);
 	const float SafeInnerAngle = FMath::Clamp(InnerConeAngle, 0.0f, SafeOuterAngle);
+	const float AttenuationRadius = GetAttenuationRadius();
 	const float SafeRadius = (AttenuationRadius > 0.0f) ? AttenuationRadius : 0.0f;
 
 	// 바깥 원뿔은 라이트 색 그대로, 안쪽은 구분되도록 흐리게
-	AddWireCone(LineBatcher, Apex, Forward, Right, Up, SafeOuterAngle, SafeRadius, LightColor);
+	AddWireCone(LineBatcher, Apex, Forward, Right, Up, SafeOuterAngle, SafeRadius, FVector4(LightColor.R, LightColor.G, LightColor.B, LightColor.A));
 
-	FVector4 InnerColor(LightColor.X * 0.5f, LightColor.Y * 0.5f, LightColor.Z * 0.5f, LightColor.W);
+	FVector4 InnerColor(LightColor.R * 0.5f, LightColor.G * 0.5f, LightColor.B * 0.5f, LightColor.A);
 
 	AddWireCone(LineBatcher, Apex, Forward, Right, Up, SafeInnerAngle, SafeRadius, InnerColor);
 }

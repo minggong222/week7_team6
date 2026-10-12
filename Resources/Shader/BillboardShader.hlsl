@@ -3,6 +3,11 @@ cbuffer constants : register(b0)
     row_major matrix World;
 };
 
+cbuffer MaterialParams : register(b1)
+{
+    float4 BaseColor;
+};
+
 cbuffer ViewConstants : register(b2)
 {
     row_major matrix ViewProjection;
@@ -37,7 +42,7 @@ PS_INPUT mainVS(VS_INPUT input)
 
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {
-    float4 c = SpriteTexture.Sample(SpriteSampler, input.uv);
+    float4 c = BaseColor * SpriteTexture.Sample(SpriteSampler, input.uv);
     clip(c.a - 0.1f);
     return c;
 }

@@ -26,7 +26,7 @@
 
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
-#include "Engine/SpotLight.h"
+#include "Engine/Light.h"
 
 #include "Engine/AssetManager.h"
 #include "Rendering/RenderResourceManager.h"
@@ -707,9 +707,9 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 	{
 		FGPUStatScope EditorScope(StatIds::GpuEditor(), L"Editor Overlays");
 		const bool bDrawOcclusionBounds = MultipleViewportsAdapter.GetSoftwareOcclusionSettings().bDebugBounds;
+		LineBatcher->BeginFrame();
 		if (EditorSettings.bDrawBoundingBox || bDrawOcclusionBounds)
 		{
-			LineBatcher->BeginFrame();
 			if (EditorSettings.bDrawBoundingBox && !PIEPanel->IsPlay())
 			{
 				LineBatcher->BuildVertexBuffer();
@@ -718,8 +718,15 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			{
 				MultipleViewportsAdapter.AppendSoftwareOcclusionDebugBounds(*LineBatcher);
 			}
-			LineBatcher->OnRender(ViewProjection);
+			
 		}
+		
+		for (TObjectIterator<USpotLightComponent> Itr; Itr; ++Itr)
+		{
+			Itr->DrawDebug(LineBatcher.get());
+		}
+		
+		LineBatcher->OnRender(ViewProjection);
 		if (Outline && Outline->GetTarget() && OutlineRenderer && CurrentWorld == Outline->GetTarget()->GetOwner()->GetWorld())
 		{
 			OutlineRenderer->OnRender(*Outline, ViewProjection, ViewRenderingInfo.ViewportSetting);

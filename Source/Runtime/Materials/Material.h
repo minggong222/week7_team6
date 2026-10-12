@@ -20,7 +20,10 @@ struct FStaticMeshMaterialParams
 	float bHasEmissiveMap;
 	FVector2D Padding;
 };
-
+struct FBillboardMaterialParams
+{
+	FVector4 BaseColor;
+};
 // StaticMeshShader.hlsl의 MaterialParams(b1)와 같은 레이아웃이어야 한다
 static_assert(sizeof(FStaticMeshMaterialParams) == 80);
 

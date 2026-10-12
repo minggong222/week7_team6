@@ -481,7 +481,7 @@ void FGeometryGenerator::CreateDefaultMeshDatas()
 	MeshDataMap["Cone"] = CreateCone(1.0f, 1.0f, 20, FVector4(1.0f, 1.0f, 1.0f, 1.0f));
 	MeshDataMap["Cube"] = CreateCube(1.0f);
 	MeshDataMap["Cylinder"] = CreateCylinder(1.0f, 1.0f, 20, FVector4(1.0f, 1.0f, 1.0f, 1.0f));
-	MeshDataMap["Sphere"] = CreateSphere(1.0f, 100, 50, FVector4(1.0f, 1.0f, 1.0f, 1.0f));
+	MeshDataMap["Sphere"] = CreateSphere(1.0f, 16, 8, FVector4(1.0f, 1.0f, 1.0f, 1.0f));
 	MeshDataMap["Plane"] = CreatePlane(1.0f, FVector4(1.0f, 1.0f, 1.0f, 1.0f));
 	MeshDataMap["Arrow"] = CreateArrow(0.04f, 1.0f, 0.10f, 0.3f, 20, FVector4(1.0f, 0.0f, 0.0f, 1.0f));
 	MeshDataMap["Ring"] = CreateRing(1.0f, 0.03f, 32, 16, FVector4(1.0f, 0.0f, 0.0f, 1.0f));
