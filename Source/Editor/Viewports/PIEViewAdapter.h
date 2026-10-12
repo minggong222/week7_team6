@@ -5,6 +5,7 @@
 
 #include "Math/Matrix.h"
 #include "Rendering/RenderPacket.h"
+#include "Rendering/RenderResourceManager.h"
 
 #include "../../Runtime/Containers/Array.h"
 #include "ViewportAdapter.h"
@@ -47,6 +48,14 @@ class FPIEViewAdapter : public IViewportAdapter
 
 	// 카메라 Forward를 반환한다.
 	FVector GetEngineCameraForward(int32 ViewIndex) const override;
+
+	void SetViewLightMode(int32 Index, ELightingModel Value) override;
+	
+	ELightingModel GetViewLightMode(int32 Index) const override;
+
+	void SetViewWireframe(int32 Index, bool Value) override;
+	
+	bool IsViewWireframe(int32 Index) const override;
 
 	// Billboard 계산에 사용할 월드 행렬을 생성한다.
 	FMatrix BuildEngineBillboardMatrix(int32 ViewIndex, const FVector& WorldPosition, float Width, float Height) const override;
@@ -128,4 +137,7 @@ class FPIEViewAdapter : public IViewportAdapter
 	TArray<UPrimitiveComponent*> VisiblePrimitives;
 
 	FSoftwareOcclusionCuller SoftwareOcclusion;
+
+	ELightingModel ViewLightMode = ELightingModel::Unlit;
+	bool ViewWireframe = false;
 };

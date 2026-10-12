@@ -270,6 +270,57 @@ float3 EvaluateShading(FShadingData Data)
 Vertex, Pixel Shader
 *******************************/
 
+float3 GetBumpNormal(PS_INPUT input, float3 baseNormal, float2 uv)
+{
+    if (bHasNormalMap == 0)
+    {
+        return baseNormal;
+    }
+    
+    uint textureWidth;
+    uint textureHeight;
+    uint mipLevels;
+    
+    g_txNormal.GetDimensions(0, textureWidth, textureHeight, mipLevels);
+    
+    float2 texelSize = 1.0f / float2(textureWidth, textureHeight);
+    
+    float heightCenter = g_txNormal.Sample(g_Sample, uv).r;
+    float heightX = g_txNormal.Sample(g_Sample, uv + float2(texelSize.x, 0.0f)).r;
+    float heightY = g_txNormal.Sample(g_Sample, uv + float2(0.0f, texelSize.y)).r;
+    
+    float dhdx = heightX - heightCenter;
+    float dhdy = heightY - heightCenter;
+
+    float3 dpdx = ddx(input.WorldPosition);
+    float3 dpdy = ddy(input.WorldPosition);
+    
+    float2 duvdx = ddx(input.uv);
+    float2 duvdy = ddy(input.uv);
+    
+    float determinant = duvdx.x * duvdy.y - duvdx.y * duvdy.x;
+    
+    if (abs(determinant) < 0.000001f)
+    {
+        return baseNormal;
+    }
+    
+    float inverseDeterminant = 1.0f / determinant;
+    
+    float3 tangent = (dpdx * duvdy.y - dpdy * duvdx.y) * inverseDeterminant;
+    float3 bitangent = (dpdy * duvdx.x - dpdx * duvdy.x) * inverseDeterminant;
+    
+    tangent = normalize(tangent - baseNormal * dot(baseNormal, tangent));
+    bitangent = normalize(cross(baseNormal, tangent));
+    
+    const float BumpStrength = 1.0f;
+    
+    float3 bumpedNormal = normalize(baseNormal - tangent * dhdx * BumpStrength - bitangent * dhdy * BumpStrength);
+    
+    return bumpedNormal;
+
+}
+
 PS_INPUT mainVS(VS_INPUT input)
 {
     PS_INPUT output;
@@ -315,6 +366,12 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
     float3 lighting = AmbientColor;
     
+    float3 mappedNormal = GetBumpNormal(input, input.normal, input.uv);
+    
+#if NormalMap
+    return float4(mappedNormal*0.5 + 0.5,1.0f);
+#endif
+    
 #if LIGHTING_MODEL_GOURAUD
     lighting = input.lighting;
 #elif LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
@@ -328,20 +385,18 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     {
         uint LightIndex = TileLightIndices[Header.Offset + i];
         FLightData Light = Lights[LightIndex];
-
         FShadingData Data = 
         {
             Light,
             CameraPosition,
             input.WorldPosition,
-            input.normal,
+            mappedNormal,
             albedo.xyz,  
-            float3(1.0f, 1.0f, 1.0f),  
-            32.0f,
+            SpecularColor,  
+            Shininess,
         };
 
         lighting += EvaluateShading(Data);
-
     }
 #else
     

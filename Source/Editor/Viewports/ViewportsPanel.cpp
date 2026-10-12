@@ -323,7 +323,7 @@ void FViewportsPanel::OnRender()
 					ImGui::EndCombo();
 				}
 
-				const char* LightLabels[] = {"Unlit", "Lit_Gouraud", "Lit_Lambert", "Lit_Phong"};
+				const char* LightLabels[] = {"Unlit", "Lit_Gouraud", "Lit_Lambert", "Lit_Phong", "Normal"};
 
 				const uint32 CurrentLightMode = static_cast<uint32>(ViewportAdapter->GetViewLightMode(ViewIndex));
 				ImGui::SameLine();

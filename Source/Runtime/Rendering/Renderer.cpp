@@ -600,8 +600,10 @@ void FRenderer::BindMaterial(UMaterial* material, ID3D11DeviceContext* Context, 
 		{
 			continue;
 		}
+		FRenderCommand::BindShaderResource(i, material->Textures[i], EShaderBindFlagBits::Vertex, Context);
 		FRenderCommand::BindShaderResource(i, material->Textures[i], EShaderBindFlagBits::Pixel, Context);
 	}
+	FRenderCommand::BindSamplerState(0, material->SamplerState, EShaderBindFlagBits::Vertex, Context);
 	FRenderCommand::BindSamplerState(0, material->SamplerState, EShaderBindFlagBits::Pixel, Context);
 	if (material->ParamBuffer)
 	{

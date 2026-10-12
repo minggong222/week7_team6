@@ -25,6 +25,7 @@ enum class ELightingModel : uint8
 	Gouraud,
 	Lambert,
 	Phong,
+	Normal,
 	Count
 };
 
@@ -72,7 +73,10 @@ private:
 
 	TMap<uint32, TUniquePtr<FPipelineState>> PipelineStateMap;
 
-	inline static const FLightingMacros LightingMacros[3] =
-		{"LIGHTING_MODEL_GOURAUD", ELightingModel::Gouraud, "LIGHTING_MODEL_LAMBERT", ELightingModel::Lambert, "LIGHTING_MODEL_PHONG", ELightingModel::Phong};
+	inline static const FLightingMacros LightingMacros[4] =
+		{"LIGHTING_MODEL_GOURAUD", ELightingModel::Gouraud,
+		"LIGHTING_MODEL_LAMBERT", ELightingModel::Lambert,
+		"LIGHTING_MODEL_PHONG", ELightingModel::Phong,
+		"NormalMap", ELightingModel::Normal};
 
 }; 

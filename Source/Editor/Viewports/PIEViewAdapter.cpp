@@ -409,6 +409,28 @@ FVector FPIEViewAdapter::GetEngineCameraForward(int32 ViewIndex) const
 	return NormalizedOrZero(CameraForward(ViewCamera.Transform.Rotation));
 }
 
+void FPIEViewAdapter::SetViewLightMode(int32 Index, ELightingModel Value)
+{
+	(void)Index;
+	ViewLightMode = Value;
+}
+ELightingModel FPIEViewAdapter::GetViewLightMode(int32 Index) const
+{
+	(void)Index;
+	return ViewLightMode;
+}
+
+void FPIEViewAdapter::SetViewWireframe(int32 Index, bool Value)
+{
+	(void)Index;
+	ViewWireframe = Value;
+}
+bool FPIEViewAdapter::IsViewWireframe(int32 Index) const
+{
+	(void)Index;
+	return ViewWireframe;
+}
+
 FMatrix FPIEViewAdapter::BuildEngineBillboardMatrix(int32 ViewIndex, const FVector& WorldPosition, float Width, float Height) const
 {
 	if (ViewCamera.Projection.Mode == ECameraProjectionMode::Orthographic)
