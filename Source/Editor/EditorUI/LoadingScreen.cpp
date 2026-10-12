@@ -123,15 +123,15 @@ void FLoadingScreen::Draw()
 
 	if (ImGui::Begin("##LoadingScreen", nullptr, WindowFlags))
 	{
-		ImGui::PushFont(nullptr, 20.0f);
+		ImGui::PushFont(nullptr, 24.0f);
 
 		const float ViewportWidth = Viewport->WorkSize.x;
 		const float ViewportHeight = Viewport->WorkSize.y;
 
-		const float SpriteWidth = 256.0f;
-		const float SpriteHeight = 256.0f;
-		const float BarWidth = 480.0f;
-		const float BarHeight = 16.0f;
+		const float SpriteWidth = 600.0f;
+		const float SpriteHeight = 600.0f;
+		const float BarWidth = 720.0f;
+		const float BarHeight = 32.0f;
 
 		// 중앙 배치를 위한 세로 위치 계산
 		const float TextHeight = ImGui::GetTextLineHeight();
@@ -164,14 +164,6 @@ void FLoadingScreen::Draw()
 		}
 
 		CursorY += SpriteHeight + 20.0f;
-
-		// 타이틀 텍스트
-		const char* TitleText = "H I T O R I   E N G I N E";
-		const ImVec2 TitleSize = ImGui::CalcTextSize(TitleText);
-		ImGui::SetCursorPos(ImVec2((ViewportWidth - TitleSize.x) * 0.5f, CursorY));
-		ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.65f, 1.0f), "%s", TitleText);
-
-		CursorY += TitleSize.y + 16.0f;
 
 		// 프로그레스 바
 		const float BarX = (ViewportWidth - BarWidth) * 0.5f;

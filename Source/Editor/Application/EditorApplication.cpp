@@ -93,8 +93,8 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	FWindowContext MainWindowCtx;
 	LOG(Info, "Create Main Window...");
 	MainWindowCtx.Window = MakeUnique<FWindowsWindow>();
-	const int32 ScreenWidth = 1600;
-	const int32 ScreenHeight = 900;
+	const int32 ScreenWidth = 1920;
+	const int32 ScreenHeight = 1080;
 
 	if (!MainWindowCtx.Window->Create(hInstance, ScreenWidth, ScreenHeight, L"Hitori Engine", false))
 	{
