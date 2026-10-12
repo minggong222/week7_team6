@@ -726,6 +726,11 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			Itr->DrawDebug(LineBatcher.get());
 		}
 		
+		for (TObjectIterator<UPointLightComponent> Itr; Itr; ++Itr)
+		{
+			Itr->DrawDebug(LineBatcher.get());
+		}
+
 		LineBatcher->OnRender(ViewProjection);
 		if (Outline && Outline->GetTarget() && OutlineRenderer && CurrentWorld == Outline->GetTarget()->GetOwner()->GetWorld())
 		{
