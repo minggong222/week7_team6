@@ -646,7 +646,8 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 		if (bDrawPrimitives)
 		{
 			const bool bWireframe = MultipleViewportsAdapter.IsViewWireframe(ViewIndex);
-			Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe);
+			const ELightingModel LightingModel = MultipleViewportsAdapter.GetViewLightMode(ViewIndex);
+			Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
 		}
 	}
 	// HZB+ 렌더링
@@ -726,6 +727,11 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			Itr->DrawDebug(LineBatcher.get());
 		}
 		
+		for (TObjectIterator<UPointLightComponent> Itr; Itr; ++Itr)
+		{
+			Itr->DrawDebug(LineBatcher.get());
+		}
+
 		LineBatcher->OnRender(ViewProjection);
 		if (Outline && Outline->GetTarget() && OutlineRenderer && CurrentWorld == Outline->GetTarget()->GetOwner()->GetWorld())
 		{
@@ -803,7 +809,8 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	if (bDrawPrimitives)
 	{
 		const bool bWireframe = false;
-		Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe);
+		const ELightingModel LightingModel = MultipleViewportsAdapter.GetViewLightMode(MultipleViewportsAdapter.GetEditorViewIndex());
+		Renderer->RenderOpaque(RenderPackets, ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
 	}
 
 	PIEViewAdapter.PostRenderOpaque(0, ViewRenderingInfo.DepthSteincil.Texture);

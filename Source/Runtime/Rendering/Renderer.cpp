@@ -208,7 +208,13 @@ void FRenderer::BindLightingResources(ID3D11DeviceContext* Context)
 }
 
 // TArray 기반 불투명 메시 지연 컨텍스트 병렬 렌더링
-void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene, bool bWireframe)
+void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
+	const FMatrix& ViewProjection,
+	const FVector& CameraPosition,
+	const FViewportSettings& ViewportSettings,
+	const FScene& Scene,
+	bool bWireframe,
+	ELightingModel LightingModel)
 {
 	FStatScope SubmitScope(StatIds::RenderSubmit());
 	FBatchStats BatchStats;
@@ -343,7 +349,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 			if (LastMaterial != RenderPacket.material)
 			{
 				const bool bPSOChanged = LastPSO != RenderPacket.material->PSOType;
-				BindMaterial(RenderPacket.material, nullptr, bPSOChanged, bWireframe);
+				BindMaterial(RenderPacket.material, nullptr, bPSOChanged, bWireframe, LightingModel);
 				LastMaterial = RenderPacket.material;
 				LastPSO = RenderPacket.material->PSOType;
 			}
@@ -480,7 +486,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets, const FMatrix& Vi
 				if (LastMaterial != RenderPacket.material)
 				{
 					const bool bPSOChanged = LastPSO != RenderPacket.material->PSOType;
-					BindMaterial(RenderPacket.material, Context, bPSOChanged, bWireframe);
+					BindMaterial(RenderPacket.material, Context, bPSOChanged, bWireframe, LightingModel);
 					LastMaterial = RenderPacket.material;
 					LastPSO = RenderPacket.material->PSOType;
 				}
@@ -578,14 +584,14 @@ void FRenderer::DrawPackets(uint32 Begin, uint32 End, const FMatrix& ViewProject
 }
 
 // 머티리얼 바인딩
-void FRenderer::BindMaterial(UMaterial* material, ID3D11DeviceContext* Context, const bool bBindPipelineState, const bool bWireframe)
+void FRenderer::BindMaterial(UMaterial* material, ID3D11DeviceContext* Context, const bool bBindPipelineState, const bool bWireframe, ELightingModel LightModel)
 {
 	if (bBindPipelineState)
 	{
 		const EPSOType EffectivePSO = (bWireframe && (material->PSOType == EPSOType::StaticMesh_Opaque || material->PSOType == EPSOType::StaticMesh_Wireframe))
 			? EPSOType::StaticMesh_Wireframe
 			: material->PSOType;
-		FRenderCommand::BindPipelineState(FRenderResourceManager::GetPSO(EffectivePSO), Context);
+		FRenderCommand::BindPipelineState(FRenderResourceManager::GetPSO(EffectivePSO, LightModel), Context);
 	}
 	for (int i = 0; i < material->Textures.size(); i++)
 	{

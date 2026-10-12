@@ -6,6 +6,7 @@
 #include "Math/Ray.h"
 #include "Math/Matrix.h"
 #include "Rendering/RenderPacket.h"
+#include "Rendering/RenderResourceManager.h"
 
 #include "Containers/Map.h"
 #include "Containers/Array.h"
@@ -111,6 +112,19 @@ class FMultipleViewportsAdapter : public IViewportAdapter
 	bool IsViewWireframe(int32 Index) const override
 	{
 		return Index >= 0 && Index < 4 && ViewWireframe[Index];
+	}
+	void SetViewLightMode(int32 Index, ELightingModel Value) override
+	{
+		if (Index >= 0 && Index < 4)
+			ViewLightMode[Index] = Value;
+	}
+	ELightingModel GetViewLightMode(int32 Index) const override
+	{
+		if (Index >= 0 && Index < 4)
+		{
+			return ViewLightMode[Index];
+		}
+		return (ELightingModel::Unlit);
 	}
 	bool IsViewSceneDepthMode(int32 Index) const override
 	{
@@ -239,6 +253,7 @@ class FMultipleViewportsAdapter : public IViewportAdapter
 	int32 ActiveViewIndex = InvalidViewIndex;
 	int32 EditorViewIndex = 0;
 	bool ViewWireframe[4]{}; // showflag 비트마스크로 분기필요
+	ELightingModel ViewLightMode[4]{};
 	bool ViewSceneDepthMode[4]{}; // showflag 비트마스크로 분기필요
     FPickHit LastPick{};
 

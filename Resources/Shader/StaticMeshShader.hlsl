@@ -45,12 +45,6 @@ cbuffer LightCountConstants : register(b4)
 #define	    LightType_Ambient 4 // 언리얼엔 미존재
 #define	    LightType_MAX 5
 
-
-// 테스트
-#define	    LIGHTING_MODEL_GOURAUD 1
-#define	    LIGHTING_MODEL_LAMBERT 0
-#define	    LIGHTING_MODEL_PHONG 0
-
 #define TileCountX 8
 #define TileCountY 8
 
@@ -281,7 +275,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     
 #if LIGHTING_MODEL_GOURAUD
     lighting += input.lighting;
-#else
+#elif LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
     float3 ViewDirection = normalize(CameraPosition - input.WorldPosition);
 
     uint X = (uint) floor((input.position.x / ViewSizeX) * TileCountX);
@@ -296,6 +290,8 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
         FLightData Light = Lights[LightIndex];
         lighting += EvaluatePhongShading(Light, input.WorldPosition, input.normal, ViewDirection, albedo.rgb, SpecularColor, Shininess);
     }
+#else
+    
 #endif
 
 

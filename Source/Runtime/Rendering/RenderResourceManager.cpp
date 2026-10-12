@@ -65,9 +65,25 @@ void FRenderResourceManager::ScanShaders(const fs::path& ShaderRoot)
 			continue;
 		if (Entry.path().filename().string().find("CS.hlsl") != std::string::npos)
 			continue;
+		if (Entry.path().filename().string().find("StaticMeshShader.hlsl") != std::string::npos)
+		{
+			CompileLightingVariants(Entry.path().generic_string());
+		}
 
 		FString Path = Entry.path().generic_string();
-		LoadOrCompileShader(Path);
+		LoadOrCompileShader(Path, nullptr);
+	}
+}
+
+void FRenderResourceManager::CompileLightingVariants(FString Path)
+{
+	D3D_SHADER_MACRO defines[2] = {};
+	defines[1] = {nullptr, nullptr};
+
+	for (FLightingMacros LightingMacro : LightingMacros)
+	{
+		defines[0] = {LightingMacro.Macro, "1"};
+		LoadOrCompileShader(Path, defines);
 	}
 }
 
@@ -91,26 +107,40 @@ FShaderProgram* FRenderResourceManager::GetShaderProgram(const FString& InPath)
 	return nullptr;
 }
 
-FPipelineState* FRenderResourceManager::GetPSO(const EPSOType& Intype)
+uint32 FRenderResourceManager::MakePSOKey(EPSOType Type, ELightingModel Model)
+{
+	return (static_cast<uint32>(Type) * static_cast<uint32>(ELightingModel::Count) + static_cast<uint32>(Model));
+}
+
+FPipelineState* FRenderResourceManager::GetPSO(const EPSOType& Intype, const ELightingModel InModel)
 {
 	// Get().을 붙여서 싱글톤 인스턴스의 멤버에 접근
-	if (auto* Found = Get().PipelineStateMap.Find(Intype))
+	if (auto* Found = Get().PipelineStateMap.Find(MakePSOKey(Intype, InModel)))
+	{
+		return Found->get();
+	}
+	if (auto* Found = Get().PipelineStateMap.Find(MakePSOKey(Intype, ELightingModel::Unlit)))
 	{
 		return Found->get();
 	}
 	return nullptr;
 }
 
-void FRenderResourceManager::LoadOrCompileShader(const FString& Path)
+void FRenderResourceManager::LoadOrCompileShader(const FString& Path, D3D_SHADER_MACRO* defines)
 {
 	FString VSCSOPath;
 	FString PSCSOPath;
-	FShaderByteCode VSCode = FRenderUtil::GetOrCompile(Path, "mainVS", EShaderType::Vertex, VSCSOPath);
-	FShaderByteCode PSCode = FRenderUtil::GetOrCompile(Path, "mainPS", EShaderType::Pixel, PSCSOPath);
+	FShaderByteCode VSCode = FRenderUtil::GetOrCompile(Path, defines, "mainVS", EShaderType::Vertex, VSCSOPath);
+	FShaderByteCode PSCode = FRenderUtil::GetOrCompile(Path, defines, "mainPS", EShaderType::Pixel, PSCSOPath);
+	FString MacroPath = Path;
+	if (defines)
+	{
+		MacroPath = defines[0].Name != nullptr ? MacroPath = Path + "#" + defines[0].Name : Path;
+	}
 
 	if (!VSCode.IsValid() || !PSCode.IsValid())
 	{
-		LOG(Error, "[Shader] compile failed: {}", Path);
+		LOG(Error, "[Shader] compile failed: {}", MacroPath);
 		return;
 	}
 
@@ -119,7 +149,7 @@ void FRenderResourceManager::LoadOrCompileShader(const FString& Path)
 
 	if (!Vs || !Vs->IsValid() || !Ps || !Ps->IsValid())
 	{
-		LOG(Error, "[Shader] device create failed: {}", Path);
+		LOG(Error, "[Shader] device create failed: {}", MacroPath);
 		return;
 	}
 
@@ -128,9 +158,10 @@ void FRenderResourceManager::LoadOrCompileShader(const FString& Path)
 
 	VertexShaderMap[VSCSOPath] = std::move(Vs);
 	PixelShaderMap[PSCSOPath] = std::move(Ps);
-	ShaderProgramMap[Path] = MakeUnique<FShaderProgram>(VsRaw, PsRaw);
 
-	LOG(Info, "[Shader] loaded: {}", Path);
+	ShaderProgramMap[MacroPath] = MakeUnique<FShaderProgram>(VsRaw, PsRaw);
+
+	LOG(Info, "[Shader] loaded: {}", MacroPath);
 }
 
 void FRenderResourceManager::InitPipelineStates()
@@ -139,8 +170,20 @@ void FRenderResourceManager::InitPipelineStates()
 	for (size_t i = 0; i < static_cast<size_t>(EPSOType::Count); ++i)
 	{
 		const auto& Entry = PipelineTable[i];
-		const EPSOType Type = static_cast<EPSOType>(i);
-		PipelineStateMap[Type] = MakeUnique<FPipelineState>(GetShaderProgram(Entry.ShaderPath), Entry.Topology, Entry.RasterizerState, Entry.BlendState, Entry.DepthStencilState);
+		const EPSOType Type = Entry.Type;
+		PipelineStateMap[MakePSOKey(Type, ELightingModel::Unlit)] =
+			MakeUnique<FPipelineState>(GetShaderProgram(Entry.ShaderPath), Entry.Topology, Entry.RasterizerState, Entry.BlendState, Entry.DepthStencilState);
+
+		if (Entry.Type == EPSOType::StaticMesh_Opaque || Entry.Type == EPSOType::StaticMesh_Translucent || Entry.Type == EPSOType::StaticMesh_Wireframe)
+		{
+			for (const FLightingMacros LightingMacro : LightingMacros)
+			{
+				FString MacroPath = FString(Entry.ShaderPath) + "#" + LightingMacro.Macro;
+
+				PipelineStateMap[MakePSOKey(Type, LightingMacro.LightingModel)] =
+					MakeUnique<FPipelineState>(GetShaderProgram(MacroPath), Entry.Topology, Entry.RasterizerState, Entry.BlendState, Entry.DepthStencilState);
+			}
+		}
 	}
 	LOG(Info, "Pipeline States Initialized from Table.");
 }
