@@ -114,7 +114,7 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 
 	LOG(Info, "Initialize ImGui...");
 	ImGuiRenderer = MakeUnique<FImGuiRenderer>();
-	if (!ImGuiRenderer->Init(MainWindow->GetHandle(), RenderDevice->GetDevice(), RenderDevice->GetContext()))
+	if (!ImGuiRenderer->Init(MainWindow, RenderDevice->GetDevice(), RenderDevice->GetContext()))
 	{
 		LOG(Error, "Failed To Initialize ImGui!");
 	}

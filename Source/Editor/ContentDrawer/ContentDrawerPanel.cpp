@@ -32,7 +32,7 @@ void FContentDrawerPanel::OnRender()
 		return;
 	}
 
-	float treeViewWidth = 200.0f;
+	float treeViewWidth = 320.0f;
 	ImGui::BeginChild("FolderTreeView", ImVec2(treeViewWidth, 0));
 	{
 		// 루트 노드
@@ -54,8 +54,8 @@ void FContentDrawerPanel::OnRender()
 	ImGui::BeginChild("AssetGridView");
 	{
 		// 그리드 레이아웃 계산
-		float padding = 16.0f;
-		float thumbnailSize = 80.0f;
+		float padding = 32.0f;
+		float thumbnailSize = 160.0f;
 		float cellSize = thumbnailSize + padding;
 		float panelWidth = ImGui::GetContentRegionAvail().x;
 		int ColumnCount = static_cast<int>(panelWidth / cellSize);

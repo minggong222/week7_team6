@@ -50,14 +50,14 @@ void FSettingsPanel::OnRender()
 
 	ImGui::Checkbox("Show Grid", &Settings.bDrawGrid);
 
-	ImGui::SameLine(140.0f);
+	ImGui::SameLine();
 	ImGui::TextDisabled("Spacing");
 	ImGui::SameLine();
 
 	if (!Settings.bDrawGrid)
 		ImGui::BeginDisabled();
 
-	ImGui::SetNextItemWidth(100.0f);
+	ImGui::SetNextItemWidth(160.0f);
 	ImGui::SliderInt("##GridSpacing", &Settings.GridSpacing, 1, 100);
 
 	if (!Settings.bDrawGrid)

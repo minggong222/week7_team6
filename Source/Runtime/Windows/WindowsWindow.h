@@ -24,6 +24,8 @@ public:
 	uint32 GetWidth() const { return Width; }
 	uint32 GetHeight() const { return Height; }
 
+	float GetScale() const;
+
 	LRESULT HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 	bool CheckResized();
