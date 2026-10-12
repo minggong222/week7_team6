@@ -298,6 +298,9 @@ void UAssetManager::CreateDefaultMeshes()
 	FStaticMeshRenderData* ConeData = FGeometryGenerator::GetMeshData("Cone");
 	RegisterAsset("Cone", CreateStaticMesh(ConeData));
 
+	FStaticMeshRenderData* LowSphereData = FGeometryGenerator::GetMeshData("LowSphere");
+	RegisterAsset("LowSphere", CreateStaticMesh(LowSphereData));
+
 	FStaticMeshRenderData* SphereData = FGeometryGenerator::GetMeshData("Sphere");
 	RegisterAsset("Sphere", CreateStaticMesh(SphereData));
 
@@ -312,6 +315,9 @@ void UAssetManager::CreateDefaultMeshes()
 
 	FStaticMeshRenderData* RingMeshData = FGeometryGenerator::GetMeshData("Ring");
 	RegisterAsset("Ring", CreateStaticMesh(RingMeshData));
+
+	FStaticMeshRenderData* TorusMeshData = FGeometryGenerator::GetMeshData("Torus");
+	RegisterAsset("Torus", CreateStaticMesh(TorusMeshData));
 
 	FStaticMeshRenderData* ScaleBarData = FGeometryGenerator::GetMeshData("ScaleBar");
 	RegisterAsset("ScaleBar", CreateStaticMesh(ScaleBarData));
