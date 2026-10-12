@@ -605,6 +605,7 @@ void FRenderer::BindMaterial(UMaterial* material, ID3D11DeviceContext* Context, 
 	FRenderCommand::BindSamplerState(0, material->SamplerState, EShaderBindFlagBits::Pixel, Context);
 	if (material->ParamBuffer)
 	{
+		FRenderCommand::BindConstantBuffer(1, material->ParamBuffer.get(), EShaderBindFlagBits::Vertex, Context);
 		FRenderCommand::BindConstantBuffer(1, material->ParamBuffer.get(), EShaderBindFlagBits::Pixel, Context);
 	}
 }
