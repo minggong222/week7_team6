@@ -74,7 +74,7 @@ struct FStaticMaterial
 {
 	FString Name;
 	FVector4 BaseColor = FVector4(1, 1, 1, 1);
-	FVector SpecularColor = FVector(0.0f, 0.0f, 0.0f);
+	FVector SpecularColor = FVector(1.0f, 1.0f, 1.0f);
 	FVector EmissiveColor = FVector(0.0f, 0.0f, 0.0f);
 	float Shininess = 32.0f;
 	float NormalScale = 1.0f;
