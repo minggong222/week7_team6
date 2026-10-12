@@ -1,3 +1,78 @@
+/******************************
+전처리기 매크로
+*******************************/
+
+#define     LightType_Directional 0
+#define	    LightType_Point 1
+#define	    LightType_Spot 2
+#define	    LightType_Rect 3
+#define	    LightType_Ambient 4 // 언리얼엔 미존재
+#define	    LightType_MAX 5
+
+#define TileCountX 8
+#define TileCountY 8
+
+/******************************
+Struct
+*******************************/
+
+struct FLightData
+{
+    uint LightType;
+    float3 Position;
+    
+    float3 Direction;
+    float Intensity;
+    
+    float3 Color;
+    float Radius;
+    
+    float LightFalloffExponent;
+    float InnerConeCos;
+    float OuterConeCos;
+    float padding;
+};
+
+struct FTileLightHeader
+{
+    uint Offset;
+    uint Count;
+};
+
+struct FShadingData
+{
+    FLightData Light;
+    float3 CameraPosition;
+    float3 VertexWorldPosition;
+    float3 VertexNormalPosition;
+    float3 Albedo;
+    float3 MaterialSpecularColor;
+    float MaterialShininess;
+};
+
+struct VS_INPUT
+{
+    float3 p : POSITION; // Input position from vertex buffer
+    float3 n : NORMAL;
+    float4 c : COLOR; // Input color from vertex buffer
+    float2 t : TEXCOORD;
+};
+
+struct PS_INPUT
+{
+    float4 position : SV_POSITION;
+    float3 normal : NORMAL;
+    float4 color : COLOR;
+    float2 uv : TEXCOORD0;
+    float3 lighting : COLOR1; // For Lambert Shading
+    
+    float3 WorldPosition : TEXCOORD1;
+};
+
+/******************************
+Constant Buffer
+*******************************/
+
 cbuffer constants : register(b0)
 {
     row_major matrix World;
@@ -38,137 +113,53 @@ cbuffer LightCountConstants : register(b4)
     uint LightCount;
     uint3 LightCountPadding;
 }
-#define     LightType_Directional 0
-#define	    LightType_Point 1
-#define	    LightType_Spot 2
-#define	    LightType_Rect 3
-#define	    LightType_Ambient 4 // 언리얼엔 미존재
-#define	    LightType_MAX 5
 
-#define TileCountX 8
-#define TileCountY 8
+/******************************
+[SRV] StructuredBuffer
+*******************************/
 
-struct FLightData
-{
-    uint LightType;
-    float3 Position;
-    
-    //Spot Light
-    float3 Direction;
-    float Intensity;
-    
-    float3 Color;
-    float Radius;
-    
-    float LightFalloffExponent;
-    float InnerConeCos;
-    float OuterConeCos;
-    float padding;
-};
+StructuredBuffer<FLightData> Lights : register(t4);
+StructuredBuffer<FTileLightHeader> TileHeaders : register(t5);
+StructuredBuffer<uint> TileLightIndices : register(t6);
 
-struct FTileLightHeader
-{
-    uint Offset;
-    uint Count;
-};
+/******************************
+[SRV] Texture & Texture Sampler
+*******************************/
+
+Texture2D g_txColor : register(t0);
+// t1~t3은 대응하는 bHas*Map이 1일 때만 유효하다. 0이면 이전 머티리얼의 텍스처가 남아 있다
+Texture2D g_txNormal : register(t1);
+Texture2D g_txSpecular : register(t2); // SpecularColor에 곱한다
+Texture2D g_txEmissive : register(t3); // EmissiveColor에 곱한다
+
+SamplerState g_Sample : register(s0);
+
+/******************************
+Constant Variable
+*******************************/
 
 // 조명 방향 및 색상
 static const float3 LightDir = normalize(float3(0.5f, 0.5f, -1.0f));
 static const float3 LightColor = float3(0.f, 0.f, 0.f);
 static const float3 AmbientColor = float3(0.25f, 0.25f, 0.25f);
 
-StructuredBuffer<FLightData> Lights : register(t4);
-StructuredBuffer<FTileLightHeader> TileHeaders : register(t5);
-StructuredBuffer<uint> TileLightIndices : register(t6);
+static const float EPSLION = 1e-4f;
 
-float3 EvaluateDirectionalLight(FLightData Light, float3 WorldPosition, float3 WorldNormal, float3 ViewDirection, float3 Albedo, float3 SpecularColor, float Shininess)
-{
-#if LIGHTING_MODEL_GOURAUD
-    // Gouraud 쉐이딩. 라이팅을 Vertex Shader 단계에서 처리하고 래스터라이저로 보간하여 적용.
-
-    // 큰 흐름은 Blinn-phong 쉐이딩과 동일
-    
-    // 1. 필요한 변수들 계산
-    float3 V = ViewDirection;
-    float3 N = WorldNormal;
-    float3 L = normalize(-Light.Direction);
-    float3 H = normalize(V + L);
-    float NdotL = saturate(dot(N, L));
-    float NdotH = saturate(dot(N, H));
-
-    // 2. Ambient, Diffuse, Specular
-    float3 Dir_Ambient = AmbientColor;
-    float3 Dir_Diffuse = float3(1.0f, 1.0f, 1.0f) * NdotL;
-    float3 Dir_Specular = SpecularColor * pow(NdotH, Shininess);
-
-    // 3. 모두 적용
-    float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse + Dir_Specular;
-    return Dir_Lighting * Light.Color * Light.Intensity;
-
-#elif LIGHTING_MODEL_LAMBERT 
-    // Lambert 쉐이딩. 라이팅을 Pixel Shader 단계에서 처리. Diffuse Only.
-    
-    // 1. 필요한 변수들 계산
-    float3 N = WorldNormal;
-    float3 L = normalize(-Light.Direction);
-    float NdotL = saturate(dot(N, L));
-
-    // 2. Diffuse
-    float3 Dir_Diffuse = float3(1.0f, 1.0f, 1.0f) * NdotL;
-
-    // 3. 모두 적용
-    float3 Dir_Lighting = Dir_Diffuse;
-    return Dir_Lighting * Light.Color * Light.Intensity;
-
-#elif LIGHTING_MODEL_PHONG
-    // Blinn-phong 쉐이딩. 라이팅을 Pixel Shader 단계에서 처리. Ambient, Diffuse, Specular.
-    
-    // 1. 필요한 변수들 계산
-    float3 V = ViewDirection;
-    float3 N = WorldNormal;
-    float3 L = normalize(-Light.Direction);
-    float3 H = normalize(V + L);
-    float NdotL = saturate(dot(N, L));
-    float NdotH = saturate(dot(N, H));
-
-    // 2. Ambient, Diffuse, Specular
-    float3 Dir_Ambient = AmbientColor;
-    float3 Dir_Diffuse = float3(1.0f, 1.0f, 1.0f) * NdotL;
-    float3 Dir_Specular = SpecularColor * pow(NdotH, Shininess);
-
-    // 3. 모두 적용
-    float3 Dir_Lighting = Dir_Ambient + Dir_Diffuse + Dir_Specular;
-    return Dir_Lighting * Light.Color * Light.Intensity;
-
-#endif 
-
-    // Unknown light type
-    return float3(0.0f, 0.0f, 0.0f);
-}
-
-struct FShadingData
-{
-  FLightData Light;
-  float3 CameraPosition;
-  float3 VertexWorldPosition;
-  float3 VertexNormalPosition;
-  float3 Albedo;
-  float3 MaterialSpecularColor;
-  float MaterialShininess;
-};
-
+/******************************
+Utility Function
+*******************************/
 
 // 빛의 벡터를 모두 계산.
 // out 키워드는 참조 변수 비슷한 키워드
 void CalculateLightVector(
-  FShadingData Data,
-  out float3 V,
-  out float3 N,
-  out float3 L,
-  out float3 H,
-  out float NdotL,
-  out float NdotH,
-  out float Distance
+    FShadingData Data,
+    out float3 V,
+    out float3 N,
+    out float3 L,
+    out float3 H,
+    out float NdotL,
+    out float NdotH,
+    out float Distance
 )
 {
     FLightData Light = Data.Light;
@@ -176,16 +167,27 @@ void CalculateLightVector(
     V = normalize(Data.CameraPosition - Data.VertexWorldPosition);
     N = normalize(Data.VertexNormalPosition);
 
-    if (Light.LightType == LightType_Point)
+    if (
+        Light.LightType == LightType_Point ||
+        Light.LightType == LightType_Spot
+    )
     {
         float3 LightVector = Light.Position - Data.VertexWorldPosition;
         Distance = length(LightVector); 
-        if (Distance < 1e-4f)
+
+        if (Light.LightType == LightType_Point)
         {
-            // PointLight에서 Vertex와 Light의 Position이 겹치면 Divide by zero가 발생하게 되므로 직접 지정
-            L = float3(0.0f, 0.0f, 0.0f);
+            if (Distance < EPSLION)
+            {
+                // PointLight에서 Vertex와 Light의 Position이 겹치면 Divide by zero가 발생하게 되므로 직접 지정
+                L = float3(0.0f, 0.0f, 0.0f);
+            }
+            else
+            {
+                L = normalize(LightVector);
+            }
         }
-        else
+        else if (Light.LightType == LightType_Spot)
         {
             L = normalize(LightVector);
         }
@@ -222,21 +224,31 @@ float3 EvaluateShading(FShadingData Data)
 #if LIGHTING_MODEL_LAMBERT
     float3 Specular = float3(0.0f, 0.0f, 0.0f);
 #else
+
     float3 SpecularFactor = pow(NdotH, Data.MaterialShininess);
     float3 Specular = Data.MaterialSpecularColor * SpecularFactor;
+
+    // Cone 범위를 벗어나면 Spotlight 적용 안되게..?
+    if (NdotL <= 0.0f)
+    {
+        Specular = float3(0.0f, 0.0f, 0.0f);
+    }
 #endif
 
     float Attenuation = 1.0f;
     float ConeFactor = 1.0f;
 
-    if (Light.LightType != LightType_Directional)
+    if (
+        Light.LightType == LightType_Point &&
+        Light.LightType == LightType_Spot
+    )
     {
         // Point, Spotlight
 
         // 거리 감쇠
         Attenuation = pow(1 - Distance / Light.Radius, Light.LightFalloffExponent);
         //float Attenuation = pow(max(1 - pow(Distance / Light.Radius, 4), 0), 2) / (pow(Distance, 2) + 1);
-        //float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * Distance, 1e-4f);
+        //float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * Distance, EPSLION);
 
         if (Light.LightType == LightType_Spot)
         {
@@ -244,7 +256,7 @@ float3 EvaluateShading(FShadingData Data)
 
             // 원뿔 감쇠
             float CosTheta = dot(normalize(Light.Direction), -L);
-            ConeFactor = saturate((CosTheta - Light.OuterConeCos) / max(Light.InnerConeCos - Light.OuterConeCos, 0.0001f));
+            ConeFactor = saturate((CosTheta - Light.OuterConeCos) / max(Light.InnerConeCos - Light.OuterConeCos, EPSLION));
             
             // 부드러운 경계
             ConeFactor = ConeFactor * ConeFactor * (3.0f - 2.0f * ConeFactor);
@@ -254,31 +266,9 @@ float3 EvaluateShading(FShadingData Data)
     return Light.Color * Light.Intensity * Attenuation * ConeFactor * (Diffuse + Specular);
 }
 
-struct VS_INPUT
-{
-    float3 p : POSITION; // Input position from vertex buffer
-    float3 n : NORMAL;
-    float4 c : COLOR; // Input color from vertex buffer
-    float2 t : TEXCOORD;
-};
-
-struct PS_INPUT
-{
-    float4 position : SV_POSITION;
-    float3 normal : NORMAL;
-    float4 color : COLOR;
-    float2 uv : TEXCOORD0;
-    float3 lighting : COLOR1; // For Lambert Shading
-    
-    float3 WorldPosition : TEXCOORD1;
-};
-
-Texture2D g_txColor : register(t0);
-// t1~t3은 대응하는 bHas*Map이 1일 때만 유효하다. 0이면 이전 머티리얼의 텍스처가 남아 있다
-Texture2D g_txNormal : register(t1);
-Texture2D g_txSpecular : register(t2); // SpecularColor에 곱한다
-Texture2D g_txEmissive : register(t3); // EmissiveColor에 곱한다
-SamplerState g_Sample : register(s0);
+/******************************
+Vertex, Pixel Shader
+*******************************/
 
 float3 GetBumpNormal(PS_INPUT input, float3 baseNormal, float2 uv)
 {
