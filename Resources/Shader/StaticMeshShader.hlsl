@@ -146,71 +146,112 @@ float3 EvaluateDirectionalLight(FLightData Light, float3 WorldPosition, float3 W
     return float3(0.0f, 0.0f, 0.0f);
 }
 
-
-
-//Spot Light
-float3 EvaluatePhongShading(FLightData Light, float3 WorldPosition, float3 WorldNormal, float3 ViewDirection, float3 Albedo, float3 SpecularColor, float Shininess)
+struct FShadingData
 {
-    float3 ToLight = Light.Position - WorldPosition;
-    float DistanceToLight = length(ToLight);
+  FLightData Light;
+  float3 CameraPosition;
+  float3 VertexWorldPosition;
+  float3 VertexNormalPosition;
+  float3 Albedo;
+  float3 MaterialSpecularColor;
+  float MaterialShininess;
+};
+
+
+// 빛의 벡터를 모두 계산.
+// out 키워드는 참조 변수 비슷한 키워드
+void CalculateLightVector(
+  FShadingData Data,
+  out float3 V,
+  out float3 N,
+  out float3 L,
+  out float3 H,
+  out float NdotL,
+  out float NdotH,
+  out float Distance
+)
+{
+    FLightData Light = Data.Light;
     
-    if (Light.LightType != LightType_Directional)
+    V = normalize(Data.CameraPosition - Data.VertexWorldPosition);
+    N = normalize(Data.VertexNormalPosition);
+
+    if (Light.LightType == LightType_Point)
     {
-        if (DistanceToLight >= Light.Radius)
-            return float3(0, 0, 0);
-    }
-    
-    float3 L;
-    if (Light.LightType == LightType_Directional)
-    {
-        L = normalize(-Light.Direction);
+        float3 LightVector = Light.Position - Data.VertexWorldPosition;
+        Distance = length(LightVector); 
+        if (Distance < 1e-4f)
+        {
+            // PointLight에서 Vertex와 Light의 Position이 겹치면 Divide by zero가 발생하게 되므로 직접 지정
+            L = float3(0.0f, 0.0f, 0.0f);
+        }
+        else
+        {
+            L = normalize(LightVector);
+        }
     }
     else
     {
-        L = ToLight / max(DistanceToLight, 0.0001f);
+        Distance = -1.0f;
+        L = normalize(-Light.Direction);
     }
-    float3 N = normalize(WorldNormal);
-    float3 V = normalize(ViewDirection);
+
+    H = normalize(V + L);
+
+    NdotL = saturate(dot(N, L));
+    NdotH = saturate(dot(N, H));
+
+}
+
+float3 EvaluateShading(FShadingData Data)
+{
+    FLightData Light = Data.Light;
+
+    float3 V, N, L, H;
+    float NdotL, NdotH, Distance;
+    CalculateLightVector(Data, V, N, L, H, NdotL, NdotH, Distance);
+
+    // 빛의 영향을 받지 않으면 검정색으로 return
+    if (Distance > Light.Radius)
+    {
+        return float3(0.0f, 0.0f, 0.0f);
+    }
     
-    //Blinn-Phong Diffuse
-    float NdotL = max(dot(N, L), 0.0f);
-    float3 Diffuse = Albedo * NdotL;
-    
-    //Blinn-Phong Specular
+    float3 Diffuse = Data.Albedo * NdotL;
+
+#if LIGHTING_MODEL_LAMBERT
     float3 Specular = float3(0.0f, 0.0f, 0.0f);
-    
-    if (NdotL > 0.0f)
+#else
+    float3 SpecularFactor = pow(NdotH, Data.MaterialShininess);
+    float3 Specular = Data.MaterialSpecularColor * SpecularFactor;
+#endif
+
+    float Attenuation = 1.0f;
+    float ConeFactor = 1.0f;
+
+    if (Light.LightType != LightType_Directional)
     {
-        float3 H = normalize(L + V);
-        
-        float SpeculaFactor = pow(max(dot(N, H), 0.0f), Shininess);
-        
-        Specular = SpecularColor * SpeculaFactor;
+        // Point, Spotlight
+
+        // 거리 감쇠
+        Attenuation = pow(1 - Distance / Light.Radius, Light.LightFalloffExponent);
+        //float Attenuation = pow(max(1 - pow(Distance / Light.Radius, 4), 0), 2) / (pow(Distance, 2) + 1);
+        //float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * Distance, 1e-4f);
+
+        if (Light.LightType == LightType_Spot)
+        {
+            // Spotlight
+
+            // 원뿔 감쇠
+            float CosTheta = dot(normalize(Light.Direction), -L);
+            ConeFactor = saturate((CosTheta - Light.OuterConeCos) / max(Light.InnerConeCos - Light.OuterConeCos, 0.0001f));
+            
+            // 부드러운 경계
+            ConeFactor = ConeFactor * ConeFactor * (3.0f - 2.0f * ConeFactor);
+        }
     }
-    
-    if (Light.LightType == LightType_Directional)
-    {
-        return Light.Color * Light.Intensity * (Diffuse + Specular);
-    }
-    
-    // 거리 감쇠
-    float Attenuation = pow(1 - DistanceToLight / Light.Radius, Light.LightFalloffExponent);
-    //float Attenuation = pow(max(1 - pow(DistanceToLight / Light.Radius, 4), 0), 2) / (pow(DistanceToLight, 2) + 1);
-    //float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * DistanceToLight, 1e-4f);
-    if (Light.LightType == LightType_Spot)
-    {
-        //원뿔 감쇠
-        float CosTheta = dot(normalize(Light.Direction), -L);
-    
-        float ConeFactor = saturate((CosTheta - Light.OuterConeCos) / max(Light.InnerConeCos - Light.OuterConeCos, 0.0001f));
-    
-        //부드러운 경계
-        ConeFactor = ConeFactor * ConeFactor * (3.0f - 2.0f * ConeFactor);
-        return Light.Color * Light.Intensity * Attenuation * ConeFactor * (Diffuse + Specular);
-    }
-        
-    return Light.Color * Light.Intensity * Attenuation * (Diffuse + Specular);
-    
+
+    return Light.Color * Light.Intensity * Attenuation * ConeFactor * (Diffuse + Specular);
 }
 
 struct VS_INPUT
@@ -253,12 +294,24 @@ PS_INPUT mainVS(VS_INPUT input)
     output.WorldPosition = worldPos.xyz;
 
 #if LIGHTING_MODEL_GOURAUD
-    float3 ViewDirection = normalize(CameraPosition - output.WorldPosition);
+    output.lighting = AmbientColor;
 
     for (uint i = 0; i < LightCount; ++i)
     {
         FLightData Light = Lights[i];
-        output.lighting = float4(EvaluatePhongShading(Light, output.WorldPosition, output.normal, ViewDirection, float3(1.0f, 1.0f, 1.0f), SpecularColor, Shininess), 1.0f);
+
+        FShadingData Data = 
+        {
+            Light,
+            CameraPosition,
+            output.WorldPosition,
+            output.normal,
+            float3(1.0f, 1.0f, 1.0f),  
+            float3(1.0f, 1.0f, 1.0f),  
+            32.0f,
+        };
+
+        output.lighting += EvaluateShading(Data);
     }
 #endif
 
@@ -270,14 +323,11 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float4 texColor = g_txColor.Sample(g_Sample, input.uv + UVOffset);
     float4 albedo = texColor * BaseColor;
 
-    // 보간되면 길이가 틀어지므로 다시 정규화한다
     float3 lighting = AmbientColor;
     
 #if LIGHTING_MODEL_GOURAUD
-    lighting += input.lighting;
+    lighting = input.lighting;
 #elif LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
-    float3 ViewDirection = normalize(CameraPosition - input.WorldPosition);
-
     uint X = (uint) floor((input.position.x / ViewSizeX) * TileCountX);
     uint Y = (uint) floor((input.position.y / ViewSizeY) * TileCountY);
     X = min(X, TileCountX - 1);
@@ -288,14 +338,25 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     {
         uint LightIndex = TileLightIndices[Header.Offset + i];
         FLightData Light = Lights[LightIndex];
-        lighting += EvaluatePhongShading(Light, input.WorldPosition, input.normal, ViewDirection, albedo.rgb, SpecularColor, Shininess);
+
+        FShadingData Data = 
+        {
+            Light,
+            CameraPosition,
+            input.WorldPosition,
+            input.normal,
+            albedo.xyz,  
+            float3(1.0f, 1.0f, 1.0f),  
+            32.0f,
+        };
+
+        lighting += EvaluateShading(Data);
+
     }
 #else
     
 #endif
 
-
-    
     float3 FinalColor = albedo.rgb * lighting;
 
     // Opaque는 알파를 1로 고정한다. 뷰포트 RT를 ImGui가 알파 블렌딩으로 그리므로 알파가 남으면 비쳐 보인다
