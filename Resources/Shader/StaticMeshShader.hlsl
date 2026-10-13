@@ -329,7 +329,11 @@ float3 GetNormalFromMap(PS_INPUT input, float3 baseNormal, float2 uv)
     // 적용하지 않고 선형 데이터로 샘플링해야 한다.
     //
     // 여기서는 Tangent Space Normal Map을 입력으로 가정한다.
+#if LIGHTING_MODEL_GOURAUD
+    float3 normalSample = g_txNormal.SampleLevel(g_Sample, uv, 0);
+#else
     float3 normalSample = g_txNormal.Sample(g_Sample, uv).rgb;
+#endif
 
 
     // ============================================================
@@ -485,7 +489,7 @@ PS_INPUT mainVS(VS_INPUT input)
             Light,
             CameraPosition,
             output.WorldPosition,
-            output.normal,
+            GetNormalFromMap(output, output.normal, output.uv),
             float3(1.0f, 1.0f, 1.0f),  
             float3(1.0f, 1.0f, 1.0f),  
             16.0f,
