@@ -13,7 +13,7 @@
 #include <cmath>
 #include <imgui_internal.h>
 
-constexpr float GRID_WIDTH_IN_FONT_UNITS = 7.5f;
+constexpr float GRID_WIDTH_IN_FONT_UNITS = 5.0f;
 
 namespace
 {
