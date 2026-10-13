@@ -443,10 +443,16 @@ void FMultipleViewportsAdapter::UpdateInput(const float DeltaTime,
   // 바꾼다.
   if (InputState.CapturedViewIndex == InvalidViewIndex &&
       IsViewActive(PointerViewIndex)) {
-    if (FInputSystem::IsMousePressed(EMouseButton::Right))
-      InputState = BeginCapture(InputState, PointerViewIndex);
-    else if (FInputSystem::IsMousePressed(EMouseButton::Left))
-      ActiveViewIndex = PointerViewIndex;
+	  if (FInputSystem::IsMousePressed(EMouseButton::Right))
+	  {
+		  InputState = BeginCapture(InputState, PointerViewIndex);
+		  ClickViewIndex = PointerViewIndex;
+	  }
+	  else if (FInputSystem::IsMousePressed(EMouseButton::Left))
+	  {
+		  ActiveViewIndex = PointerViewIndex;
+		  ClickViewIndex = PointerViewIndex;
+	  }
   }
   ActiveViewIndex = DetermineActiveView(
       InputState, LocalMousePosition, ViewRects);
