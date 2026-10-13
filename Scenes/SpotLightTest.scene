@@ -6,7 +6,7 @@
             "Properties": null,
             "Components": [
                 {
-                    "Name": "UPrimitiveComponent_167",
+                    "Name": "UPrimitiveComponent_153",
                     "Class": "UStaticMeshComponent",
                     "Properties": {
                         "StaticMesh": "Models/NormalMapTestCube.obj",
@@ -29,7 +29,41 @@
                                 100.0
                             ]
                         },
-                        "OverrideMaterials": []
+                        "OverrideMaterials": [
+                            null,
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.20000000298023224,
+                                    0.20000000298023224,
+                                    0.20000000298023224
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": true,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "Assets/Models/FlatNormalMap.png",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
                     }
                 }
             ]
@@ -39,7 +73,7 @@
             "Properties": null,
             "Components": [
                 {
-                    "Name": "UPrimitiveComponent_173",
+                    "Name": "UPrimitiveComponent_155",
                     "Class": "UStaticMeshComponent",
                     "Properties": {
                         "StaticMesh": "Models/NormalMapTestCube.obj",
@@ -62,7 +96,41 @@
                                 1.0
                             ]
                         },
-                        "OverrideMaterials": []
+                        "OverrideMaterials": [
+                            null,
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.20000000298023224,
+                                    0.20000000298023224,
+                                    0.20000000298023224
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": true,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "Assets/Models/FlatNormalMap.png",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
                     }
                 }
             ]
@@ -72,7 +140,7 @@
             "Properties": null,
             "Components": [
                 {
-                    "Name": "UPrimitiveComponent_175",
+                    "Name": "UPrimitiveComponent_157",
                     "Class": "UStaticMeshComponent",
                     "Properties": {
                         "StaticMesh": "Models/NormalMapTestCube2.obj",
@@ -95,7 +163,41 @@
                                 1.0
                             ]
                         },
-                        "OverrideMaterials": []
+                        "OverrideMaterials": [
+                            null,
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.20000000298023224,
+                                    0.20000000298023224,
+                                    0.20000000298023224
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": true,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "Assets/Models/FlatNormalMap.png",
+                                    "Assets/Models/Test2NormalMap.png"
+                                ]
+                            }
+                        ]
                     }
                 }
             ]
@@ -105,7 +207,7 @@
             "Properties": null,
             "Components": [
                 {
-                    "Name": "UPrimitiveComponent_177",
+                    "Name": "UPrimitiveComponent_159",
                     "Class": "UStaticMeshComponent",
                     "Properties": {
                         "StaticMesh": "Models/NormalMapTestCube.obj",
@@ -128,7 +230,41 @@
                                 100.0
                             ]
                         },
-                        "OverrideMaterials": []
+                        "OverrideMaterials": [
+                            null,
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.20000000298023224,
+                                    0.20000000298023224,
+                                    0.20000000298023224
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": true,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "Assets/Models/FlatNormalMap.png",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
                     }
                 }
             ]
@@ -138,7 +274,7 @@
             "Properties": null,
             "Components": [
                 {
-                    "Name": "UPrimitiveComponent_179",
+                    "Name": "UPrimitiveComponent_161",
                     "Class": "UStaticMeshComponent",
                     "Properties": {
                         "StaticMesh": "Models/NormalMapTestCube2.obj",
@@ -161,7 +297,41 @@
                                 100.0
                             ]
                         },
-                        "OverrideMaterials": []
+                        "OverrideMaterials": [
+                            null,
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.20000000298023224,
+                                    0.20000000298023224,
+                                    0.20000000298023224
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": true,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "Assets/Models/FlatNormalMap.png",
+                                    "Assets/Models/Test2NormalMap.png"
+                                ]
+                            }
+                        ]
                     }
                 }
             ]
@@ -171,7 +341,7 @@
             "Properties": null,
             "Components": [
                 {
-                    "Name": "UPrimitiveComponent_181",
+                    "Name": "UPrimitiveComponent_163",
                     "Class": "UStaticMeshComponent",
                     "Properties": {
                         "StaticMesh": "Models/NormalMapTestCube2.obj",
@@ -194,7 +364,41 @@
                                 100.0
                             ]
                         },
-                        "OverrideMaterials": []
+                        "OverrideMaterials": [
+                            null,
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.20000000298023224,
+                                    0.20000000298023224,
+                                    0.20000000298023224
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": true,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "Assets/Models/FlatNormalMap.png",
+                                    "Assets/Models/Test2NormalMap.png"
+                                ]
+                            }
+                        ]
                     }
                 }
             ]
@@ -204,7 +408,40 @@
             "Properties": null,
             "Components": [
                 {
-                    "Name": "UBillboardComponent_183",
+                    "Name": "UPointLightComponent_165",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 100.0,
+                        "LightFalloffExponent": 1.0,
+                        "Intensity": 1.0,
+                        "LightColor": [
+                            1.0,
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_166",
                     "Class": "UBillboardComponent",
                     "Properties": {
                         "Material": {
@@ -228,6 +465,7 @@
                             ],
                             "Shininess": 32.0,
                             "NormalScale": 1.0,
+                            "FlipNormal": false,
                             "UVScrollSpeed": [
                                 0.0,
                                 0.0
@@ -245,39 +483,6 @@
                                 -9.846795082092285,
                                 -0.082996666431427,
                                 23.90138053894043
-                            ],
-                            "Rotation": [
-                                0.0,
-                                0.0,
-                                0.0
-                            ],
-                            "Scale": [
-                                1.0,
-                                1.0,
-                                1.0
-                            ]
-                        }
-                    }
-                },
-                {
-                    "Name": "UPointLightComponent_185",
-                    "Class": "UPointLightComponent",
-                    "Properties": {
-                        "AttenuationRadius": 100.0,
-                        "LightFalloffExponent": 1.0,
-                        "Intensity": 1.0,
-                        "LightColor": [
-                            1.0,
-                            1.0,
-                            1.0,
-                            1.0
-                        ],
-                        "bVisible": true,
-                        "Transform": {
-                            "Location": [
-                                0.0,
-                                0.0,
-                                0.0
                             ],
                             "Rotation": [
                                 0.0,

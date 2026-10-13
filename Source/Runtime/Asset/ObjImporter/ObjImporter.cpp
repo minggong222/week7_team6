@@ -590,60 +590,8 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 		Cooked.Sections.Add(std::move(CookedSection));
 	}
 
-		// Tangent (변환이 끝난 정점 기준)
-	{
-		TArray<FVector> Tangents;
-		TArray<FVector> Bitangents;
-		Tangents.SetNum(Cooked.Vertices.Num());
-		Bitangents.SetNum(Cooked.Vertices.Num());
-
-		for (int32 i = 0; i + 2 < static_cast<int32>(Cooked.Indices.Num()); i += 3)
-		{
-			const uint32 I0 = Cooked.Indices[i];
-			const uint32 I1 = Cooked.Indices[i + 1];
-			const uint32 I2 = Cooked.Indices[i + 2];
-
-			const FVector Edge1 = Cooked.Vertices[I1].Position - Cooked.Vertices[I0].Position;
-			const FVector Edge2 = Cooked.Vertices[I2].Position - Cooked.Vertices[I0].Position;
-			const FVector2D DeltaUV1 = Cooked.Vertices[I1].UV - Cooked.Vertices[I0].UV;
-			const FVector2D DeltaUV2 = Cooked.Vertices[I2].UV - Cooked.Vertices[I0].UV;
-
-			const float determinantTerm0 = DeltaUV1.X * DeltaUV2.Y;
-			const float determinantTerm1 = DeltaUV1.Y * DeltaUV2.X;
-			const float determinant = determinantTerm0 - determinantTerm1;
-			const float determinantScale = std::abs(determinantTerm0) + std::abs(determinantTerm1);
-
-			if (determinantScale < 1e-20f || std::abs(determinant) < determinantScale * 1e-6f)
-				continue;
-
-			const float inverseDeterminant = 1.0f / determinant;
-			const FVector T = (Edge1 * DeltaUV2.Y - Edge2 * DeltaUV1.Y) * inverseDeterminant;
-			const FVector B = (Edge2 * DeltaUV1.X - Edge1 * DeltaUV2.X) * inverseDeterminant;
-
-			Tangents[I0] += T;
-			Tangents[I1] += T;
-			Tangents[I2] += T;
-			Bitangents[I0] += B;
-			Bitangents[I1] += B;
-			Bitangents[I2] += B;
-		}
-
-		for (int32 v = 0; v < Cooked.Vertices.Num(); ++v)
-		{
-			const FVector N = Cooked.Vertices[v].Normal.Normalized();
-			FVector T = Tangents[v] - N * N.Dot(Tangents[v]);
-
-			if (T.Length() < 1e-6f)
-			{
-				Cooked.Vertices[v].Tangent = FVector4(0.0f, 0.0f, 0.0f, 1.0f);
-				continue;
-			}
-			T = T.Normalized();
-
-			const float handedness = N.Cross(T).Dot(Bitangents[v]) < 0.0f ? -1.0f : 1.0f;
-			Cooked.Vertices[v].Tangent = FVector4(T.X, T.Y, T.Z, handedness);
-		}
-	}
+	// Tangent (변환이 끝난 정점 기준)
+	Cooked.CalculateTangents();
 
 	// AABB (변환이 끝난 Position 기준)
 	if (!Cooked.Vertices.IsEmpty())

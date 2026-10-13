@@ -101,6 +101,7 @@ TUniquePtr<FStaticMeshRenderData> FGeometryGenerator::CreatePlane(float Size, co
 	PlaneMeshData->Indices.Add(3);
 	PlaneMeshData->Indices.Add(2);
 
+	CalculateNormals(PlaneMeshData->Vertices, PlaneMeshData->Indices);
 	PlaneMeshData->AABB = CalculateAABB(PlaneMeshData->Vertices);
 
 	return PlaneMeshData;
@@ -505,4 +506,10 @@ void FGeometryGenerator::CreateDefaultMeshDatas()
 	MeshDataMap["Torus"] = CreateRing(1.0f, 0.25f, 32, 16, FVector4(1.0f, 0.0f, 0.0f, 1.0f));
 	MeshDataMap["ScaleBar"] = CreateScaleBar(0.04f, 1.0f, 0.15f, 20, FVector4(1.0f, 0.0f, 0.0f, 1.0f));
 	MeshDataMap["GizmoSphere"] = CreateSphere(0.1f, 100, 50, FVector4(1.0f, 1.0f, 1.0f, 1.0f));
+
+	// 노멀맵용 Tangent. Append로 합성하는 도형이 있으므로 노멀이 확정된 뒤 한 번에 계산한다
+	for (auto& [Name, MeshData] : MeshDataMap)
+	{
+		MeshData->CalculateTangents();
+	}
 }

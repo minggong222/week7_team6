@@ -175,6 +175,9 @@ struct FStaticMeshRenderData
 			V.Position += Offset;
 	}
 
+	// Position, UV, Normal로 Tangent(xyz)와 handedness(w)를 채운다. UV가 퇴화한 정점은 xyz가 0으로 남는다.
+	void CalculateTangents();
+
 	// Vertices, Indices, Sections, MaterialSlots가 서로 맞는지 검사한다.
 	// 실패하면 이유를 OutError에 담는다. 로그는 호출한 쪽이 경로와 함께 남긴다.
 	bool Validate(FString& OutError) const;
