@@ -15,6 +15,13 @@ public:
 	void Begin();
 	void End();
 	void Shutdown();
-private:
+	
+	void CreateStyle();
+	void UpdateScale(float Scale);
+
+  private:
+	float LastScale = 1.0f;
+
+	ImGuiStyle OriginalStyle;
 
 };

@@ -261,6 +261,9 @@ void FEditorApplication::Run()
 		if (!BeginFrame(DeltaTime))
 			break;
 
+		// DPI 처리
+		ImGuiRenderer->UpdateScale(MainWindow->GetScale());
+
 		// 로딩 화면 처리
 		if (LoadingScreen && !LoadingScreen->IsFinished())
 		{

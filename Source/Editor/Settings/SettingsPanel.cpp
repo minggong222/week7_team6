@@ -32,6 +32,9 @@ void FSettingsPanel::OnRender()
 {
 	ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Settings");
+	const float FontSize = ImGui::GetFontSize();
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
 
 	//////////////////////////////////////////////////////////
 
@@ -57,7 +60,7 @@ void FSettingsPanel::OnRender()
 	if (!Settings.bDrawGrid)
 		ImGui::BeginDisabled();
 
-	ImGui::SetNextItemWidth(160.0f);
+	ImGui::SetNextItemWidth(FontSize * 8.0f);
 	ImGui::SliderInt("##GridSpacing", &Settings.GridSpacing, 1, 100);
 
 	if (!Settings.bDrawGrid)
@@ -100,25 +103,25 @@ void FSettingsPanel::OnRender()
 			const int32 TileSizes[]{4, 8, 16};
 			int32 TileSelection = Settings.SoftwareOcclusionTileSize == 4 ? 0 : Settings.SoftwareOcclusionTileSize == 16 ? 2 : 1;
 
-			ImGui::SetNextItemWidth(140.0f);
+			ImGui::SetNextItemWidth(FontSize * 7.0f);
 			if (ImGui::Combo("Tile Size", &TileSelection, "4 px\0 8 px\0 16 px\0"))
 				Settings.SoftwareOcclusionTileSize = TileSizes[TileSelection];
 
 			ImGui::SameLine();
 
-			ImGui::SetNextItemWidth(140.0f);
+			ImGui::SetNextItemWidth(FontSize * 7.0f);
 			ImGui::SliderInt("Min Tiles", &Settings.SoftwareOcclusionMinimumTiles, 1, 64);
 
 			ImGui::Spacing();
 			ImGui::TextDisabled("Budget");
 
-			ImGui::SetNextItemWidth(220.0f);
+			ImGui::SetNextItemWidth(FontSize * 11.0f);
 			ImGui::SliderInt("Triangle Budget", &Settings.SoftwareOcclusionTriangleBudget, 10000, 1000000);
 
-			ImGui::SetNextItemWidth(220.0f);
+			ImGui::SetNextItemWidth(FontSize * 11.0f);
 			ImGui::SliderFloat("CPU Budget", &Settings.SoftwareOcclusionCpuBudgetMs, 0.0f, 16.0f, "%.1f ms");
 
-			ImGui::SetNextItemWidth(220.0f);
+			ImGui::SetNextItemWidth(FontSize * 11.0f);
 			ImGui::SliderFloat("Box Distance", &Settings.SoftwareOcclusionBoxDistanceThreshold, 0.0f, 100.0f, "%.1f m");
 
 			ImGui::Checkbox("Debug Bounds", &Settings.bSoftwareOcclusionDebugBounds);
@@ -144,22 +147,22 @@ void FSettingsPanel::OnRender()
 	//////////////////////////////////////////////////////////
 
 	// 에디터 수치 설정 (Values)
-	ImGui::Dummy(ImVec2(0.0f, SectionGap));
+	ImGui::Dummy(ImVec2(0.0f, SectionGap * Scale));
 	ImGui::SeparatorText("Editor Settings");
 
 	UCameraComponent* CamCom = World->GetMainCamera()->GetCameraComponent();
 
-	ImGui::SetNextItemWidth(200.0f);
+	ImGui::SetNextItemWidth(FontSize * 10.0f);
 	ImGui::SliderFloat("Camera Rotate Sensitivity", &Settings.MouseSensitivity, 0.01f, 1.0f, "%.2f");
 	CamCom->SetMouseSensitivity(Settings.MouseSensitivity);
 
-	ImGui::SetNextItemWidth(200.0f);
+	ImGui::SetNextItemWidth(FontSize * 10.0f);
 	ImGui::SliderFloat("Camera Speed", &Settings.CameraSpeed, 0.1f, 10.0f, "%.2f");
 	CamCom->SetMoveSpeed(Settings.CameraSpeed);
 
 	//////////////////////////////////////////////////////////
 
-	ImGui::Dummy(ImVec2(0.0f, SectionGap));
+	ImGui::Dummy(ImVec2(0.0f, SectionGap * Scale));
 	ImGui::SeparatorText("Load Settings");
 
 	if (ImGui::Button("Load Settings"))

@@ -16,17 +16,22 @@
 #include "UObject/UObjectIterator.h"
 #include "GameFramework/Actor.h"
 
-constexpr float GRID_WIDTH = 280.0f;
+constexpr float GRID_WIDTH_IN_FONT_UNITS = 7.0f;
 
 namespace
 {
+float GetGridWidth()
+{
+	return ImGui::GetFontSize() * GRID_WIDTH_IN_FONT_UNITS;
+}
+
 bool DrawAxisControl(const FString& _label, float& _value, float _speed, float _minValue, float _maxValue, float _resetValue, FVector4 _color)
 {
 	bool isValueChanged = false;
 
-	float lineHeight = GImGui->Font->LegacySize + GImGui->Style.FramePadding.y * 8.0f;
+	float lineHeight = ImGui::GetFrameHeight();
 	ImVec4 color(_color.X, _color.Y, _color.Z, _color.W);
-	ImVec2 buttonSize = {lineHeight + 2.0f, lineHeight};
+	ImVec2 buttonSize = {lineHeight, lineHeight};
 
 	// 각 버튼의 색상 설정
 	ImGui::PushStyleColor(ImGuiCol_Button, color);
@@ -73,7 +78,9 @@ bool DrawVector3Controller(const FString& _label, float* _values, float _resetVa
 		ImGui::TableSetColumnIndex(1);
 		// [컨트롤러 UI 코드] // 오른쪽 열: 컨트롤러
 		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{2, 0});
+		const ImGuiStyle& Style = ImGui::GetStyle();
+		const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{2.0f * Scale, 0.0f});
 		ImGui::PushFont(boldFont);
 
 		isVectorChanged |= DrawAxisControl("X", _values[0], 0.1f, 0.0f, 0.0f, _resetValue, {0.8f, 0.1f, 0.1f, 1.0f});
@@ -107,7 +114,7 @@ bool DrawVector3Controller(const FString& _label, float* _values, float _resetVa
 bool DrawRotatorAsXYZ(const FString& _label, FRotator& _rotator)
 {
 	float Euler[3] = {_rotator.Roll, _rotator.Pitch, _rotator.Yaw};
-	const bool isChanged = DrawVector3Controller(_label, Euler, 0.0f, GRID_WIDTH);
+	const bool isChanged = DrawVector3Controller(_label, Euler, 0.0f, GetGridWidth());
 	if (isChanged)
 	{
 		_rotator.Roll = Euler[0];
@@ -119,7 +126,8 @@ bool DrawRotatorAsXYZ(const FString& _label, FRotator& _rotator)
 
 void DrawTextureSlot(UMaterial** MaterialPtr, int32 SlotIndex)
 {
-	const float ThumbnailSize = 128.0f;
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float ThumbnailSize = 128.0f * Style.FontScaleDpi * Style.FontScaleMain;
 
 	UMaterial* Material = *MaterialPtr;
 	UTexture2D* Texture = nullptr;
@@ -395,7 +403,8 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 		return;
 	}
 
-	const float ThumbnailSize = 64.0f;
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float ThumbnailSize = 64.0f * Style.FontScaleDpi * Style.FontScaleMain;
 
 	// 메쉬 내의 매터리얼 별 Slot 순회
 	for (int32 Slot = 0; Slot < NumSlots; ++Slot)
@@ -432,7 +441,7 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 		{
 			if (ImGui::BeginTable("MaterialProperties", 2))
 			{
-				ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GRID_WIDTH);
+				ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GetGridWidth());
 				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 				ImGui::TableNextRow();
@@ -622,7 +631,7 @@ void DrawProperty(UObject* Object, const FProperty& Property)
 	const FString Label = "##" + Property.Name;
 
 	ImGui::Text(Property.Name.c_str());
-	ImGui::SameLine(GRID_WIDTH);
+	ImGui::SameLine(GetGridWidth());
 	ImGui::SetNextItemWidth(-1.0f);
 
 	switch (Property.Type)
@@ -692,9 +701,9 @@ void DrawProperty(UObject* Object, const FProperty& Property)
 		FTransform* Value = static_cast<FTransform*>(ValuePtr);
 
 		ImGui::NewLine();
-		bool bChanged = DrawVector3Controller("Location", Value->Location.V, 0.0f, GRID_WIDTH);
+		bool bChanged = DrawVector3Controller("Location", Value->Location.V, 0.0f, GetGridWidth());
 		bChanged |= DrawRotatorAsXYZ("Rotation", Value->Rotation);
-		bChanged |= DrawVector3Controller("Scale", Value->Scale.V, 1.0f, GRID_WIDTH);
+		bChanged |= DrawVector3Controller("Scale", Value->Scale.V, 1.0f, GetGridWidth());
 		if (bChanged)
 		{
 			if (USceneComponent* SceneComponent = Cast<USceneComponent>(Object))
@@ -780,7 +789,7 @@ void FDetailsPanel::OnRender()
 	if (Target && Target->IsA<AActor>())
 	{
 		AActor* TargetActor = Cast<AActor>(Target);
-		const float SpawnButtonWidth = 120.0f;
+		const float SpawnButtonWidth = ImGui::CalcTextSize("Add").x + ImGui::GetStyle().FramePadding.x * 2.0f;
 		const float Available = ImGui::GetContentRegionAvail().x;
 		const float ItemSpacing = ImGui::GetStyle().ItemSpacing.x;
 		const float ComboWidth = Available - SpawnButtonWidth - ItemSpacing * 2.0f;

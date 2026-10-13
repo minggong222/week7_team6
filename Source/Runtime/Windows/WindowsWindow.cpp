@@ -251,6 +251,7 @@ LRESULT FWindowsWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 		bIsInSizeMove = false;
 		break;
 	}
+
 	default:
 		return DefWindowProc(hWnd, msg, wParam, lParam);
 	}
