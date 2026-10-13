@@ -74,13 +74,13 @@ namespace
 				Section.IndexCount,
 				reinterpret_cast<const float*>(&Mesh->MeshData.Vertices[0].Position),
 				VertexCount,
-				sizeof(FVertexPNCT),
+				sizeof(FVertexPNCTT),
 				1.05f
 			);
 		}
 
 		// 버텍스 버퍼 재정렬 및 인덱스 리매핑
-		TArray<FVertexPNCT> OptimizedVertices;
+		TArray<FVertexPNCTT> OptimizedVertices;
 		OptimizedVertices.SetNum(VertexCount);
 		meshopt_optimizeVertexFetch(
 			OptimizedVertices.GetData(),
@@ -88,7 +88,7 @@ namespace
 			IndexCount,
 			Mesh->MeshData.Vertices.GetData(),
 			VertexCount,
-			sizeof(FVertexPNCT)
+			sizeof(FVertexPNCTT)
 		);
 		Mesh->MeshData.Vertices = std::move(OptimizedVertices);
 
@@ -98,8 +98,8 @@ namespace
 		// Vertex/Index GPU 업로드
 		Mesh->VertexBuffer = FRenderCommand::CreateStaticVertexBuffer(
 			Mesh->MeshData.Vertices.GetData(),
-			sizeof(FVertexPNCT) * static_cast<uint32>(Mesh->MeshData.Vertices.size()),
-			sizeof(FVertexPNCT)
+			sizeof(FVertexPNCTT) * static_cast<uint32>(Mesh->MeshData.Vertices.size()),
+			sizeof(FVertexPNCTT)
 		);
 		Mesh->IndexBuffer = FRenderCommand::CreateStaticIndexBuffer(
 			Mesh->MeshData.Indices.GetData(),
@@ -347,7 +347,7 @@ void UAssetManager::CreateDefaultMeshes()
 		Indices,
 		ARRAYSIZE(Indices));
 
-	FVertexPNCT Vertex{};
+	FVertexPNCTT Vertex{};
 	Vertex.Position = FVector(0.0f, -0.5f, 0.5f);
 	Mesh->MeshData.Vertices.Add(Vertex);
 	Vertex.Position = FVector(0.0f, 0.5f, 0.5f);

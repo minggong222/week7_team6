@@ -24,11 +24,12 @@ struct FParticleVertex
 	FVector2D UV;
 };
 
-// StaticMesh용 PNCT Vertex: Position / Normal / Color / Texcoord(UV)
-struct FVertexPNCT
+// StaticMesh용 PNCTT Vertex: Position / Normal / Color / Texcoord(UV) / Tangent
+struct FVertexPNCTT
 {
 	FVector Position = FVector();
 	FVector Normal = FVector();
 	FVector4 Color = FVector4();
 	FVector2D UV = FVector2D();
+	FVector4 Tangent = FVector4();
 };

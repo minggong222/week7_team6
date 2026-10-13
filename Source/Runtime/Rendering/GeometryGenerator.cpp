@@ -3,7 +3,7 @@
 
 namespace
 {
-	FBox CalculateAABB(const TArray<FVertexPNCT>& Vertices)
+	FBox CalculateAABB(const TArray<FVertexPNCTT>& Vertices)
 	{
 		FBox Box;
 
@@ -17,7 +17,7 @@ namespace
 
 		FVector Min{ FLT_MAX, FLT_MAX, FLT_MAX };
 		FVector Max{ -FLT_MAX, -FLT_MAX, -FLT_MAX };
-		for (const FVertexPNCT& Vertex : Vertices)
+		for (const FVertexPNCTT& Vertex : Vertices)
 		{
 			Min.X = fmin(Min.X, Vertex.Position.X);
 			Min.Y = fmin(Min.Y, Vertex.Position.Y);
@@ -33,9 +33,9 @@ namespace
 		return Box;
 	}
 
-	void CalculateNormals(TArray<FVertexPNCT>& Vertices, const TArray<uint32>& Indices)
+	void CalculateNormals(TArray<FVertexPNCTT>& Vertices, const TArray<uint32>& Indices)
 	{
-		for (FVertexPNCT& Vertex : Vertices)
+		for (FVertexPNCTT& Vertex : Vertices)
 		{
 			Vertex.Normal = FVector();
 		}
@@ -59,7 +59,7 @@ namespace
 			Vertices[IndexC].Normal += Normal;
 		}
 
-		for (FVertexPNCT& Vertex : Vertices)
+		for (FVertexPNCTT& Vertex : Vertices)
 		{
 			Vertex.Normal = Vertex.Normal.Normalized();
 		}
@@ -110,7 +110,7 @@ TUniquePtr<FStaticMeshRenderData> FGeometryGenerator::CreateCone(float Radius, f
 {
 	TUniquePtr<FStaticMeshRenderData> ConeMeshData = MakeUnique<FStaticMeshRenderData>();
 
-	TArray<FVertexPNCT>& Vertices = ConeMeshData->Vertices;
+	TArray<FVertexPNCTT>& Vertices = ConeMeshData->Vertices;
 	TArray<uint32>& Indices = ConeMeshData->Indices;
 
 	// 꼭짓점
@@ -179,7 +179,7 @@ TUniquePtr<FStaticMeshRenderData> FGeometryGenerator::CreateCylinder(float Radiu
 {
 	TUniquePtr<FStaticMeshRenderData> CylinderMeshData = MakeUnique<FStaticMeshRenderData>();
 
-	TArray<FVertexPNCT>& Vertices = CylinderMeshData->Vertices;
+	TArray<FVertexPNCTT>& Vertices = CylinderMeshData->Vertices;
 	TArray<uint32>& Indices = CylinderMeshData->Indices;
 
 	float Slice = PI * 2.0f / Segments;
@@ -316,7 +316,7 @@ TUniquePtr<FStaticMeshRenderData> FGeometryGenerator::CreateRing(float Radius, f
 			float cosPhi = cosf(phi);
 			float sinPhi = sinf(phi);
 
-			FVertexPNCT Vertex;
+			FVertexPNCTT Vertex;
 			Vertex.Position.X = (Radius + TubeRadius * cosPhi) * cosTheta;
 			Vertex.Position.Y = (Radius + TubeRadius * cosPhi) * sinTheta;
 			Vertex.Position.Z = TubeRadius * sinPhi;
@@ -406,7 +406,7 @@ TUniquePtr<FStaticMeshRenderData> FGeometryGenerator::CreateCube(float Size, con
 	{
 		for (int j = 0; j < 4; j++)
 		{
-			FVertexPNCT Vertex;
+			FVertexPNCTT Vertex;
 			Vertex.Position = positions[cubeFaces[i][j]];
 			Vertex.UV = faceUVs[j];
 			Vertex.Color = FVector4(colors[i], 1.0f);
@@ -447,7 +447,7 @@ TUniquePtr<FStaticMeshRenderData> FGeometryGenerator::CreateSphere(float Radius,
 		{
 			const float Theta = j * SliceStep;
 
-			FVertexPNCT Vertex;
+			FVertexPNCTT Vertex;
 			Vertex.Position = FVector(r * cosf(Theta), r * sinf(Theta), z);
 			Vertex.UV = FVector2D(float(j) / NumSlices, float(i) / NumStacks);
 			Vertex.Color = Color;

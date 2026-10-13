@@ -8,18 +8,18 @@
 #include <fstream>
 #include <type_traits>
 
-static_assert(sizeof(FVertexPNCT) == 48);
+static_assert(sizeof(FVertexPNCTT) == 64);
 
 // 바이트 그대로 읽고 쓰는 타입. 복사 생성자를 직접 작성하면 여기서 컴파일 오류가 난다
-static_assert(std::is_trivially_copyable_v<FVertexPNCT>);
+static_assert(std::is_trivially_copyable_v<FVertexPNCTT>);
 static_assert(std::is_trivially_copyable_v<FStaticMeshSection>);
 static_assert(std::is_trivially_copyable_v<FVector4>);
 static_assert(std::is_trivially_copyable_v<FBox>);
 
 namespace
 {
-// FStaticMeshRenderData, FVertexPNCT, FStaticMeshSection, FStaticMaterial 구조가 바뀌면 올린다
-constexpr uint32 BakeVersion = 7;
+// FStaticMeshRenderData, FVertexPNCTT, FStaticMeshSection, FStaticMaterial 구조가 바뀌면 올린다
+constexpr uint32 BakeVersion = 8;
 
 struct FBakeHeader
 {
@@ -113,7 +113,7 @@ TUniquePtr<FStaticMeshRenderData> FStaticMeshBake::ReadBaked(const FString& BinP
 
 	OutPreset = Header.AxisPreset;
 
-	if (!ReadArray<FVertexPNCT>(In, Data->Vertices, MaxCount) || !ReadArray<uint32>(In, Data->Indices, MaxCount) || !ReadArray<FStaticMeshSection>(In, Data->Sections, MaxCount))
+	if (!ReadArray<FVertexPNCTT>(In, Data->Vertices, MaxCount) || !ReadArray<uint32>(In, Data->Indices, MaxCount) || !ReadArray<FStaticMeshSection>(In, Data->Sections, MaxCount))
 	{
 		return nullptr;
 	}
@@ -169,7 +169,7 @@ void FStaticMeshBake::WriteBaked(const FString& BinPath, const FStaticMeshRender
 
 	WritePod<FBakeHeader>(Out, Header);
 
-	WriteArray<FVertexPNCT>(Out, Data.Vertices);
+	WriteArray<FVertexPNCTT>(Out, Data.Vertices);
 	WriteArray<uint32>(Out, Data.Indices);
 	WriteArray<FStaticMeshSection>(Out, Data.Sections);
 

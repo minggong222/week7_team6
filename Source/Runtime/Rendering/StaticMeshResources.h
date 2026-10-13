@@ -132,7 +132,7 @@ struct FPickingTriangle
 
 struct FStaticMeshRenderData
 {
-	TArray<FVertexPNCT> Vertices;
+	TArray<FVertexPNCTT> Vertices;
 	TArray<uint32> Indices;
 	TArray<FStaticMeshSection> Sections;
 	TArray<FStaticMaterial> MaterialSlots;

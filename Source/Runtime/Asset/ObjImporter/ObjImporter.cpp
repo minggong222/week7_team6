@@ -447,6 +447,60 @@ bool FObjImporter::ParseObj(const FString& Path, FObjInfo& Out)
 		LOG(Error, "[OBJ] {}: no faces", Path);
 		return false;
 	}
+	Info.Tangents.SetNum(Info.Normals.Num());
+	Info.Bitangents.SetNum(Info.Normals.Num());
+	for (auto Face : Info.Faces)
+	{
+		FObjIndex p0 = Face.Indexes[0];
+		FObjIndex p1 = Face.Indexes[1];
+		FObjIndex p2 = Face.Indexes[2];
+
+		FVector Edge1 = Info.Positions[p1.PositionIndex] - Info.Positions[p0.PositionIndex];
+		FVector Edge2 = Info.Positions[p2.PositionIndex] - Info.Positions[p0.PositionIndex];
+		FVector2D DeltaUV1 = Info.UVs[p1.UVIndex] - Info.UVs[p0.UVIndex];
+		FVector2D DeltaUV2 = Info.UVs[p2.UVIndex] - Info.UVs[p0.UVIndex];
+
+		float determinantTerm0 = DeltaUV1.X * DeltaUV2.Y;
+		float determinantTerm1 = DeltaUV1.Y * DeltaUV2.X;
+
+		float determinant = determinantTerm0 - determinantTerm1;
+
+		float determinantScale = abs(determinantTerm0) + abs(determinantTerm1);
+
+		if (determinantScale < 1e-20f || abs(determinant) < determinantScale * 1e-6f)
+			continue;
+
+		float inverseDeterminant = 1.0f / determinant;
+
+		FVector T = (Edge1 * DeltaUV2.Y - Edge2 * DeltaUV1.Y) * inverseDeterminant;
+
+		FVector B = (Edge2 * DeltaUV1.X - Edge1 * DeltaUV2.X) * inverseDeterminant;
+
+		Info.Tangents[p0.NormalIndex] += T;
+		Info.Tangents[p1.NormalIndex] += T;
+		Info.Tangents[p2.NormalIndex] += T;
+		Info.Bitangents[p0.NormalIndex] += B;
+		Info.Bitangents[p1.NormalIndex] += B;
+		Info.Bitangents[p2.NormalIndex] += B;
+	}
+
+	for (int v = 0; v < Info.Tangents.Num(); v++)
+	{
+		FVector4 N = Info.Normals[v];
+
+		FVector4 T = Info.Tangents[v] - N * N.Dot(Info.Tangents[v]);
+
+		if (T.Length() < 1e-6f)
+		{
+			Info.Tangents[v] = FVector4(0, 0, 0, 1);
+			continue;
+		}
+		T.Normalized();
+
+		float handedness = N.Cross(T).Dot(Info.Bitangents[v]) < 0.0f ? -1.0f : 1.0f;
+
+		Info.Tangents[v] = FVector4(T.X, T.Y, T.Z, handedness);
+	}
 
 	// 기본 머티리얼
 	FObjMaterialInfo DefaultMaterial;
@@ -552,7 +606,7 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 				Cache[RawIndex] = NewIndex;
 				Corners.Add(static_cast<uint32>(NewIndex));
 
-				FVertexPNCT Vertex;
+				FVertexPNCTT Vertex;
 				Vertex.Position = ToEngine(Raw.Positions[RawIndex.PositionIndex], Preset);
 				if (RawIndex.NormalIndex >= 0)
 				{
@@ -573,6 +627,8 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 					Vertex.UV = Raw.UVs[RawIndex.UVIndex];
 					Vertex.UV.Y = 1.0f - Vertex.UV.Y;
 				}
+
+				Vertex.Tangent = Raw.Tangents[RawIndex.NormalIndex];
 				Cooked.Vertices.Add(std::move(Vertex));
 			}
 
@@ -593,7 +649,7 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 	{
 		FVector Min = Cooked.Vertices[0].Position;
 		FVector Max = Min;
-		for (const FVertexPNCT& Vertex : Cooked.Vertices)
+		for (const FVertexPNCTT& Vertex : Cooked.Vertices)
 		{
 			Min.X = std::min(Min.X, Vertex.Position.X);
 			Min.Y = std::min(Min.Y, Vertex.Position.Y);
