@@ -45,7 +45,13 @@ public:
 		LightData.Intensity = Intensity;
 		FLinearColor Color = GetLightColor();
 		LightData.Color = {Color.R, Color.G, Color.B};
-		Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->GetMaterial(0)->BaseColor = {Color.R, Color.G, Color.B, Color.A};
+		UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+
+		if (PrimComponent)
+		{
+			UMaterial* Material = PrimComponent->GetMaterial(0);
+			Material->BaseColor = {Color.R, Color.G, Color.B, Color.A};
+		}
 		LightData.Radius = GetAttenuationRadius();
 		LightData.InnerConeCos = cosf(GetInnerConeAngle() * PI / 180);
 		LightData.OuterConeCos = cosf(GetOuterConeAngle() * PI / 180);

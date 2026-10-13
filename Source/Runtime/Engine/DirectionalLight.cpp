@@ -2,16 +2,21 @@
 #include "DirectionalLight.h"
 #include "AssetManager.h"
 #include "Rendering/RenderCommand.h"
-#include <Components/DirectionalLightComponent.h>
+#include "Components/DirectionalLightComponent.h"
 
 ADirectionalLight::ADirectionalLight()
 {
 
-	// Root: Billboard
+	// Root: DirectionalLight
+	UDirectionalLightComponent* DirectionalLight = CreateDefaultSubobject<UDirectionalLightComponent>("UDirectionalLightComponent");
+	SetRootComponent(DirectionalLight);
+	SetLightComponent(DirectionalLight);
+
+	// DirectionalLight -> Billboard
 	UBillboardComponent* Billboard = CreateDefaultSubobject<UBillboardComponent>("UBillboardComponent");
 	Billboard->SetIsEditorOnly(true);
 	Billboard->SetIsVisualizationComponent(true);
-	SetRootComponent(Billboard);
+	Billboard->SetupAttachment(DirectionalLight);
 
 	UMaterial* BillboardMat = UMaterial::CreateInstance(UAssetManager::GetAssetByKey<UMaterial>("BillboardMaterial"));
 	BillboardMat->Textures[0] = UAssetManager::GetAssetByKey<UTexture2D>("Assets/S_LightDirectional.png");
@@ -20,18 +25,11 @@ ADirectionalLight::ADirectionalLight()
 
 	SetBillboardComponent(Billboard);
 
-	// Billboard -> DirectionalLight
-	UDirectionalLightComponent* DirectionalLight = CreateDefaultSubobject<UDirectionalLightComponent>("UDirectionalLightComponent");
-	DirectionalLight->SetupAttachment(Billboard);
-	SetLightComponent(DirectionalLight);
-
-	// Billboard -> Arrow
+	// DirectionalLight -> Arrow
 	UArrowComponent* Arrow = CreateDefaultSubobject<UArrowComponent>("UArrowComponent");
 	FRotator Rotation{90.0f, 0.0f, 0.0f};
 	Arrow->SetRelativeRotation(Rotation);
-	Arrow->SetupAttachment(Billboard);
-
-	SetArrowComponent(Arrow);
+	Arrow->SetupAttachment(DirectionalLight);
 }
 
 void ADirectionalLight::DuplicateSubObjects()
