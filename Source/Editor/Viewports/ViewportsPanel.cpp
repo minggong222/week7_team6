@@ -20,8 +20,6 @@ constexpr const char* CameraPresetLabels[] = {
 	"Perspective", "Ortho (Current)", "Top", "Bottom", "Front", "Back", "Left", "Right"};
 
 // Stat Overlay
-constexpr float StatOverlayMargin = 8.0f;
-constexpr float StatOverlayPadding = 6.0f;
 constexpr ImU32 StatOverlayBackgroundColor = IM_COL32(0, 0, 0, 140);
 constexpr ImU32 TitleColor = IM_COL32(255, 210, 60, 255);
 constexpr ImU32 ValueColor = IM_COL32(235, 235, 235, 255);
@@ -280,11 +278,11 @@ void FViewportsPanel::OnRender()
 		if (!Slots[ViewIndex].bActive)
 			continue;
 		ImGui::SetCursorScreenPos({
-			ContentOrigin.x + Slots[ViewIndex].Rect.X + 8.0f,
-			ContentOrigin.y + Slots[ViewIndex].Rect.Y + 8.0f});
+			ContentOrigin.x + Slots[ViewIndex].Rect.X + ImGui::GetFontSize() * 0.4f,
+			ContentOrigin.y + Slots[ViewIndex].Rect.Y + ImGui::GetFontSize() * 0.4f});
 		ImGui::PushID(100 + ViewIndex);
 		int SelectedPreset = static_cast<int>(CurrentCameraPresets[ViewIndex]);
-		ImGui::SetNextItemWidth(120.0f);
+		ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8.0f);
 		if (ImGui::Combo("##CameraPreset", &SelectedPreset, CameraPresetLabels, IM_ARRAYSIZE(CameraPresetLabels)))
 		{
 			PendingCameraPresetViewIndex = ViewIndex;
@@ -300,7 +298,7 @@ void FViewportsPanel::OnRender()
 				bool SceneDepthMode = ViewportAdapter->IsViewSceneDepthMode(ViewIndex);
 
 				const char* Labels[] = {"Solid", "Wireframe", "Buffer Visualization"};
-				ImGui::SetNextItemWidth(170.0f);
+				ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8.0f);
 
 				if (ImGui::BeginCombo("##FillMode", Labels[Mode]))
 				{
@@ -327,7 +325,7 @@ void FViewportsPanel::OnRender()
 
 				const uint32 CurrentLightMode = static_cast<uint32>(ViewportAdapter->GetViewLightMode(ViewIndex));
 				ImGui::SameLine();
-				ImGui::SetNextItemWidth(170.0f);
+				ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8.0f);
 				if (ImGui::BeginCombo("##LightMode", LightLabels[CurrentLightMode]))
 				{
 					for (uint32 LightMode = 0; LightMode < static_cast<uint32>(ELightingModel::Count); ++LightMode)
@@ -413,6 +411,8 @@ void FViewportsPanel::DrawStatOverlay(ImDrawList* DrawList, const ImVec2& ViewMi
 
 	// 제어 위젯 한 줄 아래에서 시작해 Combo와 겹치지 않게 한다.
 	const float LineHeight = ImGui::GetTextLineHeight();
+	const float StatOverlayMargin = ImGui::GetFontSize() * 0.4f;
+	const float StatOverlayPadding = ImGui::GetFontSize() * 0.3f;
 	const ImVec2 Origin{
 		ViewMin.x + StatOverlayMargin,
 		ViewMin.y + StatOverlayMargin + ImGui::GetFrameHeight() + StatOverlayMargin};

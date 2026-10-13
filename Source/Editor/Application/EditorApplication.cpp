@@ -93,8 +93,8 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	FWindowContext MainWindowCtx;
 	LOG(Info, "Create Main Window...");
 	MainWindowCtx.Window = MakeUnique<FWindowsWindow>();
-	const int32 ScreenWidth = 1600;
-	const int32 ScreenHeight = 900;
+	const int32 ScreenWidth = 1920;
+	const int32 ScreenHeight = 1080;
 
 	if (!MainWindowCtx.Window->Create(hInstance, ScreenWidth, ScreenHeight, L"Hitori Engine", false))
 	{
@@ -114,7 +114,7 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 
 	LOG(Info, "Initialize ImGui...");
 	ImGuiRenderer = MakeUnique<FImGuiRenderer>();
-	if (!ImGuiRenderer->Init(MainWindow->GetHandle(), RenderDevice->GetDevice(), RenderDevice->GetContext()))
+	if (!ImGuiRenderer->Init(MainWindow, RenderDevice->GetDevice(), RenderDevice->GetContext()))
 	{
 		LOG(Error, "Failed To Initialize ImGui!");
 	}
@@ -260,6 +260,9 @@ void FEditorApplication::Run()
 		float DeltaTime = 0.0f;
 		if (!BeginFrame(DeltaTime))
 			break;
+
+		// DPI 처리
+		ImGuiRenderer->UpdateScale(MainWindow->GetScale());
 
 		// 로딩 화면 처리
 		if (LoadingScreen && !LoadingScreen->IsFinished())
@@ -497,7 +500,8 @@ void FEditorApplication::RenderMultipleViewports()
 		SceneData.BuildTileLightData();
 		for (auto light : SceneData.Lights)
 		{
-			Cast<UBillboardComponent>(light.Get()->GetOwner()->GetRootComponent())->SetVisibility(!ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused());
+			Cast<UBillboardComponent>(light.Get()->GetOwner()->FindComponentByClass<UBillboardComponent>())->SetVisibility(!ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused());
+			Cast<UArrowComponent>(light.Get()->GetOwner()->FindComponentByClass<UArrowComponent>())->SetVisibility(!ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused());
 		}
 		RenderFrame(ViewIndex,
 			ViewportsPanel->GetRenderingInfo(ViewIndex),
@@ -523,7 +527,8 @@ void FEditorApplication::RenderPIEViewport()
 		PIEViewAdapter.BuildRenderPackets(0, SceneRenderPackets);
 		for (auto light : GetPIEWorld()->GetScene().Lights)
 		{
-			Cast<UBillboardComponent>(light.Get()->GetOwner()->GetRootComponent())->SetVisibility(false);
+			Cast<UBillboardComponent>(light.Get()->GetOwner()->FindComponentByClass<UBillboardComponent>())->SetVisibility(false);
+			Cast<UArrowComponent>(light.Get()->GetOwner()->FindComponentByClass<UArrowComponent>())->SetVisibility(false);
 		}
 		RenderPIEFrame(PIEPanel->GetRenderingInfo(), PIEViewAdapter.GetEngineViewProjection(0), PIEViewAdapter.GetEngineCameraLocation(0), PIEViewAdapter.GetEngineCameraForward(0), SceneRenderPackets);
 	}
@@ -725,18 +730,18 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			
 		}
 
-		if (Outline->GetTarget())
+		if (Gizmo->GetTarget())
 		{
 			// DrawDebug가 있는 LightComponent가 선택되면 Visualizer 그리기
 			// Note: Spotlight가 PointLight를 상속받으니 지금은 PointLight인지만 체크하면 됨
 
-			// 피킹은 빌보드가 선택되었을 것
-			UPrimitiveComponent* SelectedComponent = Outline->GetTarget();
+			// TODO: Visualizer 만들기
+			USceneComponent* SelectedComponent = Gizmo->GetTarget();
 
 			if (SelectedComponent)
 			{
 				// light 컴포넌트 찾기
-				UPointLightComponent* LightComponent = SelectedComponent->GetOwner()->FindComponentByClass<UPointLightComponent>();
+				UPointLightComponent* LightComponent = Cast<UPointLightComponent>(SelectedComponent);
 
 				// 있으면 DrawDebug
 				if (LightComponent)

@@ -8,6 +8,9 @@
 // StaticMesh 컴포넌트를 초기화한다.
 UArrowComponent::UArrowComponent()
 {
+	bIsVisualizationComponent = true;
+	bIsEditorOnly = true;
+
 	SetStaticMesh(UAssetManager::GetAssetByKey<UStaticMesh>("Arrow"));
 	UMaterial* Material = UMaterial::CreateInstance(UAssetManager::GetAssetByKey<UMaterial>("DefaultMaterial"));
 

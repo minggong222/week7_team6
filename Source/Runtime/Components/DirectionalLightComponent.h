@@ -5,6 +5,7 @@
 #include "Math/Quat.h"
 #include "Materials/Material.h"
 #include <Templates/Casts.h>
+#include "Components/BillboardComponent.h"
 class FLineBatcher;
 
 class UDirectionalLightComponent : public ULightComponent
@@ -35,11 +36,11 @@ public:
 		FLinearColor Color = GetLightColor();
 		LightData.Color = {Color.R, Color.G, Color.B};
 
-		UPrimitiveComponent* PrimComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
+		UBillboardComponent* BillboardComponent = GetOwner()->FindComponentByClass<UBillboardComponent>();
 
-		if (PrimComponent)
+		if (BillboardComponent)
 		{
-			UMaterial* Material = PrimComponent->GetMaterial(0);
+			UMaterial* Material = BillboardComponent->GetMaterial(0);
 			Material->BaseColor = {Color.R, Color.G, Color.B, Color.A};
 		}
 

@@ -71,6 +71,34 @@ FVector4 FMatrix::InverseTransformPosition(const FVector& V) const
 	return InvMatrix.TransformPosition(V);
 }
 
+float InvSqrt(float value)
+{
+	return 1 / sqrt(value);
+}
+
+FMatrix FMatrix::GetMatrixWithoutScale() const
+{
+	FMatrix M = *this;
+
+	const float SquareSum0 = (M[0][0] * M[0][0]) + (M[0][1] * M[0][1]) + (M[0][2] * M[0][2]);
+	const float SquareSum1 = (M[1][0] * M[1][0]) + (M[1][1] * M[1][1]) + (M[1][2] * M[1][2]);
+	const float SquareSum2 = (M[2][0] * M[2][0]) + (M[2][1] * M[2][1]) + (M[2][2] * M[2][2]);
+	const float Scale0 = SquareSum0 > 0.0f ? InvSqrt(SquareSum0) : 1.0f;
+	const float Scale1 = SquareSum1 > 0.0f ? InvSqrt(SquareSum1) : 1.0f;
+	const float Scale2 = SquareSum2 > 0.0f ? InvSqrt(SquareSum2) : 1.0f;
+	M[0][0] *= Scale0;
+	M[0][1] *= Scale0;
+	M[0][2] *= Scale0;
+	M[1][0] *= Scale1;
+	M[1][1] *= Scale1;
+	M[1][2] *= Scale1;
+	M[2][0] *= Scale2;
+	M[2][1] *= Scale2;
+	M[2][2] *= Scale2;
+
+	return M;
+}
+
 FVector4 FMatrix::GetColumn(int32 i) const
 {
 	return FVector4(M[0][i], M[1][i], M[2][i], M[3][i]);

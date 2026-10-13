@@ -8,13 +8,9 @@ class ADirectionalLight : public ALight
 {
 	DECLARE_CLASS(ADirectionalLight, ALight)
 
-
 public:
 	ADirectionalLight();
 	virtual ~ADirectionalLight() override = default;
-
-	UArrowComponent* GetArrowComponent() const { return ArrowComponent; }
-	void SetArrowComponent(UArrowComponent* InComponent) { ArrowComponent = InComponent; }
 
 	virtual void DuplicateSubObjects() override;
 

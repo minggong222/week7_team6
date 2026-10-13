@@ -6,17 +6,22 @@
 
 APointLight::APointLight()
 {
+	UPointLightComponent* PointLight = CreateDefaultSubobject<UPointLightComponent>("UPointLightComponent");
+	SetRootComponent(PointLight);
+	SetLightComponent(PointLight);
+
 	UBillboardComponent* Billboard = CreateDefaultSubobject<UBillboardComponent>("UBillboardComponent");
-	SetRootComponent(Billboard);
+	Billboard->SetIsEditorOnly(true);
+	Billboard->SetIsVisualizationComponent(true);
+	Billboard->SetupAttachment(PointLight);
+
 	UMaterial* BillboardMat = UMaterial::CreateInstance(UAssetManager::GetAssetByKey<UMaterial>("BillboardMaterial"));
 	BillboardMat->Textures[0] = UAssetManager::GetAssetByKey<UTexture2D>("Assets/S_LightPoint.png");
 	BillboardMat->ParamBuffer = FRenderCommand::CreateConstantBuffer(256);
 	Billboard->SetMaterial(0, BillboardMat);
 	SetBillboardComponent(Billboard);
 
-	UPointLightComponent* PointLight = CreateDefaultSubobject<UPointLightComponent>("UPointLightComponent");
-	PointLight->SetupAttachment(Billboard);
-	SetLightComponent(PointLight);
+
 }
 
 void APointLight::DuplicateSubObjects()

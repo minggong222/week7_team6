@@ -25,6 +25,8 @@ namespace
 
 void FStatsPanel::DrawCostBreakdown(size_t GroupIndex, const char* Title, const std::vector<FCostRow>& Rows)
 {
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
 	FCostGroup& Group = CostGroups[GroupIndex];
 	const double Now = ImGui::GetTime();
 	const bool bStartFresh = Group.Costs.size() != Rows.size()
@@ -97,9 +99,9 @@ void FStatsPanel::DrawCostBreakdown(size_t GroupIndex, const char* Title, const 
 		Largest = (std::max)(Largest, Cost.DisplayAverage);
 		RecentCount += Cost.DisplayAverage >= 0.0 ? 1 : 0;
 	}
-	ImGui::Dummy(ImVec2(0.0f, 10.0f));
+	ImGui::Dummy(ImVec2(0.0f, 10.0f * Scale));
 	ImGui::SeparatorText(Title);
-	ImGui::Dummy(ImVec2(0.0f, 6.0f));
+	ImGui::Dummy(ImVec2(0.0f, 6.0f * Scale));
 	if (Largest > 0.0)
 	{
 		ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered), "TOP CANDIDATES (1s avg)");
@@ -116,11 +118,11 @@ void FStatsPanel::DrawCostBreakdown(size_t GroupIndex, const char* Title, const 
 		DrawNote(RecentCount > 0 ? "Measured cost: 0 ms" : "Waiting for recent samples");
 	if (static_cast<size_t>(RecentCount) < Rows.size())
 		ImGui::TextDisabled("Measured stages: %d / %d", RecentCount, static_cast<int>(Rows.size()));
-	ImGui::Dummy(ImVec2(0.0f, 4.0f));
+	ImGui::Dummy(ImVec2(0.0f, 4.0f * Scale));
 	ImGui::PushID(Title);
 	if (ImGui::TreeNode("Stage details"))
 	{
-		ImGui::Dummy(ImVec2(0.0f, 8.0f));
+		ImGui::Dummy(ImVec2(0.0f, 8.0f * Scale));
 		for (const size_t Index : Group.Order)
 		{
 			const FCostRow& Row = Rows[Index];
@@ -140,7 +142,7 @@ void FStatsPanel::DrawCostBreakdown(size_t GroupIndex, const char* Title, const 
 					ImVec2(-1.0f, 0.0f), Label.c_str());
 				ImGui::PopStyleColor();
 			}
-			ImGui::Dummy(ImVec2(0.0f, 7.0f));
+			ImGui::Dummy(ImVec2(0.0f, 7.0f * Scale));
 		}
 		ImGui::TreePop();
 	}
@@ -177,8 +179,10 @@ void FStatsPanel::OnRender()
 		ImGui::End();
 		return;
 	}
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
 	ImGui::TextColored(ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered), "PERFORMANCE OVERVIEW");
-	ImGui::Dummy(ImVec2(0.0f, 8.0f));
+	ImGui::Dummy(ImVec2(0.0f, 8.0f * Scale));
 	if (ImGui::Button("Enable GPU breakdown"))
 	{
 		for (const FStatId Id : {StatIds::GpuFrame(), StatIds::GpuOpaque(), StatIds::GpuHZB(),
@@ -220,9 +224,9 @@ void FStatsPanel::OnRender()
 	Tasks::FTaskScheduler::Get().GetThreadStats(ThreadStats);
 	if (!ThreadStats.empty())
 	{
-		ImGui::Dummy(ImVec2(0.0f, 10.0f));
+		ImGui::Dummy(ImVec2(0.0f, 10.0f * Scale));
 		ImGui::SeparatorText("Worker Thread Activity");
-		ImGui::Dummy(ImVec2(0.0f, 4.0f));
+		ImGui::Dummy(ImVec2(0.0f, 4.0f * Scale));
 		if (ImGui::BeginTable("##ThreadActivity", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp))
 		{
 			ImGui::TableSetupColumn("Thread", ImGuiTableColumnFlags_WidthStretch, 2.0f);
@@ -257,9 +261,9 @@ void FStatsPanel::OnRender()
 
 	FString CurrentGroup;
 	TArray<FString> DrawnGroups;
-	ImGui::Dummy(ImVec2(0.0f, 12.0f));
+	ImGui::Dummy(ImVec2(0.0f, 12.0f * Scale));
 	ImGui::SeparatorText("Detailed statistics");
-	ImGui::Dummy(ImVec2(0.0f, 8.0f));
+	ImGui::Dummy(ImVec2(0.0f, 8.0f * Scale));
 
 	for (const FStatRecord& Record : Records)
 	{
@@ -268,7 +272,7 @@ void FStatsPanel::OnRender()
 
 		CurrentGroup = Record.Desc.Group;
 		DrawnGroups.Add(CurrentGroup);
-		ImGui::Dummy(ImVec2(0.0f, 6.0f));
+		ImGui::Dummy(ImVec2(0.0f, 6.0f * Scale));
 
 		if (!ImGui::CollapsingHeader(CurrentGroup.c_str()))
 		{
@@ -277,7 +281,7 @@ void FStatsPanel::OnRender()
 
 		const FString TableId = "##" + CurrentGroup;
 
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(8.0f, 6.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(8.0f * Scale, 6.0f * Scale));
 		if (ImGui::BeginTable(TableId.c_str(), 5, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp))
 		{
 			ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 2.8f);

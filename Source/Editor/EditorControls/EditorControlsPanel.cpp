@@ -13,6 +13,16 @@
 #include <cmath>
 #include <imgui_internal.h>
 
+constexpr float GRID_WIDTH_IN_FONT_UNITS = 5.0f;
+
+namespace
+{
+float GetGridWidth()
+{
+	return ImGui::GetFontSize() * GRID_WIDTH_IN_FONT_UNITS;
+}
+}
+
 // 패널 초기화 성공을 반환한다.
 bool FEditorControlsPanel::Init()
 {
@@ -84,6 +94,8 @@ void FEditorControlsPanel::OnRender()
 {
 	ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Editor Controls");
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
 	//ImGui::Dummy(ImVec2(0.0f, SectionGap));
 
 
@@ -98,7 +110,7 @@ void FEditorControlsPanel::OnRender()
 	//ImGui::TextDisabled("%s", FpsText);
 
 	//////////////////////////////////////////////////////
-	float icon_size = 24.0f;
+	float icon_size = ImGui::GetFontSize();
 	ImGui::SameLine();
 	ImGui::BeginDisabled(PIEPanel->IsPlay() && !PIEPanel->IsPause());
 	if (DrawStartButton("##StartBtn", icon_size))
@@ -146,7 +158,7 @@ void FEditorControlsPanel::OnRender()
 	}
 
 	// Actor 종류 ComboBox로 골라 하나씩 스폰
-	const float SpawnButtonWidth = 70.0f;
+	const float SpawnButtonWidth = ImGui::CalcTextSize("Spawn").x + ImGui::GetStyle().FramePadding.x * 2.0f;
 
 	char CountText[32];
 	std::snprintf(CountText, sizeof(CountText), "%d Actors", World ? World->GetActorCount() : 0);
@@ -171,13 +183,13 @@ void FEditorControlsPanel::OnRender()
 	ImGui::TextDisabled("%s", CountText);
 
 	// StaticMeshActor를 Grid 간격 맞춰서 한꺼번에 소환
-	ImGui::Dummy(ImVec2(0.0f, SubsectionGap));
+	ImGui::Dummy(ImVec2(0.0f, SubsectionGap * Scale));
 
 	if (ImGui::CollapsingHeader("Grid Spawn"))
 	{
 		if (ImGui::BeginTable("GridSpawnSettings", 2))
 		{
-			ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+			ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GetGridWidth());
 			ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 			ImGui::TableNextRow();
@@ -217,7 +229,7 @@ void FEditorControlsPanel::OnRender()
 
 			ImGui::EndTable();
 
-			ImGui::Dummy(ImVec2(0.0f, SubsectionGap));
+			ImGui::Dummy(ImVec2(0.0f, SubsectionGap * Scale));
 
 			ImGui::BeginDisabled(!bValidGrid);
 
@@ -235,12 +247,12 @@ void FEditorControlsPanel::OnRender()
 
 	//////////////////////////////////////////////////////
 
-	ImGui::Dummy(ImVec2(0.0f, SectionGap));
+	ImGui::Dummy(ImVec2(0.0f, SectionGap * Scale));
 	ImGui::SeparatorText("Gizmo");
 
 	if (Gizmo && ImGui::BeginTable("GizmoControls", 2))
 	{
-		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GetGridWidth());
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 		ImGui::TableNextRow();
@@ -280,7 +292,9 @@ void FEditorControlsPanel::OnRender()
 // 실제 View 속성을 편집하며 패널 이동 후에도 마지막 View를 유지하고 변경된 값만 반영한다.
 void FEditorControlsPanel::DrawCameraProperties()
 {
-	ImGui::Dummy(ImVec2(0.0f, SectionGap));
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
+	ImGui::Dummy(ImVec2(0.0f, SectionGap * Scale));
 	ImGui::SeparatorText("Viewport");
 
 	UCameraComponent* CamCom = World && World->GetMainCamera() ? World->GetMainCamera()->GetCameraComponent() : nullptr;
@@ -312,13 +326,13 @@ void FEditorControlsPanel::DrawCameraProperties()
 	bool bChanged = false;
 	bool bOrthogonal = ViewportAdapter ? Camera.Projection.Mode == ECameraProjectionMode::Orthographic : CamCom->GetIsOrthogonal();
 
-	ImGui::Dummy(ImVec2(0.0f, SubsectionGap));
+	ImGui::Dummy(ImVec2(0.0f, SubsectionGap * Scale));
 	ImGui::TextDisabled("Projection");
 
 	// Camera Projection Table
 	if (ImGui::BeginTable("Camera Projection", 2))
 	{
-		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GetGridWidth());
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 		// FOV 또는 Ortho Width
@@ -407,7 +421,7 @@ void FEditorControlsPanel::DrawCameraProperties()
 	}
 
 	// Camera Transform Table
-	ImGui::Dummy(ImVec2(0.0f, SubsectionGap));
+	ImGui::Dummy(ImVec2(0.0f, SubsectionGap * Scale));
 	ImGui::TextDisabled("Transform");
 
 	bool bLocationChanged = false;
@@ -415,7 +429,7 @@ void FEditorControlsPanel::DrawCameraProperties()
 
 	if (ImGui::BeginTable("Camera Transform", 2))
 	{
-		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GetGridWidth());
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 		ImGui::TableNextRow();

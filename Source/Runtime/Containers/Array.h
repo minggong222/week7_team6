@@ -1,4 +1,4 @@
-﻿
+
 #pragma once
 
 #include <cassert>
@@ -276,8 +276,11 @@ inline void TArray<T>::RemoveAtSwap(uint32 index)
 	assert(mDatas.empty() == false);
 	assert(index < mDatas.size());
 
-	T moveData = mDatas.back();
-	mDatas[index] = moveData;
+	if (mDatas.size() > 0)
+	{
+		T moveData = mDatas.back();
+		mDatas[index] = moveData;
+	}
 
 	RemoveLast();
 }

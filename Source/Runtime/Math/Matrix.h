@@ -36,6 +36,8 @@ public:
 	FVector TransformVector(const FVector& V) const;
 	FVector4 InverseTransformPosition(const FVector& V) const;
 
+	FMatrix GetMatrixWithoutScale() const;
+
 	FMatrix ApplyScale(float Scale) const;
 	FMatrix GetTransposed() const;
 	FMatrix Inverse() const;

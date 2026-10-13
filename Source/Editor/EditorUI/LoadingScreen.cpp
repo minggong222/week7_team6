@@ -123,21 +123,27 @@ void FLoadingScreen::Draw()
 
 	if (ImGui::Begin("##LoadingScreen", nullptr, WindowFlags))
 	{
-		ImGui::PushFont(nullptr, 20.0f);
+		ImGui::PushFont(nullptr, 24.0f);
 
 		const float ViewportWidth = Viewport->WorkSize.x;
 		const float ViewportHeight = Viewport->WorkSize.y;
 
-		const float SpriteWidth = 256.0f;
-		const float SpriteHeight = 256.0f;
-		const float BarWidth = 480.0f;
-		const float BarHeight = 16.0f;
+		const ImGuiStyle& Style = ImGui::GetStyle();
+		const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
+		const float Margin = 20.0f * Scale;
+		const float TextGap = 12.0f * Scale;
+		const float TextHeight = ImGui::GetTextLineHeight();
+		const float BarHeight = ImGui::GetFrameHeight() * 0.75f;
+		const float AvailableWidth = (std::max)(0.0f, ViewportWidth - Margin * 2.0f);
+		const float AvailableHeight = (std::max)(0.0f, ViewportHeight - Margin * 3.0f - BarHeight - TextGap - TextHeight);
+		const float SpriteWidth = (std::min)(320.0f * Scale, (std::min)(AvailableWidth, AvailableHeight));
+		const float SpriteHeight = SpriteWidth;
+		const float BarWidth = (std::min)(720.0f * Scale, AvailableWidth);
 
 		// 중앙 배치를 위한 세로 위치 계산
-		const float TextHeight = ImGui::GetTextLineHeight();
-		const float TotalContentHeight = SpriteHeight + 20.0f + TextHeight + 16.0f + BarHeight + 12.0f + TextHeight;
+		const float TotalContentHeight = SpriteHeight + Margin + BarHeight + TextGap + TextHeight;
 		float CursorY = (ViewportHeight - TotalContentHeight) * 0.5f;
-		if (CursorY < 20.0f) CursorY = 20.0f;
+		if (CursorY < Margin) CursorY = Margin;
 
 		// 스프라이트 렌더링
 		if (SpriteTexture && SpriteTexture->GetResource())
@@ -163,27 +169,19 @@ void FLoadingScreen::Draw()
 			}
 		}
 
-		CursorY += SpriteHeight + 20.0f;
-
-		// 타이틀 텍스트
-		const char* TitleText = "H I T O R I   E N G I N E";
-		const ImVec2 TitleSize = ImGui::CalcTextSize(TitleText);
-		ImGui::SetCursorPos(ImVec2((ViewportWidth - TitleSize.x) * 0.5f, CursorY));
-		ImGui::TextColored(ImVec4(1.0f, 0.45f, 0.65f, 1.0f), "%s", TitleText);
-
-		CursorY += TitleSize.y + 16.0f;
+		CursorY += SpriteHeight + Margin;
 
 		// 프로그레스 바
 		const float BarX = (ViewportWidth - BarWidth) * 0.5f;
 		ImGui::SetCursorPos(ImVec2(BarX, CursorY));
 		ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(1.0f, 0.45f, 0.65f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.18f, 0.18f, 0.22f, 1.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 8.0f * Scale);
 		ImGui::ProgressBar(CurrentProgress, ImVec2(BarWidth, BarHeight), "");
 		ImGui::PopStyleVar();
 		ImGui::PopStyleColor(2);
 
-		CursorY += BarHeight + 12.0f;
+		CursorY += BarHeight + TextGap;
 
 		// 상태 텍스트 및 퍼센트
 		char PercentBuffer[32];
