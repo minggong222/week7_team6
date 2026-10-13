@@ -447,60 +447,7 @@ bool FObjImporter::ParseObj(const FString& Path, FObjInfo& Out)
 		LOG(Error, "[OBJ] {}: no faces", Path);
 		return false;
 	}
-	Info.Tangents.SetNum(Info.Normals.Num());
-	Info.Bitangents.SetNum(Info.Normals.Num());
-	for (auto Face : Info.Faces)
-	{
-		FObjIndex p0 = Face.Indexes[0];
-		FObjIndex p1 = Face.Indexes[1];
-		FObjIndex p2 = Face.Indexes[2];
-
-		FVector Edge1 = Info.Positions[p1.PositionIndex] - Info.Positions[p0.PositionIndex];
-		FVector Edge2 = Info.Positions[p2.PositionIndex] - Info.Positions[p0.PositionIndex];
-		FVector2D DeltaUV1 = Info.UVs[p1.UVIndex] - Info.UVs[p0.UVIndex];
-		FVector2D DeltaUV2 = Info.UVs[p2.UVIndex] - Info.UVs[p0.UVIndex];
-
-		float determinantTerm0 = DeltaUV1.X * DeltaUV2.Y;
-		float determinantTerm1 = DeltaUV1.Y * DeltaUV2.X;
-
-		float determinant = determinantTerm0 - determinantTerm1;
-
-		float determinantScale = abs(determinantTerm0) + abs(determinantTerm1);
-
-		if (determinantScale < 1e-20f || abs(determinant) < determinantScale * 1e-6f)
-			continue;
-
-		float inverseDeterminant = 1.0f / determinant;
-
-		FVector T = (Edge1 * DeltaUV2.Y - Edge2 * DeltaUV1.Y) * inverseDeterminant;
-
-		FVector B = (Edge2 * DeltaUV1.X - Edge1 * DeltaUV2.X) * inverseDeterminant;
-
-		Info.Tangents[p0.NormalIndex] += T;
-		Info.Tangents[p1.NormalIndex] += T;
-		Info.Tangents[p2.NormalIndex] += T;
-		Info.Bitangents[p0.NormalIndex] += B;
-		Info.Bitangents[p1.NormalIndex] += B;
-		Info.Bitangents[p2.NormalIndex] += B;
-	}
-
-	for (int v = 0; v < Info.Tangents.Num(); v++)
-	{
-		FVector4 N = Info.Normals[v];
-
-		FVector4 T = Info.Tangents[v] - N * N.Dot(Info.Tangents[v]);
-
-		if (T.Length() < 1e-6f)
-		{
-			Info.Tangents[v] = FVector4(0, 0, 0, 1);
-			continue;
-		}
-		T.Normalized();
-
-		float handedness = N.Cross(T).Dot(Info.Bitangents[v]) < 0.0f ? -1.0f : 1.0f;
-
-		Info.Tangents[v] = FVector4(T.X, T.Y, T.Z, handedness);
-	}
+	
 
 	// 기본 머티리얼
 	FObjMaterialInfo DefaultMaterial;
@@ -628,7 +575,6 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 					Vertex.UV.Y = 1.0f - Vertex.UV.Y;
 				}
 
-				Vertex.Tangent = Raw.Tangents[RawIndex.NormalIndex];
 				Cooked.Vertices.Add(std::move(Vertex));
 			}
 
@@ -642,6 +588,61 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 		}
 		CookedSection.IndexCount = static_cast<uint32>(Cooked.Indices.Num()) - CookedSection.StartIndex;
 		Cooked.Sections.Add(std::move(CookedSection));
+	}
+
+		// Tangent (변환이 끝난 정점 기준)
+	{
+		TArray<FVector> Tangents;
+		TArray<FVector> Bitangents;
+		Tangents.SetNum(Cooked.Vertices.Num());
+		Bitangents.SetNum(Cooked.Vertices.Num());
+
+		for (int32 i = 0; i + 2 < static_cast<int32>(Cooked.Indices.Num()); i += 3)
+		{
+			const uint32 I0 = Cooked.Indices[i];
+			const uint32 I1 = Cooked.Indices[i + 1];
+			const uint32 I2 = Cooked.Indices[i + 2];
+
+			const FVector Edge1 = Cooked.Vertices[I1].Position - Cooked.Vertices[I0].Position;
+			const FVector Edge2 = Cooked.Vertices[I2].Position - Cooked.Vertices[I0].Position;
+			const FVector2D DeltaUV1 = Cooked.Vertices[I1].UV - Cooked.Vertices[I0].UV;
+			const FVector2D DeltaUV2 = Cooked.Vertices[I2].UV - Cooked.Vertices[I0].UV;
+
+			const float determinantTerm0 = DeltaUV1.X * DeltaUV2.Y;
+			const float determinantTerm1 = DeltaUV1.Y * DeltaUV2.X;
+			const float determinant = determinantTerm0 - determinantTerm1;
+			const float determinantScale = std::abs(determinantTerm0) + std::abs(determinantTerm1);
+
+			if (determinantScale < 1e-20f || std::abs(determinant) < determinantScale * 1e-6f)
+				continue;
+
+			const float inverseDeterminant = 1.0f / determinant;
+			const FVector T = (Edge1 * DeltaUV2.Y - Edge2 * DeltaUV1.Y) * inverseDeterminant;
+			const FVector B = (Edge2 * DeltaUV1.X - Edge1 * DeltaUV2.X) * inverseDeterminant;
+
+			Tangents[I0] += T;
+			Tangents[I1] += T;
+			Tangents[I2] += T;
+			Bitangents[I0] += B;
+			Bitangents[I1] += B;
+			Bitangents[I2] += B;
+		}
+
+		for (int32 v = 0; v < Cooked.Vertices.Num(); ++v)
+		{
+			const FVector N = Cooked.Vertices[v].Normal.Normalized();
+			FVector T = Tangents[v] - N * N.Dot(Tangents[v]);
+
+			if (T.Length() < 1e-6f)
+			{
+				Cooked.Vertices[v].Tangent = FVector4(0.0f, 0.0f, 0.0f, 1.0f);
+				continue;
+			}
+			T = T.Normalized();
+
+			const float handedness = N.Cross(T).Dot(Bitangents[v]) < 0.0f ? -1.0f : 1.0f;
+			Cooked.Vertices[v].Tangent = FVector4(T.X, T.Y, T.Z, handedness);
+		}
 	}
 
 	// AABB (변환이 끝난 Position 기준)

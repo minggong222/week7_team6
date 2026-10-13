@@ -395,7 +395,16 @@ float3 GetNormalFromMap(PS_INPUT input, float3 baseNormal, float2 uv)
     //
     // 결과적으로 N, T, B를 노멀 맵의 좌표계를 월드 공간으로
     // 변환하기 위한 기저 벡터로 사용할 수 있다.
-    float3 B = normalize(cross(N, input.Tangent.xyz)) * input.Tangent.w;
+    float3 T = input.Tangent.xyz;
+    
+    if (dot(T, T) < 1e-8f)
+    {
+        return N;
+    }
+    
+    T = normalize(T - N * dot(N, T));
+    
+    float3 B = normalize(cross(N, T)) * input.Tangent.w;
     
     
     // 노멀맵의 G 채널 규약 보정. +1이면 그대로(DirectX 방식), −1이면 반전(OpenGL 방식)
@@ -427,7 +436,7 @@ float3 GetNormalFromMap(PS_INPUT input, float3 baseNormal, float2 uv)
     //
     // 이 함수에서는 T, B, N이 월드 공간 벡터이므로
     // 결과 worldNormal도 월드 공간 벡터가 된다.
-    float3 worldNormal = input.Tangent.xyz * tangentNormal.x + B * tangentNormal.y + N * tangentNormal.z;
+    float3 worldNormal = T * tangentNormal.x + B * tangentNormal.y + N * tangentNormal.z;
 
 
     // ============================================================
@@ -457,7 +466,8 @@ PS_INPUT mainVS(VS_INPUT input)
     output.uv = input.t;
     output.lighting = float3(0.0f, 0.0f, 0.0f);
     output.WorldPosition = worldPos.xyz;
-    output.Tangent = input.T;
+    output.Tangent.xyz = mul(float4(input.T.xyz, 0.0f), World).xyz;
+    output.Tangent.w = input.T.w;
     if (bDisableShading == 1.0f)
     {
         return output;

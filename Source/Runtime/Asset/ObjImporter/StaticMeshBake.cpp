@@ -19,7 +19,7 @@ static_assert(std::is_trivially_copyable_v<FBox>);
 namespace
 {
 // FStaticMeshRenderData, FVertexPNCTT, FStaticMeshSection, FStaticMaterial 구조가 바뀌면 올린다
-constexpr uint32 BakeVersion = 8;
+constexpr uint32 BakeVersion = 10;
 
 struct FBakeHeader
 {
