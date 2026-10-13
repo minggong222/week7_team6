@@ -70,6 +70,8 @@ public:
 		return Data ? Data->AABB : Super::CalcLocalBounds();
 	}
 
+	int WorldPrimitiveIndex = -1;
+
 protected:
 	virtual void OnBoundsMarkedDirty() override;
 	bool TraceMesh(const FRay& WorldRay, const FStaticMeshRenderData& Mesh, const FMatrix& WorldMatrix, FHitResult& OutResult, float MaxT = FLT_MAX);
@@ -77,6 +79,7 @@ protected:
 	bool bCollisionEnabled = false;
 
 	/*TArray<UMaterial* MaterialOverride = nullptr;*/
+
 
 
 
