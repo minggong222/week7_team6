@@ -501,6 +501,7 @@ void FEditorApplication::RenderMultipleViewports()
 		for (auto light : SceneData.Lights)
 		{
 			Cast<UBillboardComponent>(light.Get()->GetOwner()->FindComponentByClass<UBillboardComponent>())->SetVisibility(!ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused());
+			Cast<UArrowComponent>(light.Get()->GetOwner()->FindComponentByClass<UArrowComponent>())->SetVisibility(!ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused());
 		}
 		RenderFrame(ViewIndex,
 			ViewportsPanel->GetRenderingInfo(ViewIndex),
@@ -527,6 +528,7 @@ void FEditorApplication::RenderPIEViewport()
 		for (auto light : GetPIEWorld()->GetScene().Lights)
 		{
 			Cast<UBillboardComponent>(light.Get()->GetOwner()->FindComponentByClass<UBillboardComponent>())->SetVisibility(false);
+			Cast<UArrowComponent>(light.Get()->GetOwner()->FindComponentByClass<UArrowComponent>())->SetVisibility(false);
 		}
 		RenderPIEFrame(PIEPanel->GetRenderingInfo(), PIEViewAdapter.GetEngineViewProjection(0), PIEViewAdapter.GetEngineCameraLocation(0), PIEViewAdapter.GetEngineCameraForward(0), SceneRenderPackets);
 	}
