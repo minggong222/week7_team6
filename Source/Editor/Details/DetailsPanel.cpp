@@ -603,6 +603,103 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 					ImGui::EndCombo();
 				}
 
+				ImGui::TableNextRow();
+
+				// 7: Normal Map
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Normal Map");
+
+				ImGui::TableSetColumnIndex(1);
+
+				UTexture2D* NormalTexture = (Effective && Effective->HasTexture(EMaterialTextureSlot::Normal))
+					? Effective->Textures[static_cast<int32>(EMaterialTextureSlot::Normal)]
+					: nullptr;
+
+				if (NormalTexture && NormalTexture->GetResource())
+				{
+					ImGui::Image((ImTextureID)NormalTexture->GetResource()->GetSRV(), {ThumbnailSize, ThumbnailSize});
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::SetTooltip("%s", NormalTexture->GetPath().c_str());
+					}
+				}
+				else
+				{
+					ImGui::Button("Empty##NormalMap", {ThumbnailSize, ThumbnailSize});
+				}
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload(EditorDragDrop::Texture))
+					{
+						UTexture2D* DroppedTexture = *static_cast<UTexture2D**>(Payload->Data);
+						Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+
+						if (Override)
+						{
+							Override->SetTexture(EMaterialTextureSlot::Normal, DroppedTexture);
+							NormalTexture = DroppedTexture;
+							Effective = Override;
+						}
+					}
+					ImGui::EndDragDropTarget();
+				}
+				ImGui::SameLine();
+
+				if (NormalTexture)
+				{
+					fs::path Path(NormalTexture->GetPath());
+					FString FileName = Path.filename().string();
+
+					ImGui::TextWrapped("%s", FileName.c_str());
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::SetTooltip("%s", NormalTexture->GetPath().c_str());
+					}
+				}
+				else
+				{
+					ImGui::TextDisabled("(Empty)");
+				}
+
+				ImGui::TableNextRow();
+
+				// 8: Normal Scale
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Normal Scale");
+
+				ImGui::TableSetColumnIndex(1);
+				ImGui::SetNextItemWidth(-1.0f);
+
+				float TempNormalScale = Effective ? Effective->NormalScale : 1.0f;
+				if (ImGui::DragFloat("##NormalScale", &TempNormalScale, 0.01f))
+				{
+					Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+					if (Override)
+					{
+						Override->NormalScale = TempNormalScale;
+						Effective = Override;
+					}
+				}
+
+				ImGui::TableNextRow();
+
+				// 9: Flip Normal Green
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Flip Normal(Y)");
+
+				ImGui::TableSetColumnIndex(1);
+
+				bool bTempFlipNormalGreen = Effective ? Effective->bFlipNormalGreen : false;
+				if(ImGui::Checkbox("##FlipNormalGreen", &bTempFlipNormalGreen))
+				{
+					Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+					if (Override)
+					{
+						Override->bFlipNormalGreen = bTempFlipNormalGreen;
+						Effective = Override;
+					}
+				}
+
 				ImGui::EndTable();
 			}
 			ImGui::TreePop();

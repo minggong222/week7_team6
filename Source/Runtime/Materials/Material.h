@@ -19,7 +19,7 @@ struct FStaticMeshMaterialParams
 	float bHasSpecularMap;
 	float bHasEmissiveMap;
 	float bDisableShading;
-	float Padding;
+	float NormalGreenSign;
 };
 struct FBillboardMaterialParams
 {
@@ -57,6 +57,7 @@ public:
 	FVector EmissiveColor = FVector(0.0f, 0.0f, 0.0f);
 	float Shininess = 32.0f;
 	float NormalScale = 1.0f;
+	bool bFlipNormalGreen = false;
 	FVector2D UVScrollSpeed = FVector2D(0.0f, 0.0f);
 	bool bDisableShading = false;
 

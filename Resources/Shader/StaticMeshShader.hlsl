@@ -92,7 +92,7 @@ cbuffer MaterialParams : register(b1)
     float bHasSpecularMap;
     float bHasEmissiveMap;
     float bDisableShading;
-    float MaterialPadding;
+    float NormalGreenSign;
 };
 
 cbuffer ViewConstants : register(b2)
@@ -601,7 +601,12 @@ float3 GetNormalFromMap(PS_INPUT input, float3 baseNormal, float2 uv)
     //
     // 결과적으로 N, T, B를 노멀 맵의 좌표계를 월드 공간으로
     // 변환하기 위한 기저 벡터로 사용할 수 있다.
-    B = normalize(cross(T, N)) * handedness;
+    B = normalize(cross(N, T)) * handedness;
+    
+    
+    // 노멀맵의 G 채널 규약 보정. +1이면 그대로(DirectX 방식), −1이면 반전(OpenGL 방식)
+    
+    B = B * NormalGreenSign;
 
     // ============================================================
     // 13. Tangent Space 노멀을 월드 공간으로 변환

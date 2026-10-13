@@ -640,6 +640,7 @@ void FRenderer::UpdateMaterialParams(UMaterial* material)
 		Params.EmissiveColor = material->EmissiveColor;
 		Params.NormalScale = material->NormalScale;
 		Params.bDisableShading = material->bDisableShading ? 1.0f : 0.0f;
+		Params.NormalGreenSign = material->bFlipNormalGreen ? -1.0f : 1.0f;
 		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FStaticMeshMaterialParams));
 		break;
 	}
