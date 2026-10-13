@@ -639,6 +639,7 @@ void FRenderer::UpdateMaterialParams(UMaterial* material)
 		Params.Shininess = (std::max)(material->Shininess, 1.0f);
 		Params.EmissiveColor = material->EmissiveColor;
 		Params.NormalScale = material->NormalScale;
+		Params.bDisableShading = material->bDisableShading ? 1.0f : 0.0f;
 		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FStaticMeshMaterialParams));
 		break;
 	}

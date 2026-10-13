@@ -495,7 +495,10 @@ void FEditorApplication::RenderMultipleViewports()
 		ViewportsPanel->GetViewportAdapter()->BuildRenderPackets(ViewIndex, SceneRenderPackets);
 
 		SceneData.BuildTileLightData();
-
+		for (auto light : SceneData.Lights)
+		{
+			Cast<UBillboardComponent>(light.Get()->GetOwner()->GetRootComponent())->SetVisibility(!ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused());
+		}
 		RenderFrame(ViewIndex,
 			ViewportsPanel->GetRenderingInfo(ViewIndex),
 			ViewportsPanel->GetViewportAdapter()->GetEngineViewProjection(ViewIndex),
@@ -518,7 +521,10 @@ void FEditorApplication::RenderPIEViewport()
 		PIEPanel->SetView(PIEViewRect);
 
 		PIEViewAdapter.BuildRenderPackets(0, SceneRenderPackets);
-
+		for (auto light : GetPIEWorld()->GetScene().Lights)
+		{
+			Cast<UBillboardComponent>(light.Get()->GetOwner()->GetRootComponent())->SetVisibility(false);
+		}
 		RenderPIEFrame(PIEPanel->GetRenderingInfo(), PIEViewAdapter.GetEngineViewProjection(0), PIEViewAdapter.GetEngineCameraLocation(0), PIEViewAdapter.GetEngineCameraForward(0), SceneRenderPackets);
 	}
 }
@@ -633,11 +639,6 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 	//Sky 렌더링
 	{
 		SkyboxRenderer->OnRender(ViewProjection, ViewCameraLocation);
-	}
-	//Grid 렌더링
-	{
-		FGPUStatScope GridScope(StatIds::GpuGrid(), L"Grid");
-		GridRenderer->OnRenderPSGrid(ViewProjection, ViewCameraLocation, EditorSettings, ViewRenderingInfo.ViewportSetting);
 	}
 
 	// Opaque(불투명) 렌더링

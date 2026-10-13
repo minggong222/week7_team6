@@ -18,7 +18,8 @@ struct FStaticMeshMaterialParams
 	float NormalScale;
 	float bHasSpecularMap;
 	float bHasEmissiveMap;
-	FVector2D Padding;
+	float bDisableShading;
+	float Padding;
 };
 struct FBillboardMaterialParams
 {
@@ -57,6 +58,7 @@ public:
 	float Shininess = 32.0f;
 	float NormalScale = 1.0f;
 	FVector2D UVScrollSpeed = FVector2D(0.0f, 0.0f);
+	bool bDisableShading = false;
 
 	bool bIsInstance = false;
 

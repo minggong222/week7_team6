@@ -9,6 +9,7 @@ class UStaticMeshComponent : public UMeshComponent
 	REFLECT_START(UStaticMeshComponent)
 		PROPERTY(StaticMesh)
 	REFLECT_END()
+
 public:
 	UStaticMeshComponent();
 	virtual ~UStaticMeshComponent();
