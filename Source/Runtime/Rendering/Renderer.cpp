@@ -224,6 +224,7 @@ void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* Ca
 // 불투명 우선·반투명 거리순으로 배열을 정렬해 View 행렬과 Section 범위로 그린다.
 void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FRenderViewData& RenderView, const FScene& Scene)
 {
+	BuildLightDatas(Scene);
 	RenderOpaque(InPackets, RenderView, Scene);
 	RenderTranslucent(RenderView);
 }
@@ -280,7 +281,7 @@ static uint32 MakeMortonCode(const FVector& Position, const FVector& Min, const 
 	return Code;
 }
 
-void FRenderer::BuildLightBuffers(const FScene& Scene)
+void FRenderer::BuildLightDatas(const FScene& Scene)
 {
 	struct FLightBound
 	{
@@ -446,10 +447,17 @@ void FRenderer::BuildLightClusterBuffers(const FRenderViewData& RenderView)
 	Globals.ClusterCountX = (RenderView.Width + Resources.PixelLengthPerTile - 1) / Resources.PixelLengthPerTile;
 	Globals.ClusterCountY = (RenderView.Height + Resources.PixelLengthPerTile - 1) / Resources.PixelLengthPerTile;
 	const auto& Projection = RenderView.Camera.Projection;
-	const float HalfFovRadians = Projection.FovDegrees * 3.14159265358979323846f / 360.0f;
-	Globals.ClusterZScale = 1.0f / log2(1.0f + 2.0f * tan(HalfFovRadians) / Globals.ClusterCountY);
-	Globals.ClusterZBias = -log2(Projection.NearClip) * Globals.ClusterZScale;
-	Globals.ClusterCountZ = (std::max)(1u, static_cast<uint32>(ceil(log2(Projection.FarClip) * Globals.ClusterZScale + Globals.ClusterZBias)));
+	const bool bIsPerspective = Projection.Mode == ECameraProjectionMode::Perspective;
+	Globals.ClusterCountZ = 1;
+	Globals.ClusterZScale = 0.0f;
+	Globals.ClusterZBias = 0.0f;
+	if (bIsPerspective)
+	{
+		const float HalfFovRadians = Projection.FovDegrees * 3.14159265358979323846f / 360.0f;
+		Globals.ClusterZScale = 1.0f / log2(1.0f + 2.0f * tan(HalfFovRadians) / Globals.ClusterCountY);
+		Globals.ClusterZBias = -log2(Projection.NearClip) * Globals.ClusterZScale;
+		Globals.ClusterCountZ = (std::max)(1u, static_cast<uint32>(ceil(log2(Projection.FarClip) * Globals.ClusterZScale + Globals.ClusterZBias)));
+	}
 	const uint32 PageCount = Globals.ClusterCountX * Globals.ClusterCountY * ((Globals.ClusterCountZ + Resources.ZClusterCountPerPhysicalPage - 1) / Resources.ZClusterCountPerPhysicalPage);
 	const uint32 ClusterCount = Globals.ClusterCountX * Globals.ClusterCountY * Globals.ClusterCountZ;
 	const uint32 IndirectCount = PageCount * Resources.ZClusterCountPerPhysicalPage;
@@ -471,18 +479,22 @@ void FRenderer::BuildLightClusterBuffers(const FRenderViewData& RenderView)
 	}
 	ID3D11DeviceContext* Context = FRenderCommand::GetContext();
 	const uint32 Zeros[6]{};
-	Context->ClearUnorderedAccessViewUint(Resources.PageTableSB->GetUAV(), Zeros);
+	const uint32 TileMask[4]{1, 1, 1, 1};
+	Context->ClearUnorderedAccessViewUint(Resources.PageTableSB->GetUAV(), bIsPerspective ? Zeros : TileMask);
 	Context->ClearUnorderedAccessViewUint(Resources.ClusterSB->GetUAV(), Zeros);
 	FRenderCommand::UpdateStructuredBufferData(Resources.LightIndicesSB.get(), Zeros, sizeof(Zeros), Context);
 	FRenderCommand::UpdateBufferData(Resources.GlobalsCB.get(), &Globals, sizeof(Globals), Context);
 	ID3D11Buffer* ConstantBuffers[] = {ViewCB->GetBuffer(), LightBuffers.LightingGlobalsCB->GetBuffer(), Resources.GlobalsCB->GetBuffer()};
 	Context->CSSetConstantBuffers(0, 3, ConstantBuffers);
-	ID3D11ShaderResourceView* SRVs[] = {Resources.ViewDepthTexture->GetSRV(), LightBuffers.LightTreeSB->GetSRV()};
+	ID3D11ShaderResourceView* SRVs[] = {bIsPerspective ? Resources.ViewDepthTexture->GetSRV() : nullptr, LightBuffers.LightTreeSB->GetSRV()};
 	Context->CSSetShaderResources(0, 2, SRVs);
 	ID3D11UnorderedAccessView* UAVs[] = {Resources.LightIndicesSB->GetUAV(), Resources.ClusterSB->GetUAV(), Resources.IndirectToLightClustersSB->GetUAV(), Resources.PageTableSB->GetUAV()};
 	Context->CSSetUnorderedAccessViews(0, 4, UAVs, nullptr);
-	FRenderCommand::CSSetShader(Resources.BuildCS[0].get());
-	Context->Dispatch((RenderView.Width + Resources.MarkPagesThreadLength - 1) / Resources.MarkPagesThreadLength, (RenderView.Height + Resources.MarkPagesThreadLength - 1) / Resources.MarkPagesThreadLength, 1);
+	if (bIsPerspective)
+	{
+		FRenderCommand::CSSetShader(Resources.BuildCS[0].get());
+		Context->Dispatch((RenderView.Width + Resources.MarkPagesThreadLength - 1) / Resources.MarkPagesThreadLength, (RenderView.Height + Resources.MarkPagesThreadLength - 1) / Resources.MarkPagesThreadLength, 1);
+	}
 	FRenderCommand::CSSetShader(Resources.BuildCS[1].get());
 	Context->Dispatch((PageCount + Resources.AllocatePagesThreadLength - 1) / Resources.AllocatePagesThreadLength, 1, 1);
 	const D3D11_BOX ArgsBox{0, 0, 0, sizeof(uint32) * 3, 1, 1};
@@ -510,19 +522,22 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 	{
 		return;
 	}
+	const bool bIsPerspective = RenderView.Camera.Projection.Mode == ECameraProjectionMode::Perspective;
 
 	if (!ViewCB)
 	{
 		ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FViewConstants));
 	}
-	const FViewConstants ViewConstants{RenderView.ViewProjection, RenderView.Camera.Transform.Location, static_cast<float>(RenderView.Width), static_cast<float>(RenderView.Height), RenderView.Camera.Projection.Mode == ECameraProjectionMode::Perspective ? 1u : 0u, {}};
+	const FViewConstants ViewConstants{RenderView.ViewProjection, RenderView.Camera.Transform.Location, static_cast<float>(RenderView.Width), static_cast<float>(RenderView.Height), bIsPerspective ? 1u : 0u, {}};
 	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewConstants, sizeof(ViewConstants));
 
 	ID3D11ShaderResourceView* EmptySRVs[6]{};
 	FRenderCommand::GetContext()->PSSetShaderResources(4, 6, EmptySRVs);
 	FRenderCommand::GetContext()->VSSetShaderResources(4, 6, EmptySRVs);
-	BuildLightBuffers(Scene);
 	LightClusters.Globals = {};
+	LightClusters.Globals.ClusterDebugMode = static_cast<uint32>(LightCullingDebugSettings.View);
+	LightClusters.Globals.DebugLightCountMax = (std::max)(1u, LightCullingDebugSettings.LightCountMax);
+	LightClusters.Globals.bEnableLightCulling = LightCullingDebugSettings.bEnabled ? 1u : 0u;
 	FRenderCommand::UpdateBufferData(LightClusters.GlobalsCB.get(), &LightClusters.Globals, sizeof(LightClusters.Globals));
 	EnsureDeferredWorkers();
 
@@ -545,6 +560,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 
 	}
 
+	if (bIsPerspective)
 	{
 		FScopedRenderTargets Targets;
 		if (Targets.DSV && RenderView.Width > 0 && RenderView.Height > 0)
@@ -581,7 +597,9 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 		}
 	}
 
-	if (LightClusters.bViewDepthValid && RenderView.Camera.Projection.Mode == ECameraProjectionMode::Perspective)
+	if (RenderView.Width > 0 && RenderView.Height > 0 &&
+		(LightClusters.bViewDepthValid || !bIsPerspective) &&
+		(LightCullingDebugSettings.bEnabled || LightCullingDebugSettings.View != ELightClusterDebugView::None))
 		BuildLightClusterBuffers(RenderView);
 	DrawPacketBatch(InPackets, false, bWireframe, LightingModel);
 }
@@ -858,6 +876,9 @@ void FRenderer::BindPacketMaterial(UMaterial* Material, ID3D11DeviceContext* Con
 }
 
 // 반투명 객체가 없으므로 아무 작업도 수행하지 않음
+// TODO: 라이트컬링을 위한 클러스터 구조는 반투명용과 불투명용이 따로 존재함. 
+// 현재 renderopaque에서 빌드하는 불투명용 클러스터는 오클루전컬링에서 살아남은 인스턴스들을 리드백하여 만든 z버퍼를 사용해 만드는데, 이 인스턴스들이 전부 불투명인지는 확인 안하였음 - 불투명용 클러스터구조기 때문에 불투명 인스턴스들만 있어야 함.
+// 한편 반투명용은 z버퍼 대신 직접 픽셀셰이더에 반투명물체들을 가볍게 드로우하며 반투명용 클러스터페이지테이블에 마킹해야함.
 void FRenderer::RenderTranslucent(const FRenderViewData& RenderView)
 {
 }

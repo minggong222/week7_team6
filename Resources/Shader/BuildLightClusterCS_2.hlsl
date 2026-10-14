@@ -13,7 +13,9 @@ cbuffer LightClusterGlobals : register(b2)
     uint ClusterCountZ;
     float ClusterZScale;
     float ClusterZBias;
-    float3 ClusterGlobalsPadding;
+    uint ClusterDebugMode;
+    uint DebugLightCountMax;
+    uint bEnableLightCulling;
 };
 struct FLightCluster
 {

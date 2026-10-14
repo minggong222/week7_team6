@@ -125,7 +125,9 @@ cbuffer LightClusterGlobals : register(b4)
     uint ClusterCountZ;
     float ClusterZScale;
     float ClusterZBias;
-    float3 ClusterGlobalsPadding;
+    uint ClusterDebugMode;
+    uint DebugLightCountMax;
+    uint bEnableLightCulling;
 };
 
 /******************************
@@ -167,8 +169,9 @@ Utility Function
 
 uint GetClusterIndexZ(float ViewDepth)
 {
-    float DepthTerm = bIsPerspective ? log2(ViewDepth) : ViewDepth;
-    return (uint)clamp(DepthTerm * ClusterZScale + ClusterZBias, 0.0f, (float)(ClusterCountZ - 1));
+    if (bIsPerspective == 0)
+        return 0;
+    return (uint)clamp(log2(ViewDepth) * ClusterZScale + ClusterZBias, 0.0f, (float)(ClusterCountZ - 1));
 }
 
 uint GetClusterKey(float2 SVPosition, float ViewDepth)
@@ -183,7 +186,7 @@ uint GetClusterKey(float2 SVPosition, float ViewDepth)
 bool TryGetLightCluster(float2 PixelPosition, float ViewDepth, out FLightCluster Cluster)
 {
     Cluster = (FLightCluster) 0;
-    if (ClusterCountZ == 0 || ViewDepth <= 0.0f || any(PixelPosition < 0.0f) || any(PixelPosition >= float2(ViewSizeX, ViewSizeY)))
+    if (ClusterCountZ == 0 || (bIsPerspective != 0 && ViewDepth <= 0.0f) || any(PixelPosition < 0.0f) || any(PixelPosition >= float2(ViewSizeX, ViewSizeY)))
         return false;
     uint ClusterKey = GetClusterKey(PixelPosition, ViewDepth);
     uint PageBase = LightClusterPageTable[ClusterKey >> Log2OfZClusterCountPerPhysicalPage];
@@ -194,6 +197,39 @@ bool TryGetLightCluster(float2 PixelPosition, float ViewDepth, out FLightCluster
         return false;
     Cluster = LightClusters[ClusterIndex];
     return true;
+}
+
+float3 ClusterDebugColor(float2 PixelPosition, float ViewDepth)
+{
+    if (ClusterCountZ == 0)
+        return float3(1.0f, 0.0f, 1.0f);
+    FLightCluster Cluster;
+    bool bValid = TryGetLightCluster(PixelPosition, ViewDepth, Cluster);
+    float3 Color = float3(1.0f, 0.0f, 1.0f);
+    if (bValid)
+    {
+        uint Key = GetClusterKey(PixelPosition, ViewDepth);
+        if (ClusterDebugMode == 1)
+        {
+            float T = saturate((float)Cluster.Count / max((float)DebugLightCountMax, 1.0f));
+            Color = saturate(float3(1.5f - abs(4.0f * T - 3.0f), 1.5f - abs(4.0f * T - 2.0f), 1.5f - abs(4.0f * T - 1.0f)));
+            if (Cluster.Count == 0) Color = float3(0.025f, 0.025f, 0.04f);
+        }
+        else if (ClusterDebugMode == 2)
+        {
+            float T = (float)GetClusterIndexZ(ViewDepth) / max((float)(ClusterCountZ - 1), 1.0f);
+            Color = lerp(float3(0.1f, 0.2f, 1.0f), float3(1.0f, 0.25f, 0.05f), T);
+        }
+        else if (ClusterDebugMode == 3)
+        {
+            uint Hash = (Key >> Log2OfZClusterCountPerPhysicalPage) * 1664525u + 1013904223u;
+            Hash ^= Hash >> 16;
+            Color = 0.2f + 0.8f * float3(Hash & 255u, (Hash >> 8) & 255u, (Hash >> 16) & 255u) / 255.0f;
+        }
+        else Color = float3(0.1f, 0.8f, 0.2f);
+    }
+    if (any(fmod(PixelPosition, (float)PixelLengthPerTile) < 1.0f)) Color *= 0.35f;
+    return Color;
 }
 
 // 빛의 벡터를 모두 계산.
@@ -515,7 +551,7 @@ PS_INPUT mainVS(VS_INPUT input)
     output.WorldPosition = worldPos.xyz;
     output.Tangent.xyz = mul(float4(input.T.xyz, 0.0f), World).xyz;
     output.Tangent.w = input.T.w;
-    if (bDisableShading == 1.0f)
+    if (bDisableShading == 1.0f || (ClusterDebugMode != 0 && bOpaque > 0.5f))
     {
         return output;
     }
@@ -524,7 +560,7 @@ PS_INPUT mainVS(VS_INPUT input)
     output.lighting = AmbientRadiance.rgb * AmbientRadiance.w;
     FLightCluster Cluster = (FLightCluster) 0;
     bool bHasLightCluster = false;
-    if (output.position.w > 0.0f && output.position.z >= 0.0f && output.position.z <= output.position.w)
+    if (bEnableLightCulling != 0 && output.position.w > 0.0f && output.position.z >= 0.0f && output.position.z <= output.position.w)
     {
         float2 PixelPosition = (output.position.xy / output.position.w * float2(0.5f, -0.5f) + 0.5f) * float2(ViewSizeX, ViewSizeY);
         bHasLightCluster = TryGetLightCluster(PixelPosition, output.position.w, Cluster);
@@ -570,13 +606,15 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
     float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
     if (bDisableShading == 1.0f)
         return float4(albedo.rgb, alpha);
+    if (ClusterDebugMode != 0 && bOpaque > 0.5f)
+        return float4(ClusterDebugColor(input.position.xy, input.position.w), 1.0f);
     float3 mappedNormal = GetNormalFromMap(input, input.normal, input.uv);
 #if NormalMap
     return float4(mappedNormal * 0.5f + 0.5f, 1.0f);
 #endif
 #if LIGHTING_MODEL_GOURAUD || LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
     FLightCluster Cluster = (FLightCluster) 0;
-    bool bUseLightCluster = ClusterCountZ != 0 && bOpaque > 0.5f;
+    bool bUseLightCluster = bEnableLightCulling != 0 && ClusterCountZ != 0 && bOpaque > 0.5f;
     if (bUseLightCluster)
     {
         if (!TryGetLightCluster(input.position.xy, input.position.w, Cluster))

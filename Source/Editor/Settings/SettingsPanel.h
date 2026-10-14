@@ -4,6 +4,7 @@
 #include "Editor/EditorUI/EditorPanel.h"
 #include "Math/Quat.h"
 #include "Math/Vector.h"
+#include "Rendering/Renderer.h"
 class FMultipleViewportsAdapter;
 
 class UWorld;
@@ -18,6 +19,8 @@ struct FEditorSettings
 	bool bDrawAxis = true;
 	bool bSceneDepthMode = false;
 	bool bDrawBoundingBox = false;
+	FLightCullingDebugSettings LightCulling;
+	bool bShowLightIcons = true;
 
 	int32 SoftwareOcclusionMode = 0;
 	int32 SoftwareOccluderGeometry = 0;

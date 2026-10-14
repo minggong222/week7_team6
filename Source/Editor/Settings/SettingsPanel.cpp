@@ -47,6 +47,28 @@ void FSettingsPanel::OnRender()
 
 	ImGui::Checkbox("Draw Primitives", &Settings.bDrawPrimitives);
 	ImGui::Checkbox("Draw BoundingBox", &Settings.bDrawBoundingBox);
+	ImGui::Spacing();
+	ImGui::SeparatorText("Light Culling");
+	ImGui::Checkbox("Light Culling", &Settings.LightCulling.bEnabled);
+	ImGui::Checkbox("Show Light Icons", &Settings.bShowLightIcons);
+	const char* LightDebugViews[]{"Lighting", "Cluster / Tile Light Count", "Depth Slices", "Logical Pages", "Cluster / Tile Validity"};
+	int32 LightDebugView = static_cast<int32>(Settings.LightCulling.View);
+	ImGui::SetNextItemWidth(-1.0f);
+	if (ImGui::Combo("##LightDebugView", &LightDebugView, LightDebugViews, 5))
+		Settings.LightCulling.View = static_cast<ELightClusterDebugView>(LightDebugView);
+	if (Settings.LightCulling.View == ELightClusterDebugView::LightCount)
+	{
+		int32 LightCountMax = static_cast<int32>(Settings.LightCulling.LightCountMax);
+		if (ImGui::SliderInt("Heatmap Max", &LightCountMax, 1, 256))
+			Settings.LightCulling.LightCountMax = static_cast<uint32>(LightCountMax);
+		ImGui::TextDisabled("Local candidates: blue -> cyan -> yellow -> red");
+		ImGui::TextDisabled("Black: zero | Directional lights excluded");
+	}
+	if (Settings.LightCulling.View != ELightClusterDebugView::None)
+	{
+		ImGui::TextDisabled("Magenta: missing cluster / tile");
+		ImGui::TextDisabled("64 px grid | Orthographic: 2D tiles");
+	}
 
 	ImGui::Spacing();
 	ImGui::SeparatorText("Viewport Guides");
@@ -204,6 +226,10 @@ bool FSettingsPanel::SaveSettings() const
 	File << "DrawPrimitives=" << Settings.bDrawPrimitives << "\n";
 	File << "DrawGrid=" << Settings.bDrawGrid << "\n";
 	File << "DrawAxis=" << Settings.bDrawAxis << "\n";
+	File << "ClusteredLighting=" << Settings.LightCulling.bEnabled << "\n";
+	File << "LightClusterDebugView=" << static_cast<uint32>(Settings.LightCulling.View) << "\n";
+	File << "LightHeatmapMax=" << Settings.LightCulling.LightCountMax << "\n";
+	File << "ShowLightIcons=" << Settings.bShowLightIcons << "\n";
 
 	File << "SoftwareOcclusionMode=" << Snapshot.SoftwareOcclusionMode << "\n";
 	File << "SoftwareOccluderGeometry=" << Snapshot.SoftwareOccluderGeometry << "\n";
@@ -330,6 +356,10 @@ bool FSettingsPanel::LoadSettings()
 				if (Key == "DrawPrimitives") Settings.bDrawPrimitives = std::stoi(ValueStr);
 				else if (Key == "DrawGrid")	Settings.bDrawGrid = std::stoi(ValueStr);
 				else if (Key == "DrawAxis")	Settings.bDrawAxis = std::stoi(ValueStr);
+				else if (Key == "ClusteredLighting") Settings.LightCulling.bEnabled = std::stoi(ValueStr) != 0;
+				else if (Key == "LightClusterDebugView") Settings.LightCulling.View = static_cast<ELightClusterDebugView>(std::clamp(std::stoi(ValueStr), 0, 4));
+				else if (Key == "LightHeatmapMax") Settings.LightCulling.LightCountMax = static_cast<uint32>(std::clamp(std::stoi(ValueStr), 1, 256));
+				else if (Key == "ShowLightIcons") Settings.bShowLightIcons = std::stoi(ValueStr) != 0;
 
 				else if (Key == "SoftwareOcclusionMode") Settings.SoftwareOcclusionMode = std::clamp(std::stoi(ValueStr), 0, 5);
 				else if (Key == "SoftwareOccluderGeometry") Settings.SoftwareOccluderGeometry = std::clamp(std::stoi(ValueStr), 0, 2);

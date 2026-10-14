@@ -37,7 +37,7 @@ struct alignas(16) FPerObjectConstants
 
 struct FLightingGlobals // Constant
 {
-	FVector4 AmbientRadiance{1.0f, 1.0f, 1.0f, 0.4f};
+	FVector4 AmbientRadiance{1.0f, 1.0f, 1.0f, 0.0f};
 	uint32 LightCount = 0;
 	uint32 DirectionalLightCount = 0;
 	uint32 LightTreeRootIndex = 0;
@@ -48,6 +48,15 @@ static_assert(offsetof(FLightingGlobals, LightCount) == 16);
 static_assert(offsetof(FLightingGlobals, DirectionalLightCount) == 20);
 static_assert(offsetof(FLightingGlobals, LightTreeRootIndex) == 24);
 
+enum class ELightClusterDebugView : uint32 { None, LightCount, DepthSlice, Page, Validity };
+
+struct FLightCullingDebugSettings
+{
+	bool bEnabled = true;
+	ELightClusterDebugView View = ELightClusterDebugView::None;
+	uint32 LightCountMax = 64;
+};
+
 struct FLightClusterGlobals // Constant
 {
 	uint32 ClusterCountX = 0;
@@ -55,7 +64,9 @@ struct FLightClusterGlobals // Constant
 	uint32 ClusterCountZ = 0;
 	float ClusterZScale = 0.0f;
 	float ClusterZBias = 0.0f;
-	float ClusterGlobalsPadding[3]{};
+	uint32 ClusterDebugMode = 0;
+	uint32 DebugLightCountMax = 64;
+	uint32 bEnableLightCulling = 1;
 };
 static_assert(sizeof(FLightClusterGlobals) == 32);
 static_assert(offsetof(FLightClusterGlobals, ClusterZScale) == 12);
@@ -117,6 +128,7 @@ class FRenderer
 public:
 
 	bool Init();
+	void BuildLightDatas(const FScene& Scene);
 
 	// 기존 단일 카메라의 ViewProjection으로 렌더 패킷 배열 전체를 그린다.
 	void RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, uint32 ViewWidth, uint32 ViewHeight, const FScene& Scene);
@@ -135,7 +147,9 @@ public:
 	// RenderOpaque가 보관한 반투명 패킷을 먼 것부터 그린다.
 	void RenderTranslucent(const FRenderViewData& RenderView);
 	FRHITexture2D* GetViewDepthTexture() const { return LightClusters.bViewDepthValid ? LightClusters.ViewDepthTexture.get() : nullptr; }
+	void SetLightCullingDebugSettings(const FLightCullingDebugSettings& Settings) { LightCullingDebugSettings = Settings; }
   private:
+	FLightCullingDebugSettings LightCullingDebugSettings;
 	// 정렬된 RenderPackets에서 반투명 패킷이 시작되는 위치
 	uint32 FirstTranslucentIndex = 0;
 	TUniquePtr<FRHIUniformBuffer> CB;
@@ -200,6 +214,5 @@ public:
 	void UpdatePerObjectConstants(const FRenderPacket& RenderPacket, const FMatrixRegister& ViewProjection);
 	void BindLightingResources(ID3D11DeviceContext* Context);
 
-	void BuildLightBuffers(const FScene& Scene);
 	void BuildLightClusterBuffers(const FRenderViewData& RenderView);
 };

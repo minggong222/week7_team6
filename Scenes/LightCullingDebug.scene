@@ -1,0 +1,3905 @@
+{
+    "Version": 2,
+    "Actors": [
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7624",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                78.0,
+                                0.0,
+                                -1.2362327575683594
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                190.0,
+                                150.0,
+                                2.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.5,
+                                    0.5,
+                                    0.5,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AAmbientLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UAmbientLightComponent_7627",
+                    "Class": "UAmbientLightComponent",
+                    "Properties": {
+                        "Intensity": 1.0,
+                        "LightColor": [
+                            0.05999999865889549,
+                            0.05999999865889549,
+                            0.05999999865889549,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                50.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7628",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.05999999865889549,
+                                0.05999999865889549,
+                                0.05999999865889549,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/SkyLight.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7631",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                15.0,
+                                -48.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7634",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                15.0,
+                                -48.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7637",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                22.0,
+                                -40.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7640",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 24.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 2.0,
+                        "LightColor": [
+                            1.0,
+                            0.07999999821186066,
+                            0.029999999329447746,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                10.0,
+                                -48.0,
+                                13.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7641",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                1.0,
+                                0.07999999821186066,
+                                0.029999999329447746,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7644",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                15.0,
+                                0.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7647",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                15.0,
+                                0.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7650",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                22.0,
+                                8.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7653",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            1.0,
+                            0.05000000074505806,
+                            0.05000000074505806,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                11.0,
+                                -8.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7654",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                1.0,
+                                0.05000000074505806,
+                                0.05000000074505806,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7657",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            0.05000000074505806,
+                            1.0,
+                            0.05000000074505806,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                11.0,
+                                0.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7658",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.05000000074505806,
+                                1.0,
+                                0.05000000074505806,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7661",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            0.05000000074505806,
+                            0.05000000074505806,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                11.0,
+                                8.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7662",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.05000000074505806,
+                                0.05000000074505806,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7665",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                15.0,
+                                48.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7668",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                15.0,
+                                48.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7671",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                22.0,
+                                56.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "ASpotLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "USpotLightComponent_7674",
+                    "Class": "USpotLightComponent",
+                    "Properties": {
+                        "InnerConeAngle": 18.0,
+                        "OuterConeAngle": 32.0,
+                        "AttenuationRadius": 40.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 3.0,
+                        "LightColor": [
+                            0.15000000596046448,
+                            0.4000000059604645,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                12.0,
+                                48.0,
+                                25.0
+                            ],
+                            "Rotation": [
+                                82.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7675",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.15000000596046448,
+                                0.4000000059604645,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightSpot.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UArrowComponent_7678",
+                    "Class": "UArrowComponent",
+                    "Properties": {
+                        "StaticMesh": "Arrow",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                90.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.5,
+                                    0.5,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 16.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7680",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                65.0,
+                                -48.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7683",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                65.0,
+                                -48.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7686",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                72.0,
+                                -40.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                20.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7689",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 24.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 2.0,
+                        "LightColor": [
+                            1.0,
+                            0.07999999821186066,
+                            0.029999999329447746,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                60.0,
+                                -48.0,
+                                13.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7690",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                1.0,
+                                0.07999999821186066,
+                                0.029999999329447746,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7693",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                65.0,
+                                0.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7696",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                65.0,
+                                0.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7699",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                72.0,
+                                8.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                20.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7702",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            1.0,
+                            0.05000000074505806,
+                            0.05000000074505806,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                61.0,
+                                -8.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7703",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                1.0,
+                                0.05000000074505806,
+                                0.05000000074505806,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7706",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            0.05000000074505806,
+                            1.0,
+                            0.05000000074505806,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                61.0,
+                                0.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7707",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.05000000074505806,
+                                1.0,
+                                0.05000000074505806,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7710",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            0.05000000074505806,
+                            0.05000000074505806,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                61.0,
+                                8.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7711",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.05000000074505806,
+                                0.05000000074505806,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7714",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                65.0,
+                                48.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7717",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                65.0,
+                                48.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7720",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                72.0,
+                                56.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                20.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "ASpotLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "USpotLightComponent_7723",
+                    "Class": "USpotLightComponent",
+                    "Properties": {
+                        "InnerConeAngle": 18.0,
+                        "OuterConeAngle": 32.0,
+                        "AttenuationRadius": 40.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 3.0,
+                        "LightColor": [
+                            0.15000000596046448,
+                            0.4000000059604645,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                62.0,
+                                48.0,
+                                25.0
+                            ],
+                            "Rotation": [
+                                82.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7724",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.15000000596046448,
+                                0.4000000059604645,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightSpot.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UArrowComponent_7727",
+                    "Class": "UArrowComponent",
+                    "Properties": {
+                        "StaticMesh": "Arrow",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                90.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.5,
+                                    0.5,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 16.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7729",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                130.0,
+                                -48.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7732",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                130.0,
+                                -48.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7735",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                137.0,
+                                -40.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                40.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7738",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 24.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 2.0,
+                        "LightColor": [
+                            1.0,
+                            0.07999999821186066,
+                            0.029999999329447746,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                125.0,
+                                -48.0,
+                                13.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7739",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                1.0,
+                                0.07999999821186066,
+                                0.029999999329447746,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7742",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                130.0,
+                                0.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7745",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                130.0,
+                                0.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7748",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                137.0,
+                                8.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                40.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7751",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            1.0,
+                            0.05000000074505806,
+                            0.05000000074505806,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                126.0,
+                                -8.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7752",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                1.0,
+                                0.05000000074505806,
+                                0.05000000074505806,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7755",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            0.05000000074505806,
+                            1.0,
+                            0.05000000074505806,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                126.0,
+                                0.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7756",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.05000000074505806,
+                                1.0,
+                                0.05000000074505806,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7759",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 25.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 1.2999999523162842,
+                        "LightColor": [
+                            0.05000000074505806,
+                            0.05000000074505806,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                126.0,
+                                8.0,
+                                14.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7760",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.05000000074505806,
+                                0.05000000074505806,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7763",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                130.0,
+                                48.0,
+                                0.5
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                24.0,
+                                30.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    0.6499999761581421,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7766",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "LowSphere",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                130.0,
+                                48.0,
+                                6.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                5.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    0.699999988079071,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7769",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Cube",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                137.0,
+                                56.0,
+                                4.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                40.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                5.0,
+                                5.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    0.6000000238418579,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    0.11999999731779099,
+                                    0.11999999731779099,
+                                    0.11999999731779099
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 32.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearWrap",
+                                "Textures": [
+                                    "WhiteTexture",
+                                    "Assets/Models/Test1NormalMap.png"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "ASpotLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "USpotLightComponent_7772",
+                    "Class": "USpotLightComponent",
+                    "Properties": {
+                        "InnerConeAngle": 18.0,
+                        "OuterConeAngle": 32.0,
+                        "AttenuationRadius": 40.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 3.0,
+                        "LightColor": [
+                            0.15000000596046448,
+                            0.4000000059604645,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                127.0,
+                                48.0,
+                                25.0
+                            ],
+                            "Rotation": [
+                                82.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7773",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.15000000596046448,
+                                0.4000000059604645,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightSpot.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UArrowComponent_7776",
+                    "Class": "UArrowComponent",
+                    "Properties": {
+                        "StaticMesh": "Arrow",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                90.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        },
+                        "OverrideMaterials": [
+                            {
+                                "Base": "DefaultMaterial",
+                                "PSOType": 0,
+                                "BaseColor": [
+                                    0.5,
+                                    0.5,
+                                    1.0,
+                                    1.0
+                                ],
+                                "SpecularColor": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "EmissiveColor": [
+                                    0.0,
+                                    0.0,
+                                    0.0
+                                ],
+                                "Shininess": 16.0,
+                                "NormalScale": 1.0,
+                                "FlipNormal": false,
+                                "UVScrollSpeed": [
+                                    0.0,
+                                    0.0
+                                ],
+                                "SamplerState": "LinearClamp",
+                                "Textures": [
+                                    "WhiteTexture"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7778",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Models/Dice/dice.obj",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                55.315704345703125,
+                                -71.93476104736328,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                25.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                8.0,
+                                8.0,
+                                8.0
+                            ]
+                        },
+                        "OverrideMaterials": []
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "AStaticMeshActor",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPrimitiveComponent_7780",
+                    "Class": "UStaticMeshComponent",
+                    "Properties": {
+                        "StaticMesh": "Models/Rocket/rocket.obj",
+                        "bVisible": true,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                90.0,
+                                65.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                6.353680610656738,
+                                6.353680610656738,
+                                6.353680610656738
+                            ]
+                        },
+                        "OverrideMaterials": []
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7782",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 10.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 20.0,
+                        "LightColor": [
+                            1.0,
+                            0.0,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                70.0,
+                                500.0,
+                                8.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7783",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                1.0,
+                                0.0,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7786",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 10.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 20.0,
+                        "LightColor": [
+                            0.0,
+                            1.0,
+                            1.0,
+                            1.0
+                        ],
+                        "bVisible": true,
+                        "Transform": {
+                            "Location": [
+                                -150.0,
+                                -110.0,
+                                80.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7787",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                0.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "Class": "APointLight",
+            "Properties": null,
+            "Components": [
+                {
+                    "Name": "UPointLightComponent_7790",
+                    "Class": "UPointLightComponent",
+                    "Properties": {
+                        "AttenuationRadius": 50.0,
+                        "LightFalloffExponent": 2.0,
+                        "Intensity": 50.0,
+                        "LightColor": [
+                            0.0,
+                            1.0,
+                            0.0,
+                            1.0
+                        ],
+                        "bVisible": false,
+                        "Transform": {
+                            "Location": [
+                                15.0,
+                                -48.0,
+                                13.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                },
+                {
+                    "Name": "UBillboardComponent_7791",
+                    "Class": "UBillboardComponent",
+                    "Properties": {
+                        "Material": {
+                            "Base": "BillboardMaterial",
+                            "PSOType": 9,
+                            "BaseColor": [
+                                1.0,
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "SpecularColor": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ],
+                            "EmissiveColor": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Shininess": 16.0,
+                            "NormalScale": 1.0,
+                            "FlipNormal": false,
+                            "UVScrollSpeed": [
+                                0.0,
+                                0.0
+                            ],
+                            "SamplerState": "LinearClamp",
+                            "Textures": [
+                                "Assets/S_LightPoint.png"
+                            ]
+                        },
+                        "QuadMesh": "ParticleQuad",
+                        "bVisible": false,
+                        "bCollisionEnabled": false,
+                        "Transform": {
+                            "Location": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Rotation": [
+                                0.0,
+                                0.0,
+                                0.0
+                            ],
+                            "Scale": [
+                                1.0,
+                                1.0,
+                                1.0
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

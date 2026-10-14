@@ -526,7 +526,8 @@ void FEditorApplication::RenderMultipleViewports()
 	}
 
 
-	SetLightVisualizationVisibility(SceneData, !ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused());
+	Renderer->BuildLightDatas(SceneData);
+	SetLightVisualizationVisibility(SceneData, SettingsPanel->GetSettings().bShowLightIcons && (!ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused()));
 	for (int32 ViewIndex = 0; ViewIndex < 4; ++ViewIndex)
 	{
 		const bool bActive = MultipleViewportsAdapter.IsViewActive(ViewIndex);
@@ -657,6 +658,7 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 	const FVector& ViewCameraLocation = RenderView.Camera.Transform.Location;
 	const FVector& ViewCameraForward = RenderView.CameraForward;
 	const FEditorSettings& EditorSettings = SettingsPanel ? SettingsPanel->GetSettings() : FEditorSettings{};
+	Renderer->SetLightCullingDebugSettings(EditorSettings.LightCulling);
 	//후처리 유무에 따른 RTV대상 설정
 
 	//Render 초기화
@@ -843,9 +845,11 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	const FVector& ViewCameraLocation = RenderView.Camera.Transform.Location;
 	const FVector& ViewCameraForward = RenderView.CameraForward;
 	FScene SceneData = GetPIEWorld()->GetScene();
+	Renderer->BuildLightDatas(SceneData);
 	FRenderCommand::BeginRenderPass(ViewRenderingInfo);
 
 	const FEditorSettings& EditorSettings = SettingsPanel ? SettingsPanel->GetSettings() : FEditorSettings{};
+	Renderer->SetLightCullingDebugSettings(EditorSettings.LightCulling);
 
 	if (EditorSettings.bAntiAliasing)
 		FRenderCommand::BeginRenderPassSceneColor(ViewRenderingInfo);

@@ -29,7 +29,9 @@ cbuffer LightClusterGlobals : register(b2)
     uint ClusterCountZ;
     float ClusterZScale;
     float ClusterZBias;
-    float3 ClusterGlobalsPadding;
+    uint ClusterDebugMode;
+    uint DebugLightCountMax;
+    uint bEnableLightCulling;
 };
 
 struct FLightTreeNode
@@ -67,15 +69,23 @@ void BuildClusterFrustum(uint ClusterKey)
     float Right = PixelMax.x * 2.0f / ViewSize.x - 1.0f;
     float Top = 1.0f - PixelMin.y * 2.0f / ViewSize.y;
     float Bottom = 1.0f - PixelMax.y * 2.0f / ViewSize.y;
-    float NearDepth = exp2(((float) Z - ClusterZBias) / ClusterZScale);
-    float FarDepth = exp2(((float) Z + 1.0f - ClusterZBias) / ClusterZScale);
     float4x4 Columns = transpose(ViewProjection);
     ClusterPlanes[0] = Columns[0] - Left * Columns[3];
     ClusterPlanes[1] = Right * Columns[3] - Columns[0];
     ClusterPlanes[2] = Top * Columns[3] - Columns[1];
     ClusterPlanes[3] = Columns[1] - Bottom * Columns[3];
-    ClusterPlanes[4] = Columns[3] - float4(0.0f, 0.0f, 0.0f, NearDepth);
-    ClusterPlanes[5] = float4(0.0f, 0.0f, 0.0f, FarDepth) - Columns[3];
+    if (bIsPerspective != 0)
+    {
+        float NearDepth = exp2(((float) Z - ClusterZBias) / ClusterZScale);
+        float FarDepth = exp2(((float) Z + 1.0f - ClusterZBias) / ClusterZScale);
+        ClusterPlanes[4] = Columns[3] - float4(0.0f, 0.0f, 0.0f, NearDepth);
+        ClusterPlanes[5] = float4(0.0f, 0.0f, 0.0f, FarDepth) - Columns[3];
+    }
+    else
+    {
+        ClusterPlanes[4] = Columns[2];
+        ClusterPlanes[5] = Columns[3] - Columns[2];
+    }
     [unroll] for (uint Index = 0; Index < 6; ++Index)
         ClusterPlanes[Index] *= rsqrt(dot(ClusterPlanes[Index].xyz, ClusterPlanes[Index].xyz));
 }
