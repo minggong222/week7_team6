@@ -378,7 +378,7 @@ void FSoftwareOcclusionCuller::EnsureBVH(const TArray<FRenderableObject>& Object
 	BuiltStaticObjectIndices = StaticObjectIndices;
 	BVHObjectIndices = StaticObjectIndices;
 	BVHNodes.Reset();
-	BVHNodes.Reserve(std::max(1, BVHObjectIndices.Num() * 2));
+	BVHNodes.Reserve(std::max(1u, BVHObjectIndices.Num() * 2));
 	if (!BVHObjectIndices.IsEmpty())
 		BuildBVHNode(Objects, 0, static_cast<uint32>(BVHObjectIndices.Num()));
 	LastBVHBuildMs = static_cast<float>((NowSeconds() - Start) * 1000.0);

@@ -5,6 +5,7 @@
 #include "Materials/Material.h"
 
 #include "RenderCommand.h"
+#include "RenderUtil.h"
 #include "RHI/GPUProfiler.h"
 #include "Stats/StatDefinitions.h"
 #include "Misc/App.h"
@@ -118,22 +119,22 @@ namespace
 			: A.CameraDistanceSquared > B.CameraDistanceSquared;
 	}
 
-/*	struct FLightCountConstants
-	{
-		uint32 LightCount = 0;
-		uint32 Padding[3]{};
-	};
-	static_assert(sizeof(FLightCountConstants) == 16);
-
-	constexpr UINT LightSRVSlot = 4;*/
 }
 
 bool FRenderer::Init()
 {
 	ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FViewConstants));
-	LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));
-	LightCountCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightCountConstants));
-	TileLightHeaderSB = FRenderCommand::CreateStructuredBuffer(sizeof(FTileLightHeader), TileCountX * TileCountY);
+	LightBuffers.LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));
+	LightClusters.GlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightClusterGlobals));
+	const char* ShaderPaths[] = {"Resources/Shader/BuildLightClusterCS_1.hlsl", "Resources/Shader/BuildLightClusterCS_2.hlsl", "Resources/Shader/BuildLightClusterCS_3.hlsl"};
+	for (uint32 Index = 0; Index < 3; ++Index)
+	{
+		FString CSOPath;
+		FShaderByteCode ByteCode = FRenderUtil::GetOrCompile(ShaderPaths[Index], nullptr, "mainCS", EShaderType::Compute, CSOPath);
+		if (!ByteCode.IsValid()) return false;
+		LightClusters.BuildCS[Index] = FRenderCommand::CreateComputeShader(ByteCode);
+		if (!LightClusters.BuildCS[Index] || !LightClusters.BuildCS[Index]->IsValid()) return false;
+	}
 	if (FRenderCommand::GetRenderDevice()->SupportsConstantBufferOffsetting())
 	{
 		return EnsureConstantBufferCapacity(Temp, InitialPacketCapacity);
@@ -206,44 +207,303 @@ void FRenderer::EnsureDeferredWorkers()
 }
 
 // 기존 단일 카메라의 ViewProjection으로 렌더 패킷 배열 전체를 그린다.
-void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const FViewportSettings& ViewportSettings, const FScene& Scene)
+void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, UCameraComponent* CameraComponent, const uint32 ViewWidth, const uint32 ViewHeight, const FScene& Scene)
 {
-	RenderAll(InPackets, CameraComponent->GetViewMatrix(), CameraComponent->GetViewProjectionMatrix(), CameraComponent->GetComponentLocation(), ViewportSettings, Scene);
+	FRenderViewData RenderView;
+	RenderView.Width = (std::max)(1u, ViewWidth);
+	RenderView.Height = (std::max)(1u, ViewHeight);
+	RenderView.Camera.Transform = {CameraComponent->GetComponentLocation(), CameraComponent->GetComponentRotation().Quaternion()};
+	RenderView.Camera.Projection = {CameraComponent->GetIsOrthogonal() ? ECameraProjectionMode::Orthographic : ECameraProjectionMode::Perspective, CameraComponent->GetFieldOfView(), CameraComponent->GetOrthoWidth(), CameraComponent->GetNearZ(), CameraComponent->GetFarZ()};
+	RenderView.View = CameraComponent->GetViewMatrix();
+	RenderView.Projection = BuildProjectionMatrix(RenderView.Camera.Projection, static_cast<float>(RenderView.Width) / RenderView.Height);
+	RenderView.ViewProjection = RenderView.View * RenderView.Projection;
+	RenderView.CameraForward = RenderView.Camera.Transform.Rotation.GetForwardVector().Normalized();
+	RenderAll(InPackets, RenderView, Scene);
 }
 
 // 불투명 우선·반투명 거리순으로 배열을 정렬해 View 행렬과 Section 범위로 그린다.
-void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FMatrix& View, const FMatrix& ViewProjection, const FVector& CameraPosition, const FViewportSettings& ViewportSettings, const FScene& Scene)
+void FRenderer::RenderAll(TArray<FRenderPacket>& InPackets, const FRenderViewData& RenderView, const FScene& Scene)
 {
-	RenderOpaque(InPackets, View, ViewProjection, CameraPosition, ViewportSettings, Scene);
-	RenderTranslucent(ViewProjection);
+	RenderOpaque(InPackets, RenderView, Scene);
+	RenderTranslucent(RenderView);
 }
 
 void FRenderer::BindLightingResources(ID3D11DeviceContext* Context)
 {
-	FRenderCommand::BindConstantBuffer(3, LightingGlobalsCB.get(), EShaderBindFlagBits::Pixel, Context);
-	FRenderCommand::BindConstantBuffer(4, LightCountCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
-
+	FRenderCommand::BindConstantBuffer(3, LightBuffers.LightingGlobalsCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
+	FRenderCommand::BindConstantBuffer(4, LightClusters.GlobalsCB.get(), EShaderBindFlagBits::Vertex | EShaderBindFlagBits::Pixel, Context);
 	ID3D11DeviceContext* Ctx = Context ? Context : FRenderCommand::GetRenderDevice()->GetContext();
-	ID3D11ShaderResourceView* LightDataSRV = LightDataSB ? LightDataSB->GetSRV() : nullptr;
-	Ctx->VSSetShaderResources(4, 1, &LightDataSRV);
+	ID3D11ShaderResourceView* LightDataSRV = LightBuffers.LightDataSB ? LightBuffers.LightDataSB->GetSRV() : nullptr;
+	ID3D11ShaderResourceView* SRVs[] = {
+		LightDataSRV,
+		LightBuffers.DirectionalLightIndicesSB ? LightBuffers.DirectionalLightIndicesSB->GetSRV() : nullptr,
+		LightClusters.LightIndicesSB ? LightClusters.LightIndicesSB->GetSRV() : nullptr,
+		LightClusters.ClusterSB ? LightClusters.ClusterSB->GetSRV() : nullptr,
+		LightClusters.PageTableSB ? LightClusters.PageTableSB->GetSRV() : nullptr,
+		LightClusters.IndirectToLightClustersSB ? LightClusters.IndirectToLightClustersSB->GetSRV() : nullptr};
+	Ctx->VSSetShaderResources(4, 6, SRVs);
+	Ctx->PSSetShaderResources(4, 6, SRVs);
+}
 
-	FRenderCommand::PSSetShaderResource(4, LightDataSB ? LightDataSB->GetSRV() : nullptr, Context);
-	FRenderCommand::PSSetShaderResource(5, TileLightHeaderSB ? TileLightHeaderSB->GetSRV() : nullptr, Context);
-	FRenderCommand::PSSetShaderResource(6, TileLightIndicesSB ? TileLightIndicesSB->GetSRV() : nullptr, Context);
+static uint32 NextPowerOfTwo(uint32 x)
+{
+	if (x <= 1)
+		return 1;
+	--x;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	return x + 1;
+}
+
+static uint32 MakeMortonCode(const FVector& Position, const FVector& Min, const FVector& Max)
+{
+	auto Quantize = [](float Value, float MinValue, float MaxValue) -> uint32
+	{
+		if (MaxValue <= MinValue)
+			return 0;
+		float Normalized = std::clamp((Value - MinValue) / (MaxValue - MinValue), 0.0f, 1.0f);
+		return (std::min)(static_cast<uint32>(Normalized * 1024.0f), 1023u);
+	};
+	uint32 X = Quantize(Position.X, Min.X, Max.X);
+	uint32 Y = Quantize(Position.Y, Min.Y, Max.Y);
+	uint32 Z = Quantize(Position.Z, Min.Z, Max.Z);
+	uint32 Code = 0;
+	for (uint32 Bit = 0; Bit < 10; ++Bit)
+	{
+		Code |= ((X >> Bit) & 1u) << (3 * Bit);
+		Code |= ((Y >> Bit) & 1u) << (3 * Bit + 1);
+		Code |= ((Z >> Bit) & 1u) << (3 * Bit + 2);
+	}
+	return Code;
+}
+
+void FRenderer::BuildLightBuffers(const FScene& Scene)
+{
+	struct FLightBound
+	{
+		uint32 Morton;
+		uint32 DataIndex;
+		FSphere Bound;
+	};
+	bool AmbientDone = false;
+	FVector min{std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+	FVector max{std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
+
+	FLightingGlobals LightingGlobal;
+	TArray<FLightData> LightDatas;
+	TArray<uint32> DirectionalLightIndices;
+	TArray<FLightTreeNode> LightTree;
+	TArray<FLightBound> Bounds;
+
+	LightDatas.Reserve(Scene.Lights.Num());
+	Bounds.Reserve(Scene.Lights.Num());
+	for (const auto& Component : Scene.Lights)
+	{
+		if (!Component.IsValid() || !Component->bVisible)
+			continue;
+		ELightComponentType LightType = Component->GetLightType();
+		if (LightType == LightType_Directional || LightType == LightType_Point || LightType == LightType_Spot)
+		{
+			if (LightType != LightType_Directional)
+			{
+				FLightBound Bound{.DataIndex{(uint32)LightDatas.size()}, .Bound{Component->GetBoundingSphere()}};
+				if (min.X > Bound.Bound.Center.X) min.X = Bound.Bound.Center.X;
+				if (min.Y > Bound.Bound.Center.Y) min.Y = Bound.Bound.Center.Y;
+				if (min.Z > Bound.Bound.Center.Z) min.Z = Bound.Bound.Center.Z;
+				if (max.X < Bound.Bound.Center.X) max.X = Bound.Bound.Center.X;
+				if (max.Y < Bound.Bound.Center.Y) max.Y = Bound.Bound.Center.Y;
+				if (max.Z < Bound.Bound.Center.Z) max.Z = Bound.Bound.Center.Z;
+				Bounds.Add(Bound);
+			}
+			else
+				DirectionalLightIndices.Add((uint32)LightDatas.size());
+
+			LightDatas.Add(Component->CreateLightData());
+		}
+		else if (LightType == LightType_Ambient && !AmbientDone)
+		{
+			AmbientDone = true;
+			LightingGlobal.AmbientRadiance = {Component->LightColor.R, Component->LightColor.G, Component->LightColor.B, Component->Intensity};
+		}
+	}
+	for (auto& Bound : Bounds)
+		Bound.Morton = MakeMortonCode(Bound.Bound.Center, min, max);
+
+	std::sort(Bounds.begin(), Bounds.end(),
+		[](const FLightBound& B1, const FLightBound& B2)
+		{
+			return B1.Morton < B2.Morton;
+		});
+
+	LightingGlobal.LightCount = LightDatas.Num();
+	LightingGlobal.DirectionalLightCount = DirectionalLightIndices.Num();
+
+	uint32 RootIndex = 0;
+
+	uint32 k = Bounds.Num();
+
+	if (k == 0)
+	{
+		LightTree.Add(FLightTreeNode{.ChildIndex = std::numeric_limits<uint32>::max()});
+	}
+	else
+	{
+		uint32 NodeCount = 1;
+		uint32 Height = 0;
+		do
+		{
+			++Height;
+			NodeCount += k;
+			k = (k + MaxChildCount - 1) / MaxChildCount;
+		} while (k != 1);
+
+		LightTree.Reserve(NodeCount);
+		for (auto& Bound : Bounds)
+			LightTree.Add(FLightTreeNode{.LeafSphere{.Center = Bound.Bound.Center, .Radius = Bound.Bound.Radius, .DataIndex = Bound.DataIndex}});
+
+		k = Bounds.Num();
+		uint32 currentIndex = 0;
+		uint32 ParentInitalIndex = Bounds.Num();
+		uint32 LoopedCount = 0;
+		while (k != 0)
+		{
+			uint32 BoxAddCount = 0;
+			if (k <= MaxChildCount)
+				BoxAddCount = k;
+			else
+				BoxAddCount = MaxChildCount;
+			FBox Box;
+
+			for (uint32 i = 0; i < BoxAddCount; ++i)
+			{
+				Box += FBox(LightTree[currentIndex].LeafSphere.Center, LightTree[currentIndex].LeafSphere.Radius);
+				++currentIndex;
+			}
+
+			LightTree.Add(FLightTreeNode{.AABB{Box}, .ChildIndex = LoopedCount * MaxChildCount, .ChildCount = BoxAddCount});
+			k -= BoxAddCount;
+			++LoopedCount;
+		}
+
+		for (uint32 i = 1; i < Height; ++i)
+		{
+			k = LoopedCount;
+			uint32 baseIndex = ParentInitalIndex;
+			currentIndex = ParentInitalIndex;
+			ParentInitalIndex += LoopedCount;
+			LoopedCount = 0;
+			while (k != 0)
+			{
+				uint32 BoxAddCount = 0;
+				if (k <= MaxChildCount)
+					BoxAddCount = k;
+				else
+					BoxAddCount = MaxChildCount;
+				FBox Box;
+
+				for (uint32 j = 0; j < BoxAddCount; ++j)
+				{
+					Box += FBox(LightTree[currentIndex].AABB);
+					++currentIndex;
+				}
+
+				LightTree.Add(FLightTreeNode{.AABB{Box}, .ChildIndex = baseIndex + LoopedCount * MaxChildCount, .ChildCount = BoxAddCount});
+				k -= BoxAddCount;
+				++LoopedCount;
+			}
+		}
+
+		RootIndex = LightTree.Num() - 1;
+	}
+	LightingGlobal.LightTreeRootIndex = RootIndex;
+
+	if (!LightBuffers.LightingGlobalsCB)
+		LightBuffers.LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));
+
+	if (!LightBuffers.LightDataSB || LightBuffers.LightDataSB->GetElementCount() < LightDatas.Num())
+		LightBuffers.LightDataSB = FRenderCommand::CreateStructuredBuffer(sizeof(FLightData), NextPowerOfTwo(LightDatas.Num()));
+
+	if (!LightBuffers.DirectionalLightIndicesSB || LightBuffers.DirectionalLightIndicesSB->GetElementCount() < DirectionalLightIndices.Num())
+		LightBuffers.DirectionalLightIndicesSB = FRenderCommand::CreateStructuredBuffer(sizeof(uint32), NextPowerOfTwo(DirectionalLightIndices.Num()));
+
+	if (!LightBuffers.LightTreeSB || LightBuffers.LightTreeSB->GetElementCount() < LightTree.Num())
+		LightBuffers.LightTreeSB = FRenderCommand::CreateStructuredBuffer(sizeof(FLightTreeNode), NextPowerOfTwo(LightTree.Num()));
+
+	FRenderCommand::UpdateBufferData(LightBuffers.LightingGlobalsCB.get(), &LightingGlobal, sizeof(FLightingGlobals));
+	FRenderCommand::UpdateStructuredBufferData(LightBuffers.LightDataSB.get(), LightDatas.GetData(), LightDatas.Num() * sizeof(FLightData));
+	FRenderCommand::UpdateStructuredBufferData(LightBuffers.DirectionalLightIndicesSB.get(), DirectionalLightIndices.GetData(), DirectionalLightIndices.Num() * sizeof(uint32));
+	FRenderCommand::UpdateStructuredBufferData(LightBuffers.LightTreeSB.get(), LightTree.GetData(), LightTree.Num() * sizeof(FLightTreeNode));
+}
+
+void FRenderer::BuildLightClusterBuffers(const FRenderViewData& RenderView)
+{
+	auto& Resources = LightClusters;
+	auto& Globals = Resources.Globals;
+	Globals.ClusterCountX = (RenderView.Width + Resources.PixelLengthPerTile - 1) / Resources.PixelLengthPerTile;
+	Globals.ClusterCountY = (RenderView.Height + Resources.PixelLengthPerTile - 1) / Resources.PixelLengthPerTile;
+	const auto& Projection = RenderView.Camera.Projection;
+	const float HalfFovRadians = Projection.FovDegrees * 3.14159265358979323846f / 360.0f;
+	Globals.ClusterZScale = 1.0f / log2(1.0f + 2.0f * tan(HalfFovRadians) / Globals.ClusterCountY);
+	Globals.ClusterZBias = -log2(Projection.NearClip) * Globals.ClusterZScale;
+	Globals.ClusterCountZ = (std::max)(1u, static_cast<uint32>(ceil(log2(Projection.FarClip) * Globals.ClusterZScale + Globals.ClusterZBias)));
+	const uint32 PageCount = Globals.ClusterCountX * Globals.ClusterCountY * ((Globals.ClusterCountZ + Resources.ZClusterCountPerPhysicalPage - 1) / Resources.ZClusterCountPerPhysicalPage);
+	const uint32 ClusterCount = Globals.ClusterCountX * Globals.ClusterCountY * Globals.ClusterCountZ;
+	const uint32 IndirectCount = PageCount * Resources.ZClusterCountPerPhysicalPage;
+	if (!Resources.LightIndicesSB)
+		Resources.LightIndicesSB = FRenderCommand::CreateStructuredBuffer(sizeof(uint32), Resources.LightIndicesCapacity);
+	if (!Resources.ClusterSB || Resources.ClusterSB->GetElementCount() < ClusterCount)
+		Resources.ClusterSB = FRenderCommand::CreateStructuredBuffer(sizeof(FLightCluster), NextPowerOfTwo(ClusterCount));
+	if (!Resources.IndirectToLightClustersSB || Resources.IndirectToLightClustersSB->GetElementCount() < IndirectCount)
+		Resources.IndirectToLightClustersSB = FRenderCommand::CreateStructuredBuffer(sizeof(uint32), NextPowerOfTwo(IndirectCount));
+	if (!Resources.PageTableSB || Resources.PageTableSB->GetElementCount() < PageCount)
+		Resources.PageTableSB = FRenderCommand::CreateStructuredBuffer(sizeof(uint32), NextPowerOfTwo(PageCount));
+	if (!Resources.DispatchArgsBuffer)
+	{
+		D3D11_BUFFER_DESC Desc{};
+		Desc.ByteWidth = sizeof(uint32) * 3;
+		Desc.Usage = D3D11_USAGE_DEFAULT;
+		Desc.MiscFlags = D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS;
+		Resources.DispatchArgsBuffer = MakeUnique<FRHIBuffer>(FRenderCommand::GetDevice(), Desc);
+	}
+	ID3D11DeviceContext* Context = FRenderCommand::GetContext();
+	const uint32 Zeros[6]{};
+	Context->ClearUnorderedAccessViewUint(Resources.PageTableSB->GetUAV(), Zeros);
+	Context->ClearUnorderedAccessViewUint(Resources.ClusterSB->GetUAV(), Zeros);
+	FRenderCommand::UpdateStructuredBufferData(Resources.LightIndicesSB.get(), Zeros, sizeof(Zeros), Context);
+	FRenderCommand::UpdateBufferData(Resources.GlobalsCB.get(), &Globals, sizeof(Globals), Context);
+	ID3D11Buffer* ConstantBuffers[] = {ViewCB->GetBuffer(), LightBuffers.LightingGlobalsCB->GetBuffer(), Resources.GlobalsCB->GetBuffer()};
+	Context->CSSetConstantBuffers(0, 3, ConstantBuffers);
+	ID3D11ShaderResourceView* SRVs[] = {Resources.ViewDepthTexture->GetSRV(), LightBuffers.LightTreeSB->GetSRV()};
+	Context->CSSetShaderResources(0, 2, SRVs);
+	ID3D11UnorderedAccessView* UAVs[] = {Resources.LightIndicesSB->GetUAV(), Resources.ClusterSB->GetUAV(), Resources.IndirectToLightClustersSB->GetUAV(), Resources.PageTableSB->GetUAV()};
+	Context->CSSetUnorderedAccessViews(0, 4, UAVs, nullptr);
+	FRenderCommand::CSSetShader(Resources.BuildCS[0].get());
+	Context->Dispatch((RenderView.Width + Resources.MarkPagesThreadLength - 1) / Resources.MarkPagesThreadLength, (RenderView.Height + Resources.MarkPagesThreadLength - 1) / Resources.MarkPagesThreadLength, 1);
+	FRenderCommand::CSSetShader(Resources.BuildCS[1].get());
+	Context->Dispatch((PageCount + Resources.AllocatePagesThreadLength - 1) / Resources.AllocatePagesThreadLength, 1, 1);
+	const D3D11_BOX ArgsBox{0, 0, 0, sizeof(uint32) * 3, 1, 1};
+	Context->CopySubresourceRegion(Resources.DispatchArgsBuffer->GetBuffer(), 0, 0, 0, 0, Resources.LightIndicesSB->GetBuffer(), 0, &ArgsBox);
+	FRenderCommand::CSSetShader(Resources.BuildCS[2].get());
+	Context->DispatchIndirect(Resources.DispatchArgsBuffer->GetBuffer(), 0);
+	ID3D11UnorderedAccessView* EmptyUAVs[4]{};
+	ID3D11ShaderResourceView* EmptySRVs[2]{};
+	Context->CSSetUnorderedAccessViews(0, 4, EmptyUAVs, nullptr);
+	Context->CSSetShaderResources(0, 2, EmptySRVs);
+	FRenderCommand::CSSetShader(nullptr);
 }
 
 // TArray 기반 불투명 메시 지연 컨텍스트 병렬 렌더링
 void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
-	const FMatrix& View,
-	const FMatrix& ViewProjection,
-	const FVector& CameraPosition,
-	const FViewportSettings& ViewportSettings,
+	const FRenderViewData& RenderView,
 	const FScene& Scene,
 	bool bWireframe,
 	ELightingModel LightingModel)
 {
 	FStatScope SubmitScope(StatIds::RenderSubmit());
-	bViewDepthValid = false;
+	LightClusters.bViewDepthValid = false;
 	const int32 TotalPackets = InPackets.Num();
 	if (TotalPackets == 0)
 	{
@@ -254,9 +514,15 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 	{
 		ViewCB = FRenderCommand::CreateConstantBuffer(sizeof(FViewConstants));
 	}
-	const FViewConstants ViewConstants{ViewProjection, CameraPosition, static_cast<float>(ViewportSettings.Width), static_cast<float>(ViewportSettings.Height), {}};
+	const FViewConstants ViewConstants{RenderView.ViewProjection, RenderView.Camera.Transform.Location, static_cast<float>(RenderView.Width), static_cast<float>(RenderView.Height), RenderView.Camera.Projection.Mode == ECameraProjectionMode::Perspective ? 1u : 0u, {}};
 	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewConstants, sizeof(ViewConstants));
 
+	ID3D11ShaderResourceView* EmptySRVs[6]{};
+	FRenderCommand::GetContext()->PSSetShaderResources(4, 6, EmptySRVs);
+	FRenderCommand::GetContext()->VSSetShaderResources(4, 6, EmptySRVs);
+	BuildLightBuffers(Scene);
+	LightClusters.Globals = {};
+	FRenderCommand::UpdateBufferData(LightClusters.GlobalsCB.get(), &LightClusters.Globals, sizeof(LightClusters.Globals));
 	EnsureDeferredWorkers();
 
 	{
@@ -280,7 +546,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 
 	{
 		FScopedRenderTargets Targets;
-		if (Targets.DSV && ViewportSettings.Width > 0 && ViewportSettings.Height > 0)
+		if (Targets.DSV && RenderView.Width > 0 && RenderView.Height > 0)
 		{
 			ComPtr<ID3D11Resource> DepthResource;
 			ComPtr<ID3D11Texture2D> DepthTexture;
@@ -288,7 +554,7 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 			DepthResource.As(&DepthTexture);
 			D3D11_TEXTURE2D_DESC Desc{};
 			DepthTexture->GetDesc(&Desc);
-			if (!ViewDepthTexture || ViewDepthTexture->GetWidth() != Desc.Width || ViewDepthTexture->GetHeight() != Desc.Height)
+			if (!LightClusters.ViewDepthTexture || LightClusters.ViewDepthTexture->GetWidth() != Desc.Width || LightClusters.ViewDepthTexture->GetHeight() != Desc.Height)
 			{
 				Desc.MipLevels = 1;
 				Desc.ArraySize = 1;
@@ -297,57 +563,25 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 				Desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 				Desc.CPUAccessFlags = 0;
 				Desc.MiscFlags = 0;
-				ViewDepthTexture = FRenderCommand::CreateTexture2D(Desc);
+				LightClusters.ViewDepthTexture = FRenderCommand::CreateTexture2D(Desc);
 			}
-			if (!ViewDepthCB) ViewDepthCB = FRenderCommand::CreateConstantBuffer(sizeof(FMatrix));
-			if (ViewDepthTexture && ViewDepthTexture->GetRTV() && ViewDepthTexture->GetSRV() && ViewDepthCB && ViewDepthCB->GetBuffer())
+			if (!LightClusters.ViewMatrixCB) LightClusters.ViewMatrixCB = FRenderCommand::CreateConstantBuffer(sizeof(FMatrix));
+			if (LightClusters.ViewDepthTexture && LightClusters.ViewDepthTexture->GetRTV() && LightClusters.ViewDepthTexture->GetSRV() && LightClusters.ViewMatrixCB && LightClusters.ViewMatrixCB->GetBuffer())
 			{
-				FRenderCommand::UpdateBufferData(ViewDepthCB.get(), &View, sizeof(View));
+				FRenderCommand::UpdateBufferData(LightClusters.ViewMatrixCB.get(), &RenderView.View, sizeof(RenderView.View));
 				const float ClearDepth[4]{(std::numeric_limits<float>::max)(), 0.0f, 0.0f, 0.0f};
-				Targets.Context->ClearRenderTargetView(ViewDepthTexture->GetRTV(), ClearDepth);
+				Targets.Context->ClearRenderTargetView(LightClusters.ViewDepthTexture->GetRTV(), ClearDepth);
 				Targets.Context->ClearDepthStencilView(Targets.DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
-				ID3D11RenderTargetView* DepthRTV = ViewDepthTexture->GetRTV();
+				ID3D11RenderTargetView* DepthRTV = LightClusters.ViewDepthTexture->GetRTV();
 				Targets.Context->OMSetRenderTargets(1, &DepthRTV, Targets.DSV);
-				bViewDepthValid = DrawPacketBatch(InPackets, true, bWireframe, LightingModel);
-				if (!bViewDepthValid) Targets.Context->ClearDepthStencilView(Targets.DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+				LightClusters.bViewDepthValid = DrawPacketBatch(InPackets, true, bWireframe, LightingModel);
+				if (!LightClusters.bViewDepthValid) Targets.Context->ClearDepthStencilView(Targets.DSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 			}
 		}
 	}
 
-	FLightingGlobals tempGlobal{.AmbientRadiance{1.0f, 1.0f, 1.0f, 0.5f}};
-	if (!LightingGlobalsCB)
-	{
-		LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));
-	}
-	FRenderCommand::UpdateBufferData(LightingGlobalsCB.get(), &tempGlobal, sizeof(tempGlobal));
-
-	const uint32 LightCount = static_cast<uint32>(Scene.LightDatas.Num());
-	if (!LightCountCB)
-	{
-		LightCountCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightCountConstants));
-	}
-	const FLightCountConstants LightCountConstants{LightCount, {}};
-	FRenderCommand::UpdateBufferData(LightCountCB.get(), &LightCountConstants, sizeof(LightCountConstants));
-
-	const uint32 LightCapacity = (std::max)(1u, LightCount);
-	if (!LightDataSB || LightDataSB->GetElementCount() < LightCapacity)
-	{
-		LightDataSB = FRenderCommand::CreateStructuredBuffer(sizeof(FLightData), LightCapacity);
-	}
-	FRenderCommand::UpdateStructuredBufferData(LightDataSB.get(), Scene.LightDatas.GetData(), Scene.LightDatas.Num() * sizeof(FLightData));
-	if (!TileLightHeaderSB)
-	{
-		TileLightHeaderSB = FRenderCommand::CreateStructuredBuffer(sizeof(FTileLightHeader), TileCountX * TileCountY);
-	}
-	FRenderCommand::UpdateStructuredBufferData(TileLightHeaderSB.get(), Scene.TileLightHeader, TileCountX * TileCountY * sizeof(FTileLightHeader));
-	const uint32 IndexCount = static_cast<uint32>(Scene.TileLightIndices.Num());
-	const uint32 IndexCapacity = (std::max)(1u, IndexCount);
-	if (!TileLightIndicesSB || TileLightIndicesSB->GetElementCount() < IndexCapacity)
-	{
-		TileLightIndicesSB = FRenderCommand::CreateStructuredBuffer(sizeof(uint32), IndexCapacity);
-	}
-	FRenderCommand::UpdateStructuredBufferData(TileLightIndicesSB.get(), Scene.TileLightIndices.GetData(), Scene.TileLightIndices.Num() * sizeof(uint32));
-
+	if (LightClusters.bViewDepthValid && RenderView.Camera.Projection.Mode == ECameraProjectionMode::Perspective)
+		BuildLightClusterBuffers(RenderView);
 	DrawPacketBatch(InPackets, false, bWireframe, LightingModel);
 }
 
@@ -601,7 +835,7 @@ void FRenderer::BindPacketPass(ID3D11DeviceContext* Context, bool bViewDepthPass
 	if (bViewDepthPass)
 	{
 		FRenderCommand::BindPipelineState(FRenderResourceManager::GetPSO(EPSOType::StaticMesh_ViewDepth), Context);
-		FRenderCommand::BindConstantBuffer(5, ViewDepthCB.get(), EShaderBindFlagBits::Vertex, Context);
+		FRenderCommand::BindConstantBuffer(5, LightClusters.ViewMatrixCB.get(), EShaderBindFlagBits::Vertex, Context);
 	}
 	else
 	{
@@ -618,22 +852,12 @@ void FRenderer::BindPacketMaterial(UMaterial* Material, ID3D11DeviceContext* Con
 	else
 	{
 		BindMaterial(Material, Context, bPSOChanged, bWireframe, LightingModel);
-		if (bViewDepthValid && IsOpaquePSO(Material->PSOType)) FRenderCommand::SetDepthStencilState(EDepthStencilState::ReadOnlyLessEqual, Context);
+		if (LightClusters.bViewDepthValid && IsOpaquePSO(Material->PSOType)) FRenderCommand::SetDepthStencilState(EDepthStencilState::ReadOnlyLessEqual, Context);
 	}
 }
 
 // 반투명 객체가 없으므로 아무 작업도 수행하지 않음
-void FRenderer::RenderTranslucent(const FMatrix& ViewProjection)
-{
-}
-
-/*void FRenderer::SetWorldLights(const TArray<FLightData>& InLights)
-{
-	WorldLights = InLights;
-}*/
-
-// 기존 인터페이스 호환용 함수
-void FRenderer::DrawPackets(uint32 Begin, uint32 End, const FMatrix& ViewProjection)
+void FRenderer::RenderTranslucent(const FRenderViewData& RenderView)
 {
 }
 
@@ -715,95 +939,3 @@ void FRenderer::UpdatePerObjectConstants(const FRenderPacket& RenderPacket, cons
 	Constants.Normal = RenderPacket.Normal;
 	FRenderCommand::UpdateBufferData(Temp.get(), &Constants);
 }
-
-/*bool FRenderer::UpdateWorldLightResources()
-{
-	auto* RenderDevice = FRenderCommand::GetRenderDevice();
-	if (!RenderDevice || !LightCountCB)
-		return false;
-
-	ID3D11DeviceContext* Context = RenderDevice->GetContext();
-
-	if (!Context)
-		return false;
-
-	const uint32 NumLights = static_cast<uint32>(WorldLights.Num());
-
-	const uint32 RequiredCapacity = (std::max)(1u, NumLights);
-
-	if (!LightsBuffer || RequiredCapacity > LightsBufferCapacity)
-	{
-		uint32 NewCapacity = (std::max)(1u, LightsBufferCapacity);
-
-		while (NewCapacity < RequiredCapacity)
-		{
-			if (NewCapacity > (std::numeric_limits<uint32>::max)() / 2)
-			{
-				NewCapacity = RequiredCapacity;
-				break;
-			}
-
-			NewCapacity *= 2;
-		}
-
-		const uint64 ByteWidth = static_cast<uint64>(NewCapacity) * sizeof(FLightData);
-
-		if (ByteWidth > (std::numeric_limits<UINT>::max)())
-			return false;
-
-		ComPtr<ID3D11Device> Device;
-		Context->GetDevice(Device.GetAddressOf());
-
-		if (!Device)
-			return false;
-
-		D3D11_BUFFER_DESC Desc{};
-
-		Desc.ByteWidth = static_cast<UINT>(ByteWidth);
-		Desc.Usage = D3D11_USAGE_DEFAULT;
-		Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		Desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-		Desc.StructureByteStride = sizeof(FLightData);
-
-		ComPtr<ID3D11Buffer> NewBuffer;
-
-		HRESULT hr = Device->CreateBuffer(&Desc, nullptr, NewBuffer.GetAddressOf());
-		if (FAILED(hr))
-			return false;
-
-		D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc{};
-		SRVDesc.Format = DXGI_FORMAT_UNKNOWN;
-		SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-		SRVDesc.Buffer.FirstElement = 0;
-		SRVDesc.Buffer.NumElements = NewCapacity;
-
-		ComPtr<ID3D11ShaderResourceView> NewSRV;
-
-		hr = Device->CreateShaderResourceView(NewBuffer.Get(), &SRVDesc, NewSRV.GetAddressOf());
-		if (FAILED(hr))
-			return false;
-
-		LightsBuffer = std::move(NewBuffer);
-		LightsSRV = std::move(NewSRV);
-		LightsBufferCapacity = NewCapacity;
-	}
-
-	if (NumLights > 0)
-	{
-		D3D11_BOX UpdateBox{};
-		UpdateBox.left = 0;
-		UpdateBox.right = NumLights * sizeof(FLightData);
-		UpdateBox.top = 0;
-		UpdateBox.bottom = 1;
-		UpdateBox.front = 0;
-		UpdateBox.back = 1;
-
-		Context->UpdateSubresource(LightsBuffer.Get(), 0, &UpdateBox, &WorldLights[0], 0, 0);
-
-		FLightCountConstants CountConstants{};
-		CountConstants.LightCount = NumLights;
-
-		FRenderCommand::UpdateBufferData(LightCountCB.get(), &CountConstants, sizeof(CountConstants));
-		return true;
-	}
-}*/

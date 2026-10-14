@@ -69,7 +69,7 @@ FRHIStructuredBuffer::FRHIStructuredBuffer(ID3D11Device* Device, uint32 ByteSize
 	D3D11_BUFFER_DESC StructuredBufferDesc = {};
 	StructuredBufferDesc.ByteWidth = ByteSizePerElement * ElementCount;
 	StructuredBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	StructuredBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	StructuredBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 	StructuredBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	StructuredBufferDesc.StructureByteStride = ByteSizePerElement;
 	ReCreateBuffer(Device, StructuredBufferDesc, nullptr);
@@ -80,6 +80,13 @@ FRHIStructuredBuffer::FRHIStructuredBuffer(ID3D11Device* Device, uint32 ByteSize
 	SRVDesc.Buffer.FirstElement = 0;
 	SRVDesc.Buffer.NumElements = ElementCount;
 	Device->CreateShaderResourceView(Buffer.Get(), &SRVDesc, SRV.GetAddressOf());
+	D3D11_UNORDERED_ACCESS_VIEW_DESC UAVDesc = {};
+	UAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	UAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	UAVDesc.Buffer.FirstElement = 0;
+	UAVDesc.Buffer.NumElements = ElementCount;
+	if (FAILED(Device->CreateUnorderedAccessView(Buffer.Get(), &UAVDesc, UAV.GetAddressOf())))
+		LOG(Warning, "Failed To Create Structured Buffer UAV!");
 	ElementSize = ByteSizePerElement;
 	this->ElementCount = ElementCount;
 }

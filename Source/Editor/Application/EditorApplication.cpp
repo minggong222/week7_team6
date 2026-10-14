@@ -87,7 +87,7 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	Renderer = MakeUnique<FRenderer>();
 	RenderDevice = MakeUnique<FDynamicRHI>();
 	FRenderCommand::Init(RenderDevice.get());
-	Renderer->Init();
+	if (!Renderer->Init()) return false;
 
 	// Create Main Window & Swapchain
 	FWindowContext MainWindowCtx;
@@ -380,8 +380,9 @@ void FEditorApplication::UpdatePIEViewportState(const float DeltaTime)
 
 		const FRect ViewRect{0.0f, 0.0f, std::max(1.0f, ViewportSize.X), std::max(1.0f, ViewportSize.Y)};
 
-		PIEPanel->SetView(ViewRect);
 		PIEViewAdapter.SetViewRect(0, ViewRect);
+		const FRenderViewData& RenderView = PIEViewAdapter.GetRenderView(0);
+		PIEPanel->SetView(ViewRect, RenderView.Width, RenderView.Height);
 
 		return;
 	}
@@ -407,17 +408,13 @@ void FEditorApplication::UpdatePIEViewportState(const float DeltaTime)
 
 	const FRect ViewRect{0.0f, 0.0f, std::max(1.0f, ViewportSize.X), std::max(1.0f, ViewportSize.Y)};
 
-	PIEPanel->SetView(ViewRect);
-
-	ViewportsPanel->SetView(0, ViewRect, true);
-
-	ViewportsPanel->SetView(1, FRect{}, false);
-
-	ViewportsPanel->SetView(2, FRect{}, false);
-
-	ViewportsPanel->SetView(3, FRect{}, false);
-
 	PIEViewAdapter.SetViewRect(0, ViewRect);
+	const FRenderViewData& RenderView = PIEViewAdapter.GetRenderView(0);
+	PIEPanel->SetView(ViewRect, RenderView.Width, RenderView.Height);
+	ViewportsPanel->SetView(0, ViewRect, true, RenderView.Width, RenderView.Height);
+	ViewportsPanel->SetView(1, FRect{}, false, 0, 0);
+	ViewportsPanel->SetView(2, FRect{}, false, 0, 0);
+	ViewportsPanel->SetView(3, FRect{}, false, 0, 0);
 }
 
 // 월드를 한 번 Tick·Capture한 뒤 에디터와 피킹을 갱신한다.
@@ -483,27 +480,26 @@ void FEditorApplication::RenderMultipleViewports()
 	{
 		SceneData = GetEditorWorld()->GetScene();
 	}
+
+
 	for (int32 ViewIndex = 0; ViewIndex < 4; ++ViewIndex)
 	{
 		const bool bActive = MultipleViewportsAdapter.IsViewActive(ViewIndex);
-		ViewportsPanel->SetView(ViewIndex, MultipleViewportsAdapter.GetViewRect(ViewIndex), bActive);
+		const FRect& Rect = MultipleViewportsAdapter.GetViewRect(ViewIndex);
 		CameraPresets[ViewIndex] = MultipleViewportsAdapter.GetCameraPreset(ViewIndex);
 
 		if (!bActive)
+		{
+			ViewportsPanel->SetView(ViewIndex, Rect, false, 0, 0);
 			continue;
+		}
 		
-		ViewportsPanel->GetViewportAdapter()->BuildRenderPackets(ViewIndex, SceneRenderPackets);
+		IViewportAdapter* Adapter = ViewportsPanel->GetViewportAdapter();
+		const FRenderViewData& RenderView = Adapter->GetRenderView(ViewIndex);
+		ViewportsPanel->SetView(ViewIndex, Rect, true, RenderView.Width, RenderView.Height);
+		Adapter->BuildRenderPackets(ViewIndex, SceneRenderPackets);
 
-		SceneData.BuildTileLightData();
-
-		RenderFrame(ViewIndex,
-			ViewportsPanel->GetRenderingInfo(ViewIndex),
-			ViewportsPanel->GetViewportAdapter()->GetEngineViewProjection(ViewIndex),
-			ViewportsPanel->GetViewportAdapter()->GetEnginePerspectiveProjection(ViewIndex),
-			ViewportsPanel->GetViewportAdapter()->GetEngineCameraLocation(ViewIndex),
-			ViewportsPanel->GetViewportAdapter()->GetEngineCameraForward(ViewIndex),
-			SceneRenderPackets,
-			SceneData);
+		RenderFrame(ViewIndex, ViewportsPanel->GetRenderingInfo(ViewIndex), RenderView, SceneRenderPackets, SceneData);
 	}
 
 	ViewportsPanel->SetControlState(MultipleViewportsAdapter.GetLayoutMode(), MultipleViewportsAdapter.GetSingleViewIndex(), CameraPresets);
@@ -513,13 +509,11 @@ void FEditorApplication::RenderPIEViewport()
 {
 	if (PIEPanel && PIEPanel->IsPlay() && !PIEPanel->IsPause())
 	{
-		const FRect PIEViewRect{0.0f, 0.0f, PIEPanel->GetContentSize().X, PIEPanel->GetContentSize().Y};
-
-		PIEPanel->SetView(PIEViewRect);
-
+		const FRenderViewData& RenderView = PIEViewAdapter.GetRenderView(0);
+		PIEPanel->SetView(PIEViewAdapter.GetViewRect(0), RenderView.Width, RenderView.Height);
 		PIEViewAdapter.BuildRenderPackets(0, SceneRenderPackets);
 
-		RenderPIEFrame(PIEPanel->GetRenderingInfo(), PIEViewAdapter.GetEngineViewProjection(0), PIEViewAdapter.GetEngineCameraLocation(0), PIEViewAdapter.GetEngineCameraForward(0), SceneRenderPackets);
+		RenderPIEFrame(PIEPanel->GetRenderingInfo(), RenderView, SceneRenderPackets);
 	}
 }
 
@@ -608,13 +602,14 @@ void FEditorApplication::UpdateGizmoAndPicking()
 // TArray 기반 렌더 프레임
 void FEditorApplication::RenderFrame(const int32 ViewIndex,
 	const FRenderingInfo& ViewRenderingInfo,
-	const FMatrix& ViewProjection,
-	const FMatrix& Projection,
-	const FVector& ViewCameraLocation,
-	const FVector& ViewCameraForward,
+	const FRenderViewData& RenderView,
 	TArray<FRenderPacket>& RenderPackets,
 	const FScene& SceneData)
 {
+	const FMatrix& ViewProjection = RenderView.ViewProjection;
+	const FMatrix& Projection = RenderView.Projection;
+	const FVector& ViewCameraLocation = RenderView.Camera.Transform.Location;
+	const FVector& ViewCameraForward = RenderView.CameraForward;
 	const FEditorSettings& EditorSettings = SettingsPanel ? SettingsPanel->GetSettings() : FEditorSettings{};
 	//후처리 유무에 따른 RTV대상 설정
 
@@ -649,7 +644,7 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			const ELightingModel LightingModel = ViewportsPanel->IsPIEMode()
 				? PIEViewAdapter.GetViewLightMode(0)
 				: MultipleViewportsAdapter.GetViewLightMode(ViewIndex);
-			Renderer->RenderOpaque(RenderPackets, ViewportsPanel->GetViewportAdapter()->GetEngineView(ViewIndex), ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
+			Renderer->RenderOpaque(RenderPackets, RenderView, SceneData, bWireframe, LightingModel);
 		}
 	}
 	// HZB+ 렌더링
@@ -681,7 +676,7 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 	if (!MultipleViewportsAdapter.IsViewSceneDepthMode(ViewIndex))
 	{
 		FGPUStatScope GridScope(StatIds::GpuGrid(), L"Grid");
-		if (MultipleViewportsAdapter.IsOrthographic(ViewIndex))
+		if (RenderView.Camera.Projection.Mode == ECameraProjectionMode::Orthographic)
 		{
 			// 직교 View는 프리셋 방향에 맞는 평면(XY/YZ/XZ)에 Grid를 그린다.
 			GridRenderer->OnRenderBatchGrid(ViewProjection, ViewCameraLocation, ViewCameraForward,
@@ -748,7 +743,7 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			auto Target = Cast<UPrimitiveComponent>(Gizmo->GetTarget());
 			//FBox box = Target->CalcBounds();
 			FRenderCommand::ClearDepthStencil(ViewRenderingInfo.DepthSteincil.Texture);
-			GizmoRenderer->OnRender(*Gizmo, ViewProjection, ViewCameraLocation, MultipleViewportsAdapter.IsOrthographic(ViewIndex));
+			GizmoRenderer->OnRender(*Gizmo, ViewProjection, ViewCameraLocation, RenderView.Camera.Projection.Mode == ECameraProjectionMode::Orthographic);
 		}
 	}
 
@@ -789,13 +784,13 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 }
 
 void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
-	const FMatrix& ViewProjection,
-	const FVector& ViewCameraLocation,
-	const FVector& ViewCameraForward,
+	const FRenderViewData& RenderView,
 	TArray<FRenderPacket>& RenderPackets)
 {
+	const FMatrix& ViewProjection = RenderView.ViewProjection;
+	const FVector& ViewCameraLocation = RenderView.Camera.Transform.Location;
+	const FVector& ViewCameraForward = RenderView.CameraForward;
 	FScene SceneData = GetPIEWorld()->GetScene();
-	SceneData.BuildTileLightData();
 	FRenderCommand::BeginRenderPass(ViewRenderingInfo);
 
 	const FEditorSettings& EditorSettings = SettingsPanel ? SettingsPanel->GetSettings() : FEditorSettings{};
@@ -812,7 +807,7 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	{
 		const bool bWireframe = false;
 		const ELightingModel LightingModel = PIEViewAdapter.GetViewLightMode(0);
-		Renderer->RenderOpaque(RenderPackets, PIEViewAdapter.GetEngineView(0), ViewProjection, ViewCameraLocation, ViewRenderingInfo.ViewportSetting, SceneData, bWireframe, LightingModel);
+		Renderer->RenderOpaque(RenderPackets, RenderView, SceneData, bWireframe, LightingModel);
 	}
 
 	PIEViewAdapter.PostRenderOpaque(0, ViewRenderingInfo.DepthSteincil.Texture);
@@ -820,7 +815,7 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 
 	if (MultipleViewportsAdapter.IsViewSceneDepthMode(0))
 	{
-		DepthSceneRenderer->OnRender(ViewRenderingInfo.DepthSteincil.Texture, PIEViewAdapter.GetEnginePerspectiveProjection(0));
+		DepthSceneRenderer->OnRender(ViewRenderingInfo.DepthSteincil.Texture, RenderView.Projection);
 	}
 	if (!SceneData.Fireballs.IsEmpty())
 	{
@@ -837,7 +832,7 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	if (!MultipleViewportsAdapter.IsViewSceneDepthMode(0))
 	{
 		FGPUStatScope GridScope(StatIds::GpuGrid(), L"Grid");
-		if (MultipleViewportsAdapter.IsOrthographic(0))
+		if (RenderView.Camera.Projection.Mode == ECameraProjectionMode::Orthographic)
 		{
 			// 직교 View는 프리셋 방향에 맞는 평면(XY/YZ/XZ)에 Grid를 그린다.
 			GridRenderer->OnRenderBatchGrid(ViewProjection,

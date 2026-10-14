@@ -9,8 +9,8 @@
 #define	    LightType_Ambient 4 // 언리얼엔 미존재
 #define	    LightType_MAX 5
 
-#define TileCountX 8
-#define TileCountY 8
+
+#define PixelLengthPerTile 64
 
 /******************************
 Struct
@@ -30,13 +30,14 @@ struct FLightData
     float LightFalloffExponent;
     float InnerConeCos;
     float OuterConeCos;
-    float padding;
+    float Padding;
 };
 
-struct FTileLightHeader
+struct FLightCluster
 {
     uint Offset;
     uint Count;
+    uint ClusterKey;
 };
 
 struct FShadingData
@@ -100,27 +101,42 @@ cbuffer ViewConstants : register(b2)
     float3 CameraPosition;
     float ViewSizeX;
     float ViewSizeY;
-    float3 Padding_noUse;
+    uint bIsPerspective;
+    float2 Padding_noUse;
 };
 
 cbuffer LightingGlobals : register(b3)
 {
     float4 AmbientRadiance;
+    uint LightCount;
+    uint DirectionalLightCount;
+    uint LightTreeRootIndex;
+    uint LightingGlobalsPadding;
 };
 
-cbuffer LightCountConstants : register(b4)
+cbuffer LightClusterGlobals : register(b4)
 {
-    uint LightCount;
-    uint3 LightCountPadding;
-}
+    uint ClusterCountX;
+    uint ClusterCountY;
+    uint ClusterCountZ;
+    float ClusterZScale;
+    float ClusterZBias;
+    float3 ClusterGlobalsPadding;
+};
 
 /******************************
 [SRV] StructuredBuffer
 *******************************/
 
-StructuredBuffer<FLightData> Lights : register(t4);
-StructuredBuffer<FTileLightHeader> TileHeaders : register(t5);
-StructuredBuffer<uint> TileLightIndices : register(t6);
+StructuredBuffer<FLightData> LightData : register(t4);
+StructuredBuffer<uint> DirectionalLightIndices : register(t5);
+
+StructuredBuffer<uint> LightIndices : register(t6);
+StructuredBuffer<FLightCluster> LightClusters : register(t7);
+#define ZClusterCountPerPhysicalPage 8
+#define Log2OfZClusterCountPerPhysicalPage 3
+StructuredBuffer<uint> LightClusterPageTable : register(t8);
+StructuredBuffer<uint> IndirectToLightClusters : register(t9);
 
 /******************************
 [SRV] Texture & Texture Sampler
@@ -138,16 +154,43 @@ SamplerState g_Sample : register(s0);
 Constant Variable
 *******************************/
 
-// 조명 방향 및 색상
-static const float3 LightDir = normalize(float3(0.5f, 0.5f, -1.0f));
-static const float3 LightColor = float3(0.f, 0.f, 0.f);
-static const float3 AmbientColor = float3(0.25f, 0.25f, 0.25f);
-
 static const float EPSLION = 1e-4f;
 
 /******************************
 Utility Function
 *******************************/
+
+
+uint GetClusterIndexZ(float ViewDepth)
+{
+    float DepthTerm = bIsPerspective ? log2(ViewDepth) : ViewDepth;
+    return (uint)clamp(DepthTerm * ClusterZScale + ClusterZBias, 0.0f, (float)(ClusterCountZ - 1));
+}
+
+uint GetClusterKey(float2 SVPosition, float ViewDepth)
+{
+    uint X = (uint) (SVPosition.x / PixelLengthPerTile);
+    uint Y = (uint) (SVPosition.y / PixelLengthPerTile);
+    uint Z = GetClusterIndexZ(ViewDepth);
+    uint PageCountZ = (ClusterCountZ + ZClusterCountPerPhysicalPage - 1) / ZClusterCountPerPhysicalPage;
+    uint PageIndex = (X * ClusterCountY + Y) * PageCountZ + (Z >> Log2OfZClusterCountPerPhysicalPage);
+    return (PageIndex << Log2OfZClusterCountPerPhysicalPage) | (Z & (ZClusterCountPerPhysicalPage - 1));
+}
+bool TryGetLightCluster(float2 PixelPosition, float ViewDepth, out FLightCluster Cluster)
+{
+    Cluster = (FLightCluster) 0;
+    if (ClusterCountZ == 0 || ViewDepth <= 0.0f || any(PixelPosition < 0.0f) || any(PixelPosition >= float2(ViewSizeX, ViewSizeY)))
+        return false;
+    uint ClusterKey = GetClusterKey(PixelPosition, ViewDepth);
+    uint PageBase = LightClusterPageTable[ClusterKey >> Log2OfZClusterCountPerPhysicalPage];
+    if (PageBase == 0xffffffffu)
+        return false;
+    uint ClusterIndex = IndirectToLightClusters[PageBase + (ClusterKey & (ZClusterCountPerPhysicalPage - 1))];
+    if (ClusterIndex == 0xffffffffu)
+        return false;
+    Cluster = LightClusters[ClusterIndex];
+    return true;
+}
 
 // 빛의 벡터를 모두 계산.
 // out 키워드는 참조 변수 비슷한 키워드
@@ -184,12 +227,12 @@ void CalculateLightVector(
             }
             else
             {
-                L = normalize(LightVector);
+                L = LightVector / max(Distance, EPSLION);
             }
         }
         else if (Light.LightType == LightType_Spot)
         {
-            L = normalize(LightVector);
+            L = LightVector / max(Distance, EPSLION);
         }
     }
     else
@@ -214,7 +257,7 @@ float3 EvaluateShading(FShadingData Data)
     CalculateLightVector(Data, V, N, L, H, NdotL, NdotH, Distance);
 
     // 빛의 영향을 받지 않으면 검정색으로 return
-    if (Distance > Light.Radius)
+    if (Distance >= Light.Radius)
     {
         return float3(0.0f, 0.0f, 0.0f);
     }
@@ -239,14 +282,14 @@ float3 EvaluateShading(FShadingData Data)
     float ConeFactor = 1.0f;
 
     if (
-        Light.LightType == LightType_Point &&
+        Light.LightType == LightType_Point ||
         Light.LightType == LightType_Spot
     )
     {
         // Point, Spotlight
 
         // 거리 감쇠
-        Attenuation = pow(1 - Distance / Light.Radius, Light.LightFalloffExponent);
+        Attenuation = pow(saturate(1.0f - Distance / max(Light.Radius, EPSLION)), Light.LightFalloffExponent);
         //float Attenuation = pow(max(1 - pow(Distance / Light.Radius, 4), 0), 2) / (pow(Distance, 2) + 1);
         //float Attenuation = 1.0f / max(1.0f + Light.AttenuationLinear * Distance, EPSLION);
 
@@ -335,24 +378,41 @@ PS_INPUT mainVS(VS_INPUT input)
     output.WorldPosition = worldPos.xyz;
 
 #if LIGHTING_MODEL_GOURAUD
-    output.lighting = AmbientColor;
-
-    for (uint i = 0; i < LightCount; ++i)
+    output.lighting = AmbientRadiance.rgb * AmbientRadiance.w;
+    FLightCluster Cluster = (FLightCluster) 0;
+    bool bHasLightCluster = false;
+    if (output.position.w > 0.0f && output.position.z >= 0.0f && output.position.z <= output.position.w)
     {
-        FLightData Light = Lights[i];
-
-        FShadingData Data = 
+        float2 PixelPosition = (output.position.xy / output.position.w * float2(0.5f, -0.5f) + 0.5f) * float2(ViewSizeX, ViewSizeY);
+        bHasLightCluster = TryGetLightCluster(PixelPosition, output.position.w, Cluster);
+    }
+    FShadingData Data = (FShadingData) 0;
+    Data.CameraPosition = CameraPosition;
+    Data.VertexWorldPosition = output.WorldPosition;
+    Data.VertexNormalPosition = output.normal;
+    Data.Albedo = 1.0f;
+    Data.MaterialSpecularColor = 1.0f;
+    Data.MaterialShininess = 32.0f;
+    if (bHasLightCluster)
+    {
+        [loop] for (uint DirectionalIndex = 0; DirectionalIndex < DirectionalLightCount; ++DirectionalIndex)
         {
-            Light,
-            CameraPosition,
-            output.WorldPosition,
-            output.normal,
-            float3(1.0f, 1.0f, 1.0f),  
-            float3(1.0f, 1.0f, 1.0f),  
-            32.0f,
-        };
-
-        output.lighting += EvaluateShading(Data);
+            Data.Light = LightData[DirectionalLightIndices[DirectionalIndex]];
+            output.lighting += EvaluateShading(Data);
+        }
+        [loop] for (uint LocalIndex = 0; LocalIndex < Cluster.Count; ++LocalIndex)
+        {
+            Data.Light = LightData[LightIndices[Cluster.Offset + LocalIndex]];
+            output.lighting += EvaluateShading(Data);
+        }
+    }
+    else
+    {
+        [loop] for (uint LightIndex = 0; LightIndex < LightCount; ++LightIndex)
+        {
+            Data.Light = LightData[LightIndex];
+            output.lighting += EvaluateShading(Data);
+        }
     }
 #endif
 
@@ -363,48 +423,54 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 {
     float4 texColor = g_txColor.Sample(g_Sample, input.uv + UVOffset);
     float4 albedo = texColor * BaseColor;
-
-    float3 lighting = AmbientColor;
-    
     float3 mappedNormal = GetBumpNormal(input, input.normal, input.uv);
-    
 #if NormalMap
-    return float4(mappedNormal*0.5 + 0.5,1.0f);
+    return float4(mappedNormal * 0.5f + 0.5f, 1.0f);
 #endif
-    
-#if LIGHTING_MODEL_GOURAUD
-    lighting = input.lighting;
-#elif LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
-    uint X = (uint) floor((input.position.x / ViewSizeX) * TileCountX);
-    uint Y = (uint) floor((input.position.y / ViewSizeY) * TileCountY);
-    X = min(X, TileCountX - 1);
-    Y = min(Y, TileCountY - 1);
-
-    FTileLightHeader Header = TileHeaders[Y * TileCountX + X];
-    for (uint i = 0; i < Header.Count; ++i)
+#if LIGHTING_MODEL_GOURAUD || LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
+    FLightCluster Cluster = (FLightCluster) 0;
+    bool bUseLightCluster = ClusterCountZ != 0 && bOpaque > 0.5f;
+    if (bUseLightCluster)
     {
-        uint LightIndex = TileLightIndices[Header.Offset + i];
-        FLightData Light = Lights[LightIndex];
-        FShadingData Data = 
-        {
-            Light,
-            CameraPosition,
-            input.WorldPosition,
-            mappedNormal,
-            albedo.xyz,  
-            SpecularColor,  
-            Shininess,
-        };
-
-        lighting += EvaluateShading(Data);
+        if (!TryGetLightCluster(input.position.xy, input.position.w, Cluster))
+            discard;
     }
-#else
-    
 #endif
-
-    float3 FinalColor = albedo.rgb * lighting;
-
-    // Opaque는 알파를 1로 고정한다. 뷰포트 RT를 ImGui가 알파 블렌딩으로 그리므로 알파가 남으면 비쳐 보인다
+    float3 FinalColor = albedo.rgb;
+#if LIGHTING_MODEL_GOURAUD
+    FinalColor *= input.lighting;
+#elif LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
+    float3 lighting = albedo.rgb * AmbientRadiance.rgb * AmbientRadiance.w;
+    FShadingData Data = (FShadingData) 0;
+    Data.CameraPosition = CameraPosition;
+    Data.VertexWorldPosition = input.WorldPosition;
+    Data.VertexNormalPosition = mappedNormal;
+    Data.Albedo = albedo.rgb;
+    Data.MaterialSpecularColor = SpecularColor;
+    Data.MaterialShininess = Shininess;
+    if (bUseLightCluster)
+    {
+        [loop] for (uint DirectionalIndex = 0; DirectionalIndex < DirectionalLightCount; ++DirectionalIndex)
+        {
+            Data.Light = LightData[DirectionalLightIndices[DirectionalIndex]];
+            lighting += EvaluateShading(Data);
+        }
+        [loop] for (uint LocalIndex = 0; LocalIndex < Cluster.Count; ++LocalIndex)
+        {
+            Data.Light = LightData[LightIndices[Cluster.Offset + LocalIndex]];
+            lighting += EvaluateShading(Data);
+        }
+    }
+    else
+    {
+        [loop] for (uint LightIndex = 0; LightIndex < LightCount; ++LightIndex)
+        {
+            Data.Light = LightData[LightIndex];
+            lighting += EvaluateShading(Data);
+        }
+    }
+    FinalColor = lighting;
+#endif
     float alpha = bOpaque > 0.5f ? 1.0f : albedo.a;
     return float4(FinalColor, alpha);
 }

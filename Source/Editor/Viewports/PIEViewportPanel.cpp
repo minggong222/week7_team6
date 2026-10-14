@@ -118,10 +118,10 @@ void FPIEViewportPanel::OnRender()
 
 // Core에서 전달된 PIE View Rect와 활성 상태를 반영하고,
 // 크기가 변경되면 렌더 타깃을 다시 만든다.
-void FPIEViewportPanel::SetView(const FRect& InRect)
+void FPIEViewportPanel::SetView(const FRect& InRect, const uint32 RenderWidth, const uint32 RenderHeight)
 {
 	Rect = InRect;
-	bool bInActive = Rect.Width > 0.0f && Rect.Height > 0.0f;
+	bool bInActive = Rect.Width > 0.0f && Rect.Height > 0.0f && RenderWidth > 0 && RenderHeight > 0;
 
 	if (!bInActive)
 	{
@@ -129,13 +129,9 @@ void FPIEViewportPanel::SetView(const FRect& InRect)
 		return;
 	}
 
-	const uint32 NewWidth = static_cast<uint32>(std::max(1.0f, Rect.Width));
-
-	const uint32 NewHeight = static_cast<uint32>(std::max(1.0f, Rect.Height));
-
-	if (NewWidth != Width || NewHeight != Height)
+	if (RenderWidth != Width || RenderHeight != Height)
 	{
-		Resize(NewWidth, NewHeight);
+		Resize(RenderWidth, RenderHeight);
 	}
 }
 

@@ -60,17 +60,12 @@ class FEditorApplication : public FApplication
 	// View 하나의 Scene·Grid·Gizmo·텍스트를 해당 ViewProjection으로 렌더한다.
 	void RenderFrame(int32 ViewIndex,
 		const FRenderingInfo& ViewRenderingInfo,
-		const FMatrix& ViewProjection,
-		const FMatrix& Projection,
-		const FVector& ViewCameraLocation,
-		const FVector& ViewCameraForward,
+		const FRenderViewData& RenderView,
 		TArray<FRenderPacket>& RenderPackets,
 		const FScene& SceneData);
 
 	void RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
-		const FMatrix& ViewProjection,
-		const FVector& ViewCameraLocation,
-		const FVector& ViewCameraForward,
+		const FRenderViewData& RenderView,
 		TArray<FRenderPacket>& RenderPackets);
 	// 네 View 결과와 ImGui를 메인 Swapchain에 합성해 화면에 표시한다.
 	void PresentFrame();

@@ -77,8 +77,7 @@ uint32 BuildPickingBVHNode(const FStaticMeshRenderData& Mesh, const FPickingBuil
 	{
 		const uint32 TriangleIndex = Mesh.PickingTriangleIndices[First + Offset];
 		const FBox& TriangleBounds = Data.TriangleBounds[TriangleIndex];
-		Bounds.Min = MinVector(Bounds.Min, TriangleBounds.Min);
-		Bounds.Max = MaxVector(Bounds.Max, TriangleBounds.Max);
+		Bounds += TriangleBounds;
 		const FVector& Centroid = Data.Centroids[TriangleIndex];
 		CentroidMin = MinVector(CentroidMin, Centroid);
 		CentroidMax = MaxVector(CentroidMax, Centroid);
@@ -122,15 +121,7 @@ uint32 BuildPickingBVHNode(const FStaticMeshRenderData& Mesh, const FPickingBuil
 		{
 			const FBox& TriangleBounds = Data.TriangleBounds[*It];
 			FBin& Bin = Bins[SAHBinIndex(AxisValue(Data.Centroids[*It], Axis), Minimum, Scale)];
-			if (Bin.Count == 0)
-			{
-				Bin.Bounds = TriangleBounds;
-			}
-			else
-			{
-				Bin.Bounds.Min = MinVector(Bin.Bounds.Min, TriangleBounds.Min);
-				Bin.Bounds.Max = MaxVector(Bin.Bounds.Max, TriangleBounds.Max);
-			}
+			Bin.Bounds += TriangleBounds;
 			++Bin.Count;
 		}
 
@@ -144,15 +135,7 @@ uint32 BuildPickingBVHNode(const FStaticMeshRenderData& Mesh, const FPickingBuil
 			const FBin& Bin = Bins[BinIndex];
 			if (Bin.Count > 0)
 			{
-				if (RightAccumCount == 0)
-				{
-					RightAccum = Bin.Bounds;
-				}
-				else
-				{
-					RightAccum.Min = MinVector(RightAccum.Min, Bin.Bounds.Min);
-					RightAccum.Max = MaxVector(RightAccum.Max, Bin.Bounds.Max);
-				}
+				RightAccum += Bin.Bounds;
 				RightAccumCount += Bin.Count;
 			}
 			RightBounds[BinIndex] = RightAccum;
@@ -166,15 +149,7 @@ uint32 BuildPickingBVHNode(const FStaticMeshRenderData& Mesh, const FPickingBuil
 			const FBin& Bin = Bins[Split];
 			if (Bin.Count > 0)
 			{
-				if (LeftAccumCount == 0)
-				{
-					LeftAccum = Bin.Bounds;
-				}
-				else
-				{
-					LeftAccum.Min = MinVector(LeftAccum.Min, Bin.Bounds.Min);
-					LeftAccum.Max = MaxVector(LeftAccum.Max, Bin.Bounds.Max);
-				}
+				LeftAccum += Bin.Bounds;
 				LeftAccumCount += Bin.Count;
 			}
 			if (LeftAccumCount == 0 || RightCounts[Split + 1] == 0)
@@ -388,6 +363,7 @@ bool ToLocalRayAffine(const FRay& WorldRay, const FMatrix& WorldMatrix, FRay& Ou
 
 bool RayIntersectsAABB(const FRay& Ray, const FVector& BoxMin, const FVector& BoxMax, float& OutT)
 {
+	if (BoxMin.X > BoxMax.X || BoxMin.Y > BoxMax.Y || BoxMin.Z > BoxMax.Z) return false;
 	float invRayDir = 1.0f / Ray.Direction.X;
 	float tX1 = (BoxMin.X - Ray.Origin.X) * invRayDir;
 	float tX2 = (BoxMax.X - Ray.Origin.X) * invRayDir;
@@ -497,6 +473,7 @@ FTraceContext MakeTraceContext(const FRay& WorldRay, FBillboardTraceFn ResolveBi
 // 기존 RayIntersectsAABB와 같은 slab 판정이지만, 역수를 컨텍스트에서 받아 나눗셈이 없다.
 bool RayIntersectsAABB(const FTraceContext& Context, const FVector& BoxMin, const FVector& BoxMax, float& OutTEnter)
 {
+	if (BoxMin.X > BoxMax.X || BoxMin.Y > BoxMax.Y || BoxMin.Z > BoxMax.Z) return false;
 	const FVector& O = Context.Ray.Origin;
 	const FVector& I = Context.InvDir;
 
@@ -547,7 +524,8 @@ uint32 RayIntersectsNode4(const FTraceContext& Context, const FPickingBVHNode4& 
 	uint32 HitCount = 0;
 	for (uint32 Slot = 0; Slot < 4; ++Slot)
 	{
-		if ((HitMask & (1u << Slot)) == 0 || Node.Count[Slot] == FPickingBVHNode4::EmptySlot)
+		if ((HitMask & (1u << Slot)) == 0 || Node.Count[Slot] == FPickingBVHNode4::EmptySlot ||
+			Node.MinX[Slot] > Node.MaxX[Slot] || Node.MinY[Slot] > Node.MaxY[Slot] || Node.MinZ[Slot] > Node.MaxZ[Slot])
 			continue;
 		uint32 Insert = HitCount++;
 		for (; Insert > 0 && OutTEnter[OutSlots[Insert - 1]] > OutTEnter[Slot]; --Insert)

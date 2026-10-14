@@ -6,30 +6,8 @@ namespace
 	FBox CalculateAABB(const TArray<FVertexPNCT>& Vertices)
 	{
 		FBox Box;
-
-		if (Vertices.Num() == 0)
-		{
-			Box.Min = { 0.0f, 0.0f, 0.0f };
-			Box.Max = { 0.0f, 0.0f, 0.0f };
-
-			return Box;
-		}
-
-		FVector Min{ FLT_MAX, FLT_MAX, FLT_MAX };
-		FVector Max{ -FLT_MAX, -FLT_MAX, -FLT_MAX };
 		for (const FVertexPNCT& Vertex : Vertices)
-		{
-			Min.X = fmin(Min.X, Vertex.Position.X);
-			Min.Y = fmin(Min.Y, Vertex.Position.Y);
-			Min.Z = fmin(Min.Z, Vertex.Position.Z);
-
-			Max.X = fmax(Max.X, Vertex.Position.X);
-			Max.Y = fmax(Max.Y, Vertex.Position.Y);
-			Max.Z = fmax(Max.Z, Vertex.Position.Z);
-		}
-		Box.Min = Min;
-		Box.Max = Max;
-
+			Box += Vertex.Position;
 		return Box;
 	}
 

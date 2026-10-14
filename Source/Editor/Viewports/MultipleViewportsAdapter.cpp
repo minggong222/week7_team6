@@ -82,6 +82,7 @@ void ApplySplitterGutter(const FVector2D WindowSize, FRect ViewRects[4]) {
 
 // 엔진 FBox의 최소·최대점으로 Native AABB 중심과 반크기를 만든다.
 FAABB MakeWorldBounds(const FBox &Value) {
+  if (!Value.IsValid()) return {};
   const FVector Center = (Value.Min + Value.Max) * 0.5f;
   const FVector Extent = (Value.Max - Value.Min) * 0.5f;
   return {Center, Extent};
@@ -688,15 +689,12 @@ FMultipleViewportsAdapter::GetViewRect(const int32 ViewIndex) const {
 // 직교 화면의 XY는 유지하면서 렌더·컬링·피킹용 카메라만 후퇴시켜 양방향 깊이를
 // 확보한다.
 FViewCamera
-FMultipleViewportsAdapter::GetRenderCamera(const int32 ViewIndex) const {
+FMultipleViewportsAdapter::GetRenderCamera(const int32 ViewIndex, const float AspectRatio) const {
   assert(ViewIndex >= 0 && ViewIndex < 4);
   FViewCamera Camera = Views.Cameras[ViewIndex];
   if (Camera.Projection.Mode != ECameraProjectionMode::Orthographic)
     return Camera;
 
-  const FRect &Rect = ViewRects[ViewIndex];
-  const float AspectRatio =
-      Rect.Width > 0.0f && Rect.Height > 0.0f ? Rect.Width / Rect.Height : 1.0f;
   const float HalfWidth = Camera.Projection.OrthoWidth * 0.5f;
   const float HalfHeight = HalfWidth / AspectRatio;
   const FVector Position = Camera.Transform.Location;
@@ -728,24 +726,30 @@ FMultipleViewportsAdapter::PrepareView(const int32 ViewIndex) const {
   const auto &L = Source.Transform.Location;
   const auto &R = Source.Transform.Rotation;
   const auto &Rect = ViewRects[ViewIndex];
+  const uint32 Width = static_cast<uint32>((std::max)(1.0f, Rect.Width));
+  const uint32 Height = static_cast<uint32>((std::max)(1.0f, Rect.Height));
   const float Key[14]{
       L.X,          L.Y,          L.Z,        R.X,
       R.Y,          R.Z,          R.W,        static_cast<float>(P.Mode),
       P.FovDegrees, P.OrthoWidth, P.NearClip, P.FarClip,
-      Rect.Width,   Rect.Height};
+      static_cast<float>(Width), static_cast<float>(Height)};
   FPreparedView &Cached = PreparedViews[ViewIndex];
   // 고정 크기 입력 키는 할당 없는 배열로 비교하며 NaN도 매번 변경으로 취급한다.
   bool bKeyChanged = !Cached.bValid;
   for (int Index = 0; Index < 14; ++Index)
     bKeyChanged = bKeyChanged || Cached.Key[Index] != Key[Index];
   if (bKeyChanged) {
-    const FViewCamera Camera = GetRenderCamera(ViewIndex);
+    FRenderViewData& RenderView = Cached.RenderView;
+    RenderView.Width = Width;
+    RenderView.Height = Height;
+    const float AspectRatio = static_cast<float>(Width) / Height;
+    RenderView.Camera = GetRenderCamera(ViewIndex, AspectRatio);
     // row-vector는 View 다음 Projection 순서로 합성하고 같은 VP로 컬링한다.
-    const FMatrix VP =
-        BuildViewMatrix(Camera.Transform) *
-        BuildProjectionMatrix(Camera.Projection, Rect.Width / Rect.Height);
-    Cached.EngineViewProjection = VP;
-    Cached.Frustum = ExtractFrustumPlanes(VP);
+    RenderView.View = BuildViewMatrix(RenderView.Camera.Transform);
+    RenderView.Projection = BuildProjectionMatrix(RenderView.Camera.Projection, AspectRatio);
+    RenderView.ViewProjection = RenderView.View * RenderView.Projection;
+    RenderView.CameraForward = NormalizedOrZero(CameraForward(RenderView.Camera.Transform.Rotation));
+    Cached.Frustum = ExtractFrustumPlanes(RenderView.ViewProjection);
     for (int Index = 0; Index < 14; ++Index)
       Cached.Key[Index] = Key[Index];
     Cached.bValid = true;
@@ -753,29 +757,8 @@ FMultipleViewportsAdapter::PrepareView(const int32 ViewIndex) const {
   return Cached;
 }
 
-// Native와 엔진이 함께 쓰는 row-vector VP를 추가 전치 없이 캐시에서 반환한다.
-FMatrix FMultipleViewportsAdapter::GetEngineViewProjection(
-    const int32 ViewIndex) const {
-  assert(IsViewActive(ViewIndex));
-  return PrepareView(ViewIndex).EngineViewProjection;
-}
-FMatrix FMultipleViewportsAdapter::GetEnginePerspectiveProjection(const int32 ViewIndex) const {
-	return BuildProjectionMatrix(Views.Cameras[ViewIndex].Projection, ViewRects[ViewIndex].Width / ViewRects[ViewIndex].Height);
-}
-
-// Native 카메라 위치를 엔진 FVector 그대로 반환한다.
-FVector FMultipleViewportsAdapter::GetEngineCameraLocation(
-    const int32 ViewIndex) const {
-  assert(ViewIndex >= 0 && ViewIndex < 4);
-  return Views.Cameras[ViewIndex].Transform.Location;
-}
-
-// Native 회전에서 정규화한 Forward를 엔진 FVector로 반환한다.
-FVector
-FMultipleViewportsAdapter::GetEngineCameraForward(const int32 ViewIndex) const {
-  assert(ViewIndex >= 0 && ViewIndex < 4);
-  return NormalizedOrZero(
-      CameraForward(Views.Cameras[ViewIndex].Transform.Rotation));
+const FRenderViewData& FMultipleViewportsAdapter::GetRenderView(const int32 ViewIndex) const {
+  return PrepareView(ViewIndex).RenderView;
 }
 
 // 위치·크기·View 카메라로 엔진 규약의 Billboard 행렬을 계산한다.
@@ -844,8 +827,9 @@ bool FMultipleViewportsAdapter::TryGetActiveViewRay(
   const FRect &Rect = ViewRects[ActiveViewIndex];
   const FVector2D ViewLocal{LocalMousePosition.X - Rect.X,
                            LocalMousePosition.Y - Rect.Y};
-  const FRay Ray = Deproject(GetRenderCamera(ActiveViewIndex), ViewLocal,
-                             {Rect.Width, Rect.Height});
+  const FRenderViewData& RenderView = GetRenderView(ActiveViewIndex);
+  const FVector2D RenderPixel{ViewLocal.X * RenderView.Width / Rect.Width, ViewLocal.Y * RenderView.Height / Rect.Height};
+  const FRay Ray = Deproject(RenderView.Camera, RenderPixel, {static_cast<float>(RenderView.Width), static_cast<float>(RenderView.Height)});
   OutRay = Ray;
   return true;
 }
@@ -864,16 +848,16 @@ void FMultipleViewportsAdapter::BuildRenderPackets(
     OutPackets.Reset();
     if (!IsViewActive(ViewIndex)) return;
     const FPreparedView& View = PrepareView(ViewIndex);
-    const FViewCamera RenderCamera = GetRenderCamera(ViewIndex);
+    const FRenderViewData& RenderView = View.RenderView;
 
     SoftwareOcclusion.Cull(
         ViewIndex,
         RenderObjects,
         View.Frustum,
-        View.EngineViewProjection,
-        RenderCamera.Transform.Location,
-        (std::max)(1, static_cast<int32>(ViewRects[ViewIndex].Width)),
-        (std::max)(1, static_cast<int32>(ViewRects[ViewIndex].Height)),
+        RenderView.ViewProjection,
+        RenderView.Camera.Transform.Location,
+        static_cast<int32>(RenderView.Width),
+        static_cast<int32>(RenderView.Height),
         IsViewWireframe(ViewIndex),
         VisiblePrimitives[ViewIndex],
         OcclusionStats[ViewIndex]);

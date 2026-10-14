@@ -47,19 +47,17 @@ void FViewportsPanel::Tick(float DeltaTime)
 }
 
 // Core Rect에 맞춰 View 활성 상태와 타깃 크기를 갱신한다.
-void FViewportsPanel::SetView(const int32 ViewIndex, const FRect& Rect, const bool bActive)
+void FViewportsPanel::SetView(const int32 ViewIndex, const FRect& Rect, const bool bActive, const uint32 RenderWidth, const uint32 RenderHeight)
 {
 	assert(ViewIndex >= 0 && ViewIndex < 4);
 	FViewSlot& Slot = Slots[ViewIndex];
 	Slot.Rect = Rect;
-	Slot.bActive = bActive && Rect.Width > 0.0f && Rect.Height > 0.0f;
+	Slot.bActive = bActive && Rect.Width > 0.0f && Rect.Height > 0.0f && RenderWidth > 0 && RenderHeight > 0;
 	if (!Slot.bActive)
 		return;
 
-	const uint32 Width = static_cast<uint32>(std::max(1.0f, Rect.Width));
-	const uint32 Height = static_cast<uint32>(std::max(1.0f, Rect.Height));
-	if (Width != Slot.Width || Height != Slot.Height)
-		ResizeSlot(Slot, Width, Height);
+	if (RenderWidth != Slot.Width || RenderHeight != Slot.Height)
+		ResizeSlot(Slot, RenderWidth, RenderHeight);
 }
 
 // 인덱스를 검사해 해당 View의 렌더 정보를 반환한다.

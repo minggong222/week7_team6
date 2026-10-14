@@ -350,9 +350,9 @@ void FEditorControlsPanel::DrawCameraProperties()
 		else
 		{
 			float FOV = ViewportAdapter ? Camera.Projection.FovDegrees : CamCom->GetFieldOfView();
-			if (ImGui::DragFloat("##FOV", &FOV, 0.1f) && std::isfinite(FOV))
+			if (ImGui::DragFloat("##FOV", &FOV, 0.1f, 20.0f, 179.0f) && std::isfinite(FOV))
 			{
-				FOV = FMath::Clamp(FOV, 1.0f, 179.0f);
+				FOV = FMath::Clamp(FOV, 20.0f, 179.0f);
 
 				if (ViewportAdapter)
 				{

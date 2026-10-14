@@ -59,6 +59,7 @@ public:
 	FRHIStructuredBuffer(ID3D11Device* Device, uint32 ByteSizePerElement, uint32 ElementCount);
 	~FRHIStructuredBuffer() override = default;
 	inline ID3D11ShaderResourceView* GetSRV() const{return SRV.Get();}
+	inline ID3D11UnorderedAccessView* GetUAV() const{return UAV.Get();}
 	inline uint32 GetElementCount() const
 	{
 		return ElementCount;
@@ -67,4 +68,5 @@ public:
 	uint32 ElementSize = 0;
 	uint32 ElementCount = 0;
 	ComPtr<ID3D11ShaderResourceView> SRV = nullptr;
+	ComPtr<ID3D11UnorderedAccessView> UAV = nullptr;
 };

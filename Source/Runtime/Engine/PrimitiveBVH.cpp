@@ -13,19 +13,6 @@ namespace
 	constexpr int32 SAHBinCount = 16;
 	constexpr float SplitEpsilon = 1.0e-6f;
 
-	FBox UnionBounds(const FBox& A, const FBox& B)
-	{
-		return {
-			FVector(
-				(std::min)(A.Min.X, B.Min.X),
-				(std::min)(A.Min.Y, B.Min.Y),
-				(std::min)(A.Min.Z, B.Min.Z)),
-			FVector(
-				(std::max)(A.Max.X, B.Max.X),
-				(std::max)(A.Max.Y, B.Max.Y),
-				(std::max)(A.Max.Z, B.Max.Z))};
-	}
-
 	FVector BoundsCenter(const FBox& Bounds)
 	{
 		return (Bounds.Min + Bounds.Max) * 0.5f;
@@ -87,9 +74,9 @@ void FPrimitiveBVH::Update(
 		Entries.Reserve(UpdateBoundedPrimitives.Num());
 		EntryBoundsRevisions.Reserve(UpdateBoundedPrimitives.Num());
 		PrimitiveIndices.Reserve(UpdateBoundedPrimitives.Num());
-		Nodes.Reserve((std::max)(1, UpdateBoundedPrimitives.Num() * 2));
-		NodeParents.Reserve((std::max)(1, UpdateBoundedPrimitives.Num() * 2));
-		NodeRefitSerials.Reserve((std::max)(1, UpdateBoundedPrimitives.Num() * 2));
+		Nodes.Reserve((std::max)(1u, UpdateBoundedPrimitives.Num() * 2));
+		NodeParents.Reserve((std::max)(1u, UpdateBoundedPrimitives.Num() * 2));
+		NodeRefitSerials.Reserve((std::max)(1u, UpdateBoundedPrimitives.Num() * 2));
 		for (UPrimitiveComponent* Primitive : UpdateBoundedPrimitives)
 		{
 			FEntry Entry{};
@@ -151,7 +138,7 @@ void FPrimitiveBVH::Update(
 	if (UpdateDirtyEntries.IsEmpty() || Nodes.IsEmpty())
 		return;
 
-	const int32 FullRefitThreshold = (std::max)(64, Entries.Num() / 128);
+	const uint32 FullRefitThreshold = (std::max)(64u, Entries.Num() / 128);
 	if (UpdateDirtyEntries.Num() >= FullRefitThreshold)
 	{
 		RefitNode(0);
@@ -255,7 +242,7 @@ uint32 FPrimitiveBVH::BuildNode(const uint32 First, const uint32 Count, const ui
 	{
 		const FBox& Bounds = Entries[PrimitiveIndices[First + Offset]].Bounds;
 		const FVector Center = BoundsCenter(Bounds);
-		NodeBounds = UnionBounds(NodeBounds, Bounds);
+		NodeBounds += Bounds;
 		CentroidMin.X = (std::min)(CentroidMin.X, Center.X);
 		CentroidMin.Y = (std::min)(CentroidMin.Y, Center.Y);
 		CentroidMin.Z = (std::min)(CentroidMin.Z, Center.Z);
@@ -303,7 +290,7 @@ uint32 FPrimitiveBVH::BuildNode(const uint32 First, const uint32 Count, const ui
 				static_cast<int32>((AxisValue(BoundsCenter(Bounds), Axis) - Minimum) / Extent * SAHBinCount),
 				0, SAHBinCount - 1);
 			FBin& Bin = Bins[BinIndex];
-			Bin.Bounds = Bin.bValid ? UnionBounds(Bin.Bounds, Bounds) : Bounds;
+			Bin.Bounds += Bounds;
 			Bin.bValid = true;
 			++Bin.Count;
 		}
@@ -319,7 +306,7 @@ uint32 FPrimitiveBVH::BuildNode(const uint32 First, const uint32 Count, const ui
 			if (Bins[BinIndex].bValid)
 			{
 				LeftBounds[BinIndex] = bLeftValid
-					? UnionBounds(LeftBounds[BinIndex - 1], Bins[BinIndex].Bounds)
+					? LeftBounds[BinIndex - 1] + Bins[BinIndex].Bounds
 					: Bins[BinIndex].Bounds;
 				bLeftValid = true;
 			}
@@ -335,7 +322,7 @@ uint32 FPrimitiveBVH::BuildNode(const uint32 First, const uint32 Count, const ui
 			if (Bins[BinIndex].bValid)
 			{
 				RightBounds[BinIndex] = bRightValid
-					? UnionBounds(RightBounds[BinIndex + 1], Bins[BinIndex].Bounds)
+					? RightBounds[BinIndex + 1] + Bins[BinIndex].Bounds
 					: Bins[BinIndex].Bounds;
 				bRightValid = true;
 			}
@@ -480,13 +467,13 @@ FBox FPrimitiveBVH::RefitNode(const uint32 NodeIndex)
 	{
 		FBox Bounds = Entries[PrimitiveIndices[Node.First]].Bounds;
 		for (uint32 Offset = 1; Offset < Node.Count; ++Offset)
-			Bounds = UnionBounds(Bounds, Entries[PrimitiveIndices[Node.First + Offset]].Bounds);
+			Bounds += Entries[PrimitiveIndices[Node.First + Offset]].Bounds;
 		Node.Bounds = Bounds;
 		SyncNode4Bounds(NodeIndex);
 		return Bounds;
 	}
 
-	Node.Bounds = UnionBounds(RefitNode(Node.Left), RefitNode(Node.Right));
+	Node.Bounds = RefitNode(Node.Left) + RefitNode(Node.Right);
 	SyncNode4Bounds(NodeIndex);
 	return Node.Bounds;
 }
@@ -496,7 +483,7 @@ void FPrimitiveBVH::RefitFromLeaf(const uint32 LeafIndex)
 	FNode& Leaf = Nodes[LeafIndex];
 	FBox Bounds = Entries[PrimitiveIndices[Leaf.First]].Bounds;
 	for (uint32 Offset = 1; Offset < Leaf.Count; ++Offset)
-		Bounds = UnionBounds(Bounds, Entries[PrimitiveIndices[Leaf.First + Offset]].Bounds);
+		Bounds += Entries[PrimitiveIndices[Leaf.First + Offset]].Bounds;
 	Leaf.Bounds = Bounds;
 	SyncNode4Bounds(LeafIndex);
 
@@ -504,7 +491,7 @@ void FPrimitiveBVH::RefitFromLeaf(const uint32 LeafIndex)
 	while (ParentIndex != InvalidNodeIndex)
 	{
 		FNode& Parent = Nodes[ParentIndex];
-		Parent.Bounds = UnionBounds(Nodes[Parent.Left].Bounds, Nodes[Parent.Right].Bounds);
+		Parent.Bounds = Nodes[Parent.Left].Bounds + Nodes[Parent.Right].Bounds;
 		SyncNode4Bounds(ParentIndex);
 		ParentIndex = NodeParents[ParentIndex];
 	}

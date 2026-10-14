@@ -34,6 +34,10 @@ public:
 	{
 		return LightType_Point;
 	};
+	virtual FSphere GetBoundingSphere() const override
+	{
+		return {GetOwner()->GetActorLocation(), GetAttenuationRadius()};
+	}
 
 	virtual FLightData CreateLightData() const override
 	{

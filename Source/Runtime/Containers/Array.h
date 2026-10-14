@@ -47,7 +47,7 @@ public:
 
 	void Reserve(uint32 Number);
 
-	int32 Num() const;
+	uint32 Num() const;
 	int32 Max() const;
 	
 	bool IsEmpty() const;
@@ -214,9 +214,9 @@ inline void TArray<T>::Append(const TArray<T>& other)
 }
 
 template<typename T>
-inline int32 TArray<T>::Num() const
+inline uint32 TArray<T>::Num() const
 {
-	return static_cast<int32>(mDatas.size());
+	return static_cast<uint32>(mDatas.size());
 }
 
 template<typename T>

@@ -37,21 +37,6 @@ namespace
 	constexpr float MinCameraDistance = 0.01f;
 	constexpr float MaxCameraDistance = CameraFarZ * 0.5f;
 
-	// CameraComponent와 같은 원근 행렬 (Forward = X, Right = Y, Up = Z)
-	FMatrix MakePerspective(float FovDegrees, float Aspect, float NearZ, float FarZ)
-	{
-		const float YScale = 1.0f / tan(FMath::DegreesToRadians(FovDegrees) * 0.5f);
-		const float XScale = YScale / Aspect;
-		const float ZScale = FarZ / (FarZ - NearZ);
-		const float ZOffset = -NearZ * FarZ / (FarZ - NearZ);
-
-		return FMatrix(
-			0.0f, 0.0f, ZScale, 1.0f,
-			XScale, 0.0f, 0.0f, 0.0f,
-			0.0f, YScale, 0.0f, 0.0f,
-			0.0f, 0.0f, ZOffset, 0.0f);
-	}
-
 	// 역회전 행렬의 열이 Forward·Right·Up이 되도록 View 행렬을 만든다.
 	FMatrix MakeLookAt(const FVector& Eye, const FVector& Target)
 	{
@@ -94,7 +79,7 @@ bool FObjViewerApp::Init(HINSTANCE hInstance)
 	FRenderCommand::Init(RenderDevice.get());
 
 	Renderer = MakeUnique<FRenderer>();
-	Renderer->Init();
+	if (!Renderer->Init()) return false;
 
 	MainWindow = MakeUnique<FWindowsWindow>();
 	if (!MainWindow->Create(hInstance, WindowWidth, WindowHeight, WindowTitle))
@@ -213,15 +198,19 @@ void FObjViewerApp::UpdateCamera()
 
 void FObjViewerApp::RenderFrame()
 {
-	const float Aspect = static_cast<float>(MainWindow->GetWidth()) / static_cast<float>(MainWindow->GetHeight());
-	const FMatrix View = MakeLookAt(GetCameraEye(), CameraTarget);
-	const FMatrix Projection = MakePerspective(CameraFovDegrees, Aspect, CameraNearZ, CameraFarZ);
-	const FMatrix ViewProjection = View * Projection;
-
-	BuildRenderPackets(RenderPackets, ViewProjection);
-
 	FRenderingInfo Info = Swapchain->GetRenderingInfo();
 	Info.DepthSteincil.Texture = DepthBuffer.get();
+	FRenderViewData RenderView;
+	RenderView.Width = Info.ViewportSetting.Width;
+	RenderView.Height = Info.ViewportSetting.Height;
+	RenderView.Camera.Transform = {GetCameraEye(), FRotator(CameraPitch, CameraYaw, 0.0f).Quaternion()};
+	RenderView.Camera.Projection = {ECameraProjectionMode::Perspective, CameraFovDegrees, 0.0f, CameraNearZ, CameraFarZ};
+	RenderView.View = MakeLookAt(RenderView.Camera.Transform.Location, CameraTarget);
+	RenderView.Projection = BuildProjectionMatrix(RenderView.Camera.Projection, static_cast<float>(RenderView.Width) / RenderView.Height);
+	RenderView.ViewProjection = RenderView.View * RenderView.Projection;
+	RenderView.CameraForward = (CameraTarget - RenderView.Camera.Transform.Location).Normalized();
+
+	BuildRenderPackets(RenderPackets, RenderView.ViewProjection);
 
 	FRenderCommand::BeginRenderPass(Info);
 
@@ -230,8 +219,7 @@ void FObjViewerApp::RenderFrame()
 	FRenderCommand::SetDepthStencilState(EDepthStencilState::Default);
 	FRenderCommand::SetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	FScene SceneData;
-	SceneData.BuildTileLightData();
-	Renderer->RenderAll(RenderPackets, View, ViewProjection, GetCameraEye(), Info.ViewportSetting, SceneData);
+	Renderer->RenderAll(RenderPackets, RenderView, SceneData);
 
 	FRenderCommand::EndRenderPass(Info);
 

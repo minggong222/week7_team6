@@ -163,15 +163,7 @@ class FMultipleViewportsAdapter : public IViewportAdapter
 	}
 	// 지정 View의 로컬 화면 Rect를 반환한다.
 	const FRect& GetViewRect(int32 ViewIndex) const override;
-	// Native View·Projection을 row-vector 순서로 합성한 엔진 행렬을 반환한다.
-	FMatrix GetEngineViewProjection(int32 ViewIndex) const override;
-	FMatrix GetEngineView(int32 ViewIndex) const override { return BuildViewMatrix(GetRenderCamera(ViewIndex).Transform); }
-	// Native Projection을 row-vector 순서로 합성한 엔진 행렬을 반환한다.
-	FMatrix GetEnginePerspectiveProjection(const int32 ViewIndex) const override;
-	// 지정 View 카메라 위치를 엔진 FVector 그대로 반환한다.
-	FVector GetEngineCameraLocation(int32 ViewIndex) const override;
-	// 지정 View의 카메라 Forward를 엔진 FVector로 계산해 반환한다.
-	FVector GetEngineCameraForward(int32 ViewIndex) const override;
+	const FRenderViewData& GetRenderView(int32 ViewIndex = 0) const override;
 	// Core Billboard 계산 결과를 엔진 월드 행렬로 변환한다.
 	FMatrix BuildEngineBillboardMatrix(int32 ViewIndex, const FVector& WorldPosition, float Width, float Height) const override;
 	// 지정 View가 직교 투영인지 반환한다.
@@ -231,13 +223,13 @@ class FMultipleViewportsAdapter : public IViewportAdapter
 	void SetViewRect(int32 ViewIndex, const FRect& Rect) override {}
   private:
 	// 직교 View의 논리 위치는 유지하고 렌더·컬링·피킹용 깊이 범위만 확장한다.
-	FViewCamera GetRenderCamera(int32 ViewIndex) const;
+	FViewCamera GetRenderCamera(int32 ViewIndex, float AspectRatio) const;
 	// 카메라·투영·화면 크기 키와 파생 행렬·절두체를 보관한다.
 	struct FPreparedView
 	{
 		float Key[14]{};
 		FFrustumPlanes Frustum{};
-		FMatrix EngineViewProjection{};
+		FRenderViewData RenderView{};
 		bool bValid = false;
 	};
 	// 카메라·투영·화면 크기가 같으면 VP와 절두체를 재사용한다.

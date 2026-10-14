@@ -28,7 +28,7 @@ public:
 	const char* GetPanelName() const override { return "Viewports"; }
 
 	// Core가 계산한 View Rect에 맞춰 해당 Slot의 활성 상태와 렌더 타깃을 갱신한다.
-	void SetView(int32 ViewIndex, const FRect& Rect, bool bActive);
+	void SetView(int32 ViewIndex, const FRect& Rect, bool bActive, uint32 RenderWidth, uint32 RenderHeight);
 	const FRenderingInfo& GetRenderingInfo(int32 ViewIndex) const;
 
 	FVector2D GetContentSize() const { return {ContentSize.x, ContentSize.y}; }

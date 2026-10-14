@@ -437,7 +437,7 @@ void FSettingsPanel::ApplyViewportSettings()
         if (Settings.ViewPreset[Index] >= 0 && Settings.ViewPreset[Index] <= 7)
             ViewportAdapter->ApplyCameraPreset(Index, static_cast<EMultipleViewportsCameraPreset>(Settings.ViewPreset[Index]));
         FViewCamera Camera = ViewportAdapter->GetViewCamera(Index);
-        if (Settings.ViewFov[Index] > 0) Camera.Projection.FovDegrees = Settings.ViewFov[Index];
+        if (Settings.ViewFov[Index] > 0) Camera.Projection.FovDegrees = FMath::Clamp(Settings.ViewFov[Index], 20.0f, 179.0f);
         if (Settings.ViewOrthoWidth[Index] > 0) Camera.Projection.OrthoWidth = Settings.ViewOrthoWidth[Index];
         if (Settings.bViewLocationSaved[Index]) Camera.Transform.Location = Settings.ViewLocation[Index];
         if (Settings.bViewRotationSaved[Index]) Camera.Transform.Rotation = Settings.ViewRotation[Index];

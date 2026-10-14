@@ -20,7 +20,7 @@ public:
 	void Tick(float DeltaTime) override;
 	// 각 View Texture와 Splitter·Layout·Preset 조작 UI를 ImGui 패널에 그린다.
 	void OnRender() override;
-	void SetView(const FRect& Rect);
+	void SetView(const FRect& Rect, uint32 RenderWidth, uint32 RenderHeight);
 	const char* GetPanelName() const override { return "PIEViewports"; }
 
 

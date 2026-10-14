@@ -2,7 +2,7 @@
 
 #include "../Math/Transform.h"
 #include "ActorComponent.h"
-#include "Rendering/StaticMeshResources.h"
+#include "Math/Box.h"
 #include "Engine/EngineTypes.h"
 
 struct FHitResult;

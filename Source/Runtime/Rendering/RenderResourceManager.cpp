@@ -64,7 +64,7 @@ void FRenderResourceManager::ScanShaders(const fs::path& ShaderRoot)
 			continue;
 		if (Entry.path().extension() != ".hlsl")
 			continue;
-		if (Entry.path().filename().string().find("CS.hlsl") != std::string::npos)
+		if (Entry.path().filename().string().find("CS.hlsl") != std::string::npos || Entry.path().filename().string().find("CS_") != std::string::npos)
 			continue;
 		if (Entry.path().filename().string().find("StaticMeshShader.hlsl") != std::string::npos)
 		{

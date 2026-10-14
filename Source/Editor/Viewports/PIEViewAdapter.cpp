@@ -73,6 +73,7 @@ void ApplySplitterGutter(const FVector2D WindowSize, FRect ViewRects[4])
 // 엔진 FBox의 최소·최대점으로 Native AABB 중심과 반크기를 만든다.
 FAABB MakeWorldBounds(const FBox& Value)
 {
+	if (!Value.IsValid()) return {};
 	const FVector Center = (Value.Min + Value.Max) * 0.5f;
 	const FVector Extent = (Value.Max - Value.Min) * 0.5f;
 	return {Center, Extent};
@@ -380,7 +381,6 @@ void FPIEViewAdapter::SetViewRect(int32 ViewIndex, const FRect& Rect)
 		ConstrainOrthographicWidth(ViewCamera.Projection, ViewRect);
 	}
 
-	PreparedView.bValid = false;
 }
 
 void FPIEViewAdapter::SetViewCameraTransform(int32 ViewIndex, const FCameraTransform& CameraTransform)
@@ -388,25 +388,9 @@ void FPIEViewAdapter::SetViewCameraTransform(int32 ViewIndex, const FCameraTrans
 	ViewCamera.Transform = CameraTransform;
 }
 
-FMatrix FPIEViewAdapter::GetEngineViewProjection(int32 ViewIndex) const
+const FRenderViewData& FPIEViewAdapter::GetRenderView(int32 ViewIndex) const
 {
-
-	return PrepareView().EngineViewProjection;
-}
-
-FMatrix FPIEViewAdapter::GetEnginePerspectiveProjection(const int32 ViewIndex) const
-{
-	return BuildProjectionMatrix(ViewCamera.Projection, ViewRect.Width / ViewRect.Height);
-}
-
-FVector FPIEViewAdapter::GetEngineCameraLocation(int32 ViewIndex) const
-{
-	return ViewCamera.Transform.Location;
-}
-
-FVector FPIEViewAdapter::GetEngineCameraForward(int32 ViewIndex) const
-{
-	return NormalizedOrZero(CameraForward(ViewCamera.Transform.Rotation));
+	return PrepareView().RenderView;
 }
 
 void FPIEViewAdapter::SetViewLightMode(int32 Index, ELightingModel Value)
@@ -477,12 +461,9 @@ void FPIEViewAdapter::BuildRenderPackets(int32 ViewIndex, TArray<FRenderPacket>&
 		return;
 
 	const FPreparedView& View = PrepareView();
-	const FViewCamera RenderCamera = GetRenderCamera();
+	const FRenderViewData& RenderView = View.RenderView;
 
-	const int32 RenderWidth = (std::max(1, static_cast<int32>(ViewRect.Width)));
-	const int32 RenderHeight = (std::max(1, static_cast<int32>(ViewRect.Height)));
-
-	SoftwareOcclusion.Cull(0, RenderObjects, View.Frustum, View.EngineViewProjection, RenderCamera.Transform.Location, RenderWidth, RenderHeight, false, VisiblePrimitives, OcclusionStats);
+	SoftwareOcclusion.Cull(0, RenderObjects, View.Frustum, RenderView.ViewProjection, RenderView.Camera.Transform.Location, static_cast<int32>(RenderView.Width), static_cast<int32>(RenderView.Height), false, VisiblePrimitives, OcclusionStats);
 
 	const int32 TotalPrimitives = VisiblePrimitives.Num();
 
@@ -606,14 +587,12 @@ void FPIEViewAdapter::BuildRenderPackets(int32 ViewIndex, TArray<FRenderPacket>&
 	OcclusionStats.RenderPackets = OutPackets.Num();
 }
 
-FViewCamera FPIEViewAdapter::GetRenderCamera() const
+FViewCamera FPIEViewAdapter::GetRenderCamera(const float AspectRatio) const
 {
 	FViewCamera Camera = ViewCamera;
 	if (Camera.Projection.Mode != ECameraProjectionMode::Orthographic)
 		return Camera;
 
-	const FRect& Rect = ViewRect;
-	const float AspectRatio = Rect.Width > 0.0f && Rect.Height > 0.0f ? Rect.Width / Rect.Height : 1.0f;
 	const float HalfWidth = Camera.Projection.OrthoWidth * 0.5f;
 	const float HalfHeight = HalfWidth / AspectRatio;
 	const FVector Position = Camera.Transform.Location;
@@ -635,7 +614,9 @@ const FPIEViewAdapter::FPreparedView& FPIEViewAdapter::PrepareView() const
 	const auto& L = ViewCamera.Transform.Location;
 	const auto& R = ViewCamera.Transform.Rotation;
 	const auto& Rect = ViewRect;
-	const float Key[14]{L.X, L.Y, L.Z, R.X, R.Y, R.Z, R.W, static_cast<float>(P.Mode), P.FovDegrees, P.OrthoWidth, P.NearClip, P.FarClip, Rect.Width, Rect.Height};
+	const uint32 Width = static_cast<uint32>((std::max)(1.0f, Rect.Width));
+	const uint32 Height = static_cast<uint32>((std::max)(1.0f, Rect.Height));
+	const float Key[14]{L.X, L.Y, L.Z, R.X, R.Y, R.Z, R.W, static_cast<float>(P.Mode), P.FovDegrees, P.OrthoWidth, P.NearClip, P.FarClip, static_cast<float>(Width), static_cast<float>(Height)};
 	FPreparedView& Cached = PreparedView;
 	// 고정 크기 입력 키는 할당 없는 배열로 비교하며 NaN도 매번 변경으로 취급한다.
 	bool bKeyChanged = !Cached.bValid;
@@ -643,11 +624,17 @@ const FPIEViewAdapter::FPreparedView& FPIEViewAdapter::PrepareView() const
 		bKeyChanged = bKeyChanged || Cached.Key[Index] != Key[Index];
 	if (bKeyChanged)
 	{
-		const FViewCamera Camera = GetRenderCamera();
+		FRenderViewData& RenderView = Cached.RenderView;
+		RenderView.Width = Width;
+		RenderView.Height = Height;
+		const float AspectRatio = static_cast<float>(Width) / Height;
+		RenderView.Camera = GetRenderCamera(AspectRatio);
 		// row-vector는 View 다음 Projection 순서로 합성하고 같은 VP로 컬링한다.
-		const FMatrix VP = BuildViewMatrix(Camera.Transform) * BuildProjectionMatrix(Camera.Projection, Rect.Width / Rect.Height);
-		Cached.EngineViewProjection = VP;
-		Cached.Frustum = ExtractFrustumPlanes(VP);
+		RenderView.View = BuildViewMatrix(RenderView.Camera.Transform);
+		RenderView.Projection = BuildProjectionMatrix(RenderView.Camera.Projection, AspectRatio);
+		RenderView.ViewProjection = RenderView.View * RenderView.Projection;
+		RenderView.CameraForward = NormalizedOrZero(CameraForward(RenderView.Camera.Transform.Rotation));
+		Cached.Frustum = ExtractFrustumPlanes(RenderView.ViewProjection);
 		for (int Index = 0; Index < 14; ++Index)
 			Cached.Key[Index] = Key[Index];
 		Cached.bValid = true;

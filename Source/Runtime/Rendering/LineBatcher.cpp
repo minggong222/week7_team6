@@ -87,6 +87,7 @@ namespace
 
 void FLineBatcher::AddBox(FBox BoundingBox, FVector4 Color)
 {
+	if (!BoundingBox.IsValid()) return;
 	FVector C[8];
 	MakeCorners(BoundingBox.Min, BoundingBox.Max, C);
 
@@ -98,6 +99,7 @@ void FLineBatcher::AddBox(FBox BoundingBox, FVector4 Color)
 
 void FLineBatcher::AddOrientedBox(const FBox& LocalBox, const FMatrix& WorldMatrix, const FVector4& Color)
 {
+	if (!LocalBox.IsValid()) return;
 	FVector C[8];
 	MakeCorners(LocalBox.Min, LocalBox.Max, C);
 

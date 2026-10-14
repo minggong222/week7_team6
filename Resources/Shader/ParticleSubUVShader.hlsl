@@ -17,7 +17,8 @@ cbuffer ViewConstants : register(b2)
     float3 CameraPosition;
     float ViewSizeX;
     float ViewSizeY;
-    float3 Padding_noUse;
+    uint bIsPerspective;
+    float2 Padding_noUse;
 };
 
 Texture2D AtlasTexture : register(t0);

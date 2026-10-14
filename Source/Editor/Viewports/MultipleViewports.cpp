@@ -192,35 +192,6 @@ FMatrix BuildViewMatrix(const FCameraTransform& Transform)
     return Result;
 }
 
-// 원근은 FOV, 직교는 전체 폭을 기준으로 Projection 행렬을 구성한다.
-FMatrix BuildProjectionMatrix(const FCameraProjection& Projection, const float AspectRatio)
-{
-    assert(AspectRatio > 0.0f);
-    assert(Projection.NearClip > 0.0f && Projection.FarClip > Projection.NearClip);
-    FMatrix Result = ZeroMatrix();
-    if (Projection.Mode == ECameraProjectionMode::Perspective)
-    {
-        assert(Projection.FovDegrees > 0.0f && Projection.FovDegrees < 180.0f);
-        const float ScaleY = 1.0f / tanf(Projection.FovDegrees * Pi / 360.0f);
-        Result.M[1][0] = ScaleY / AspectRatio;
-        Result.M[2][1] = ScaleY;
-        Result.M[0][2] = Projection.FarClip / (Projection.FarClip - Projection.NearClip);
-        Result.M[3][2] = -Projection.NearClip * Projection.FarClip / (Projection.FarClip - Projection.NearClip);
-        Result.M[0][3] = 1.0f;
-    }
-    else
-    {
-        assert(Projection.OrthoWidth > 0.0f);
-        const float Height = Projection.OrthoWidth / AspectRatio;
-        Result.M[1][0] = 2.0f / Projection.OrthoWidth;
-        Result.M[2][1] = 2.0f / Height;
-        Result.M[0][2] = 1.0f / (Projection.FarClip - Projection.NearClip);
-        Result.M[3][2] = -Projection.NearClip / (Projection.FarClip - Projection.NearClip);
-        Result.M[3][3] = 1.0f;
-    }
-    return Result;
-}
-
 // 화면 좌표를 NDC로 바꾸고 카메라 기저에 결합해 월드 Ray를 만든다.
 FRay Deproject(const FViewCamera& Camera, const FVector2D ScreenPos, const FVector2D ViewportSize)
 {

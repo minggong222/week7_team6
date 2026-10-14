@@ -38,17 +38,7 @@ class FPIEViewAdapter : public IViewportAdapter
 		return ViewCamera;
 	}
 
-	// View 카메라의 ViewProjection을 반환한다.
-	FMatrix GetEngineViewProjection(int32 ViewIndex) const override;
-	FMatrix GetEngineView(int32 ViewIndex) const override { return BuildViewMatrix(GetRenderCamera().Transform); }
-
-	FMatrix GetEnginePerspectiveProjection(const int32 ViewIndex) const override;
-
-	// 카메라 위치를 반환한다.
-	FVector GetEngineCameraLocation(int32 ViewIndex) const override;
-
-	// 카메라 Forward를 반환한다.
-	FVector GetEngineCameraForward(int32 ViewIndex) const override;
+	const FRenderViewData& GetRenderView(int32 ViewIndex = 0) const override;
 
 	void SetViewLightMode(int32 Index, ELightingModel Value) override;
 	
@@ -100,14 +90,14 @@ class FPIEViewAdapter : public IViewportAdapter
 	bool IsViewActive(int32 ViewIndex) const override { return true; }
   private:
 	// 직교 View의 렌더·컬링에 사용할 카메라를 계산한다.
-	FViewCamera GetRenderCamera() const;
+	FViewCamera GetRenderCamera(float AspectRatio) const;
 
 	// 카메라·투영·화면 크기를 기준으로 파생 렌더 정보를 캐시한다.
 	struct FPreparedView
 	{
 		float Key[14]{};
 		FFrustumPlanes Frustum{};
-		FMatrix EngineViewProjection{};
+		FRenderViewData RenderView{};
 		bool bValid = false;
 	};
 

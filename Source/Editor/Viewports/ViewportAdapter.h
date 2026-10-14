@@ -20,11 +20,12 @@ class IViewportAdapter
 	virtual void SetViewCameraTransform(int32 ViewIndex, const FCameraTransform& CameraTransform) = 0;
 	virtual void SetViewRect(int32 ViewIndex, const FRect& Rect) = 0;
 	virtual const FRect& GetViewRect(int32 ViewIndex = 0) const = 0;
-	virtual FMatrix GetEngineViewProjection(int32 ViewIndex = 0) const = 0;
-	virtual FMatrix GetEngineView(int32 ViewIndex = 0) const = 0;
-	virtual FMatrix GetEnginePerspectiveProjection(const int32 ViewIndex) const = 0;
-	virtual FVector GetEngineCameraLocation(int32 ViewIndex = 0) const = 0;
-	virtual FVector GetEngineCameraForward(int32 ViewIndex = 0) const = 0;
+	virtual const FRenderViewData& GetRenderView(int32 ViewIndex = 0) const = 0;
+	virtual FMatrix GetEngineViewProjection(int32 ViewIndex = 0) const { return GetRenderView(ViewIndex).ViewProjection; }
+	virtual FMatrix GetEngineView(int32 ViewIndex = 0) const { return GetRenderView(ViewIndex).View; }
+	virtual FMatrix GetEnginePerspectiveProjection(int32 ViewIndex) const { return GetRenderView(ViewIndex).Projection; }
+	virtual FVector GetEngineCameraLocation(int32 ViewIndex = 0) const { return GetRenderView(ViewIndex).Camera.Transform.Location; }
+	virtual FVector GetEngineCameraForward(int32 ViewIndex = 0) const { return GetRenderView(ViewIndex).CameraForward; }
 	virtual FMatrix BuildEngineBillboardMatrix(int32 ViewIndex, const FVector& WorldPosition, float Width, float Height) const = 0;
 	virtual bool IsOrthographic(int32 ViewIndex = 0) const = 0;
 	//virtual int32 GetViewCount() const = 0;

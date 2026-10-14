@@ -9,6 +9,7 @@
 #include "Math/Quat.h"
 #include "Math/Matrix.h"
 #include "Math/Ray.h"
+#include "Rendering/RenderView.h"
 
 // 좌표 규약: +X Forward, +Y Right, +Z Up.
 using ObjectId = uint32;
@@ -27,32 +28,7 @@ struct FPlane { FVector Normal; float Distance; };
 // 화면상의 좌상단 위치와 너비·높이를 담는다.
 struct FRect { float X, Y, Width, Height; };
 
-enum class ECameraProjectionMode { Perspective, Orthographic };
 enum class ELayoutMode { Single, QuadSplit };
-
-// 카메라의 월드 위치와 회전을 담는다.
-struct FCameraTransform
-{
-    FVector Location;
-    FQuat Rotation{0.0f, 0.0f, 0.0f, 1.0f};
-};
-
-// 원근·직교 투영에 필요한 모드와 절두체 값을 담는다.
-struct FCameraProjection
-{
-    ECameraProjectionMode Mode;
-    float FovDegrees;
-    float OrthoWidth;
-    float NearClip;
-    float FarClip;
-};
-
-// 한 View에서 사용하는 카메라 Transform과 투영 설정을 담는다.
-struct FViewCamera
-{
-    FCameraTransform Transform;
-    FCameraProjection Projection;
-};
 
 // 레이아웃 모드와 최대 네 View의 카메라 상태를 담는다.
 struct FViewSet
@@ -74,8 +50,6 @@ struct FCameraMoveInput
 
 // 카메라의 월드 축을 직교기저로 변환해 View 행렬을 만든다.
 FMatrix BuildViewMatrix(const FCameraTransform& Transform);
-// 투영 모드에 따라 원근 또는 직교 Projection 행렬을 만든다.
-FMatrix BuildProjectionMatrix(const FCameraProjection& Projection, float AspectRatio);
 // 화면 좌표를 카메라 기저와 투영값으로 역투영해 월드 Ray를 만든다.
 FRay Deproject(const FViewCamera& Camera, FVector2D ScreenPos, FVector2D ViewportSize);
 // 로컬 이동과 Yaw·Pitch 입력을 현재 카메라에 적분한다.
