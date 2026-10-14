@@ -1,6 +1,6 @@
 #pragma once
-#include "FogSceneData.h"
-#include "FireballSceneData.h"
+#include "Rendering/SceneData/FogSceneData.h"
+#include "Rendering/SceneData/FireballSceneData.h"
 #include "Containers/Array.h"
 #include "HAL\Platform.h"
 #include "Components/LightComponent.h"

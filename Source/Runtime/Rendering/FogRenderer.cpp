@@ -2,7 +2,7 @@
 #include "FogRenderer.h"
 #include "RenderResourceManager.h"
 #include "Rendering/RenderCommand.h"
-#include "FogSceneData.h"
+#include "Rendering/SceneData/FogSceneData.h"
 bool FFogRenderer::Init()
 {
 	// 셰이더 가져오기
