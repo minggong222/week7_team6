@@ -694,6 +694,26 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 
 				ImGui::TableNextRow();
 
+				// Specular Color
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Specular Color");
+
+				ImGui::TableSetColumnIndex(1);
+				ImGui::SetNextItemWidth(-1.0f);
+
+				FVector TempSpecularColor = Effective ? Effective->SpecularColor : FVector(1.0f, 1.0f, 1.0f);
+				if (ImGui::ColorEdit3("##SpecularColor", &TempSpecularColor.X))
+				{
+					Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+					if (Override)
+					{
+						Override->SpecularColor = TempSpecularColor;
+						Effective = Override;
+					}
+				}
+
+				ImGui::TableNextRow();
+
 				// 8-1: Shininess
 				ImGui::TableSetColumnIndex(0);
 				ImGui::Text("Shininess");

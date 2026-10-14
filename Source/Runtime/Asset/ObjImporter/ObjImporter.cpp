@@ -500,7 +500,7 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 		// 익스포터가 "광택 없음"을 Ks는 켠 채 Ns 0으로 내보내는 경우가 있다 (Concert 등)
 		// illum 0, 1은 스페큘러를 쓰지 않는 조명 모델이다
 		const bool bNoSpecular = RawMtl.Ns < 1.0f || RawMtl.Illum < 2;
-		CookedMtl.SpecularColor = bNoSpecular ? FVector(0.0f, 0.0f, 0.0f) : RawMtl.Ks;
+		CookedMtl.SpecularColor = bNoSpecular ? FVector(1.0f, 1.0f, 1.0f) : RawMtl.Ks;
 		CookedMtl.EmissiveColor = RawMtl.Ke;
 		CookedMtl.Shininess = RawMtl.Ns;
 		CookedMtl.NormalScale = RawMtl.BumpScale;
