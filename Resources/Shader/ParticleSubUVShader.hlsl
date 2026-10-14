@@ -3,6 +3,7 @@
 cbuffer constants : register(b0)
 {
     row_major matrix World;
+    row_major matrix Normal;
 
     // FSubUVConstants와 같은 순서
     float CurrentFrame;
