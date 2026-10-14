@@ -78,6 +78,11 @@ class FMultipleViewportsAdapter : public IViewportAdapter
 		return ActiveViewIndex;
 	}
 
+	int32 GetClickViewIndex() const
+	{
+		return ClickViewIndex;
+	}
+
 	// 입력 영역 밖에서도 마지막 편집 대상을 유지하며 Single에서는 확대 View를 반환한다.
 	int32 GetEditorViewIndex() const override
 	{
@@ -244,6 +249,7 @@ class FMultipleViewportsAdapter : public IViewportAdapter
 	FRect ViewRects[4]{};
 	int32 SingleViewIndex = 0;
 	int32 ActiveViewIndex = InvalidViewIndex;
+	int32 ClickViewIndex = 0;
 	int32 EditorViewIndex = 0;
 	bool ViewWireframe[4]{}; // showflag 비트마스크로 분기필요
 	ELightingModel ViewLightMode[4]{};

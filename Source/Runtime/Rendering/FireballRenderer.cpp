@@ -2,7 +2,7 @@
 #include "FireballRenderer.h"
 #include "RenderResourceManager.h"
 #include "RenderPacket.h"
-#include "FireballSceneData.h"
+#include "Rendering/SceneData/FireballSceneData.h"
 #include "Engine/AssetManager.h"
 #include "Engine/StaticMesh.h"
 

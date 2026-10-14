@@ -21,6 +21,8 @@
 #include "Engine/Level.h"
 #include "Engine/World.h"
 #include "Components/LightComponent.h"
+#include "Components/ArrowComponent.h"
+#include "Components/BillboardComponent.h"
 
 #include "Rendering/Renderer.h"
 
@@ -46,6 +48,23 @@
 
 #include "Tasks/Tasks.h"
 #include "FScene.h"
+#include <chrono>
+
+namespace
+{
+	void SetLightVisualizationVisibility(const FScene& Scene, bool bVisible)
+	{
+		for (const auto& Light : Scene.Lights)
+		{
+			AActor* Owner = Light.IsValid() ? Light->GetOwner() : nullptr;
+			if (!Owner) continue;
+			if (auto* Billboard = Owner->FindComponentByClass<UBillboardComponent>())
+				Billboard->SetVisibility(bVisible);
+			if (auto* Arrow = Owner->FindComponentByClass<UArrowComponent>())
+				Arrow->SetVisibility(bVisible);
+		}
+	}
+}
 
 // 렌더 자원·월드·에디터와 MultipleViewports 연결을 초기화한다.
 bool FEditorApplication::Init(HINSTANCE hInstance)
@@ -93,10 +112,10 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	FWindowContext MainWindowCtx;
 	LOG(Info, "Create Main Window...");
 	MainWindowCtx.Window = MakeUnique<FWindowsWindow>();
-	const int32 ScreenWidth = 1600;
-	const int32 ScreenHeight = 900;
+	const int32 ScreenWidth = 1920;
+	const int32 ScreenHeight = 1080;
 
-	if (!MainWindowCtx.Window->Create(hInstance, ScreenWidth, ScreenHeight, L"Hitori Engine", false))
+	if (!MainWindowCtx.Window->Create(hInstance, ScreenWidth, ScreenHeight, L"Shiba Engine", false))
 	{
 		LOG(Error, "Failed To Create Main Window!");
 		return false;
@@ -114,7 +133,7 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 
 	LOG(Info, "Initialize ImGui...");
 	ImGuiRenderer = MakeUnique<FImGuiRenderer>();
-	if (!ImGuiRenderer->Init(MainWindow->GetHandle(), RenderDevice->GetDevice(), RenderDevice->GetContext()))
+	if (!ImGuiRenderer->Init(MainWindow, RenderDevice->GetDevice(), RenderDevice->GetContext()))
 	{
 		LOG(Error, "Failed To Initialize ImGui!");
 	}
@@ -124,33 +143,49 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	LoadingScreen->Init();
 	LoadingScreen->SetProgress(0.0f);
 	LoadingScreen->SetStatusText("Scanning assets...");
-	LoadingScreen->Tick(0.016f);
+	LoadingScreen->Tick(0.0f);
 	// 초기 로딩 화면 출력 및 창 표시
 	PresentFrame();
 	MainWindow->Show();
 
+	// 애셋/초기화 단계 사이에 실행한다. 빠른 작업은 모아 약 22Hz로 표시한다.
+	auto LastLoadingFrame = std::chrono::steady_clock::now();
+	auto RefreshLoadingScreen = [this, &LastLoadingFrame](bool bForce = false)
+	{
+		MainWindow->ProcessMessage(bIsRunning);
+		if (!bIsRunning) return;
+		const auto Now = std::chrono::steady_clock::now();
+		const float DeltaTime = std::chrono::duration<float>(Now - LastLoadingFrame).count();
+		if (!bForce && DeltaTime < 1.0f / 22.0f) return;
+		LastLoadingFrame = Now;
+		LoadingScreen->Tick(DeltaTime);
+		PresentFrame();
+	};
+
 	// 애셋 초기화 및 진행률 연동
 	LOG(Info, "Initialize AssetManager...");
 	UAssetManager::Get().Init(
-		[this](float Ratio, const FString& AssetName)
+		[this, &RefreshLoadingScreen](float Ratio, const FString& AssetName)
 		{
 			// 창이 이미 닫혔으면 파괴된 창에 그리지 않는다.
 			if (LoadingScreen && bIsRunning)
 			{
 				LoadingScreen->SetProgress(Ratio);
 				LoadingScreen->SetStatusText(AssetName);
-				LoadingScreen->Tick(0.016f);
-				PresentFrame();
-				MainWindow->ProcessMessage(bIsRunning);
+				RefreshLoadingScreen();
 			}
 		});
 	LOG(Info, "Initialize AssetManager Success!");
+	LoadingScreen->SetStatusText("Initializing editor...");
+	RefreshLoadingScreen(true);
 
 	GridRenderer = MakeUnique<FGridRenderer>();
 	GridRenderer->Init(Renderer.get());
+	RefreshLoadingScreen();
 
 	GizmoRenderer = MakeUnique<FGizmoRenderer>();
 	GizmoRenderer->Init(Renderer.get());
+	RefreshLoadingScreen();
 
 	Gizmo = MakeUnique<FGizmo>();
 
@@ -167,6 +202,7 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	
 	OutlineRenderer = MakeUnique<FOutlineRenderer>();
 	OutlineRenderer->Init(Renderer.get());
+	RefreshLoadingScreen();
 
 	Outline = MakeUnique<FOutline>();
 
@@ -174,25 +210,33 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	
 	TextRenderer = MakeUnique<FTextRenderer>();
 	TextRenderer->Init();
+	RefreshLoadingScreen();
 
 	FogRenderer = MakeUnique<FFogRenderer>();
 	FogRenderer->Init();
+	RefreshLoadingScreen();
 
 	FireballRenderer = MakeUnique<FFireballRenderer>();
 	FireballRenderer->Init();
+	RefreshLoadingScreen();
 
 	DepthSceneRenderer = MakeUnique<FDepthSceneRenderer>();
 	DepthSceneRenderer->Init();
+	RefreshLoadingScreen();
 
 	AntiAliasingRenderer = MakeUnique<FAntiAliasingRenderer>();
 	AntiAliasingRenderer-> Init();
+	RefreshLoadingScreen();
 
 	SkyboxRenderer = MakeUnique<FSkyboxRenderer>();
 	SkyboxRenderer->Init("Assets/SkySphere/Sky.jpg");
+	LoadingScreen->SetStatusText("Initializing world...");
+	RefreshLoadingScreen();
 
 	// Scene
 	UWorld* World = FObjectFactory::ConstructObject<UWorld>();
 	World->Init();
+	RefreshLoadingScreen();
 
 	FWorldContext WorldContext = {World, EWorldType::Editor};
 	WorldContexts.Add(WorldContext);
@@ -204,11 +248,6 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	MultipleViewportsAdapter.SetSingleViewIndex(0);
 
 	PIEViewAdapter.InitializeFromWorld(*World);
-	if (LoadingScreen)
-	{
-		// 씬 적재 완료 상태 설정
-		LoadingScreen->SetSceneLoaded(true);
-	}
 
 	World->GetMainCamera()->GetCameraComponent()->SetExternalInputManaged(true);
 
@@ -244,6 +283,8 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	SettingsPanel->SetViewportAdapter(&MultipleViewportsAdapter);
 
 	ViewportsPanel->SetViewportAdapter(&MultipleViewportsAdapter);
+	RefreshLoadingScreen(true);
+	LoadingScreen->SetSceneLoaded(true);
 	return true;
 }
 
@@ -260,6 +301,9 @@ void FEditorApplication::Run()
 		float DeltaTime = 0.0f;
 		if (!BeginFrame(DeltaTime))
 			break;
+
+		// DPI 처리
+		ImGuiRenderer->UpdateScale(MainWindow->GetScale());
 
 		// 로딩 화면 처리
 		if (LoadingScreen && !LoadingScreen->IsFinished())
@@ -482,6 +526,7 @@ void FEditorApplication::RenderMultipleViewports()
 	}
 
 
+	SetLightVisualizationVisibility(SceneData, !ViewportsPanel->IsPIEMode() || !ViewportsPanel->IsPIEFocused());
 	for (int32 ViewIndex = 0; ViewIndex < 4; ++ViewIndex)
 	{
 		const bool bActive = MultipleViewportsAdapter.IsViewActive(ViewIndex);
@@ -511,6 +556,7 @@ void FEditorApplication::RenderPIEViewport()
 	{
 		const FRenderViewData& RenderView = PIEViewAdapter.GetRenderView(0);
 		PIEPanel->SetView(PIEViewAdapter.GetViewRect(0), RenderView.Width, RenderView.Height);
+		SetLightVisualizationVisibility(GetPIEWorld()->GetScene(), false);
 		PIEViewAdapter.BuildRenderPackets(0, SceneRenderPackets);
 
 		RenderPIEFrame(PIEPanel->GetRenderingInfo(), RenderView, SceneRenderPackets);
@@ -629,18 +675,13 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 	{
 		SkyboxRenderer->OnRender(ViewProjection, ViewCameraLocation);
 	}
-	//Grid 렌더링
-	{
-		FGPUStatScope GridScope(StatIds::GpuGrid(), L"Grid");
-		GridRenderer->OnRenderPSGrid(ViewProjection, ViewCameraLocation, EditorSettings, ViewRenderingInfo.ViewportSetting);
-	}
 
 	// Opaque(불투명) 렌더링
 	{
 		const bool bDrawPrimitives = EditorSettings.bDrawPrimitives;
 		if (bDrawPrimitives)
 		{
-			const bool bWireframe = MultipleViewportsAdapter.IsViewWireframe(ViewIndex);
+			const bool bWireframe = ViewportsPanel->IsPIEMode() ? PIEViewAdapter.IsViewWireframe(0) : MultipleViewportsAdapter.IsViewWireframe(ViewIndex);
 			const ELightingModel LightingModel = ViewportsPanel->IsPIEMode()
 				? PIEViewAdapter.GetViewLightMode(0)
 				: MultipleViewportsAdapter.GetViewLightMode(ViewIndex);
@@ -718,15 +759,26 @@ void FEditorApplication::RenderFrame(const int32 ViewIndex,
 			}
 			
 		}
-		
-		for (TObjectIterator<USpotLightComponent> Itr; Itr; ++Itr)
+
+		if (Gizmo->GetTarget())
 		{
-			Itr->DrawDebug(LineBatcher.get());
-		}
-		
-		for (TObjectIterator<UPointLightComponent> Itr(false); Itr; ++Itr)
-		{
-			Itr->DrawDebug(LineBatcher.get());
+			// DrawDebug가 있는 LightComponent가 선택되면 Visualizer 그리기
+			// Note: Spotlight가 PointLight를 상속받으니 지금은 PointLight인지만 체크하면 됨
+
+			// TODO: Visualizer 만들기
+			USceneComponent* SelectedComponent = Gizmo->GetTarget();
+
+			if (SelectedComponent)
+			{
+				// light 컴포넌트 찾기
+				UPointLightComponent* LightComponent = Cast<UPointLightComponent>(SelectedComponent);
+
+				// 있으면 DrawDebug
+				if (LightComponent)
+				{
+					LightComponent->DrawDebug(LineBatcher.get());
+				}
+			}
 		}
 
 		LineBatcher->OnRender(ViewProjection);
@@ -805,7 +857,7 @@ void FEditorApplication::RenderPIEFrame(const FRenderingInfo& ViewRenderingInfo,
 	const bool bDrawPrimitives = EditorSettings.bDrawPrimitives;
 	if (bDrawPrimitives)
 	{
-		const bool bWireframe = false;
+		const bool bWireframe = PIEViewAdapter.IsViewWireframe(0);
 		const ELightingModel LightingModel = PIEViewAdapter.GetViewLightMode(0);
 		Renderer->RenderOpaque(RenderPackets, RenderView, SceneData, bWireframe, LightingModel);
 	}
@@ -942,8 +994,8 @@ void FEditorApplication::StartPIE()
 	PIEViewAdapter.InitializeFromWorld(*PIEWorld);
 	if (PIEPanel->GetMode() == ETypePIEMode::Selected)
 	{
-		PIEViewAdapter.SetViewLightMode(0, MultipleViewportsAdapter.GetViewLightMode(MultipleViewportsAdapter.GetEditorViewIndex()));
-		PIEViewAdapter.SetViewWireframe(0, MultipleViewportsAdapter.IsViewWireframe(MultipleViewportsAdapter.GetEditorViewIndex()));
+		PIEViewAdapter.SetViewLightMode(0, MultipleViewportsAdapter.GetViewLightMode(MultipleViewportsAdapter.GetClickViewIndex()));
+		PIEViewAdapter.SetViewWireframe(0, MultipleViewportsAdapter.IsViewWireframe(MultipleViewportsAdapter.GetClickViewIndex()));
 		ViewportsPanel->SetViewportAdapter(&PIEViewAdapter);
 		ViewportsPanel->SetViewportMode(EViewportMode::PIE);
 		ViewportsPanel->SetPIE();

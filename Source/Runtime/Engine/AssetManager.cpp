@@ -74,13 +74,13 @@ namespace
 				Section.IndexCount,
 				reinterpret_cast<const float*>(&Mesh->MeshData.Vertices[0].Position),
 				VertexCount,
-				sizeof(FVertexPNCT),
+				sizeof(FVertexPNCTT),
 				1.05f
 			);
 		}
 
 		// 버텍스 버퍼 재정렬 및 인덱스 리매핑
-		TArray<FVertexPNCT> OptimizedVertices;
+		TArray<FVertexPNCTT> OptimizedVertices;
 		OptimizedVertices.SetNum(VertexCount);
 		meshopt_optimizeVertexFetch(
 			OptimizedVertices.GetData(),
@@ -88,7 +88,7 @@ namespace
 			IndexCount,
 			Mesh->MeshData.Vertices.GetData(),
 			VertexCount,
-			sizeof(FVertexPNCT)
+			sizeof(FVertexPNCTT)
 		);
 		Mesh->MeshData.Vertices = std::move(OptimizedVertices);
 
@@ -98,8 +98,8 @@ namespace
 		// Vertex/Index GPU 업로드
 		Mesh->VertexBuffer = FRenderCommand::CreateStaticVertexBuffer(
 			Mesh->MeshData.Vertices.GetData(),
-			sizeof(FVertexPNCT) * static_cast<uint32>(Mesh->MeshData.Vertices.size()),
-			sizeof(FVertexPNCT)
+			sizeof(FVertexPNCTT) * static_cast<uint32>(Mesh->MeshData.Vertices.size()),
+			sizeof(FVertexPNCTT)
 		);
 		Mesh->IndexBuffer = FRenderCommand::CreateStaticIndexBuffer(
 			Mesh->MeshData.Indices.GetData(),
@@ -201,6 +201,7 @@ void UAssetManager::ScanAssets(const fs::path& AssetRoot, std::function<void(flo
 	{
 		if (!Entry.is_regular_file()) continue;
 		AssetFiles.Add(Entry.path());
+		if (OnProgress) OnProgress(0.0f, "Scanning assets...");
 	}
 
 	const int32 TotalFiles = static_cast<int32>(AssetFiles.Num());
@@ -251,13 +252,19 @@ void UAssetManager::LoadAsset(const FString& Key, const FString& Path)
 void UAssetManager::Init(std::function<void(float, const FString&)> OnProgress)
 {
 	FGeometryGenerator::CreateDefaultMeshDatas();
+	if (OnProgress) OnProgress(0.0f, "Creating default textures...");
 	// 머티리얼이 참조하므로 반드시 먼저 만든다
 	CreateDefaultTextures();
 	CreateDefaultMaterial();
+	if (OnProgress) OnProgress(0.0f, "Scanning assets...");
 	ScanAssets("Assets", OnProgress);
+	if (OnProgress) OnProgress(1.0f, "Creating default meshes...");
 	CreateDefaultMeshes();
+	if (OnProgress) OnProgress(1.0f, "Creating particle material...");
 	CreateParticleMaterial();
+	if (OnProgress) OnProgress(1.0f, "Creating billboard material...");
 	CreateBillboardMaterial();
+	if (OnProgress) OnProgress(1.0f, "Assets ready");
 }
 
 void UAssetManager::CreateDefaultTextures()
@@ -298,6 +305,9 @@ void UAssetManager::CreateDefaultMeshes()
 	FStaticMeshRenderData* ConeData = FGeometryGenerator::GetMeshData("Cone");
 	RegisterAsset("Cone", CreateStaticMesh(ConeData));
 
+	FStaticMeshRenderData* LowSphereData = FGeometryGenerator::GetMeshData("LowSphere");
+	RegisterAsset("LowSphere", CreateStaticMesh(LowSphereData));
+
 	FStaticMeshRenderData* SphereData = FGeometryGenerator::GetMeshData("Sphere");
 	RegisterAsset("Sphere", CreateStaticMesh(SphereData));
 
@@ -312,6 +322,9 @@ void UAssetManager::CreateDefaultMeshes()
 
 	FStaticMeshRenderData* RingMeshData = FGeometryGenerator::GetMeshData("Ring");
 	RegisterAsset("Ring", CreateStaticMesh(RingMeshData));
+
+	FStaticMeshRenderData* TorusMeshData = FGeometryGenerator::GetMeshData("Torus");
+	RegisterAsset("Torus", CreateStaticMesh(TorusMeshData));
 
 	FStaticMeshRenderData* ScaleBarData = FGeometryGenerator::GetMeshData("ScaleBar");
 	RegisterAsset("ScaleBar", CreateStaticMesh(ScaleBarData));
@@ -341,7 +354,7 @@ void UAssetManager::CreateDefaultMeshes()
 		Indices,
 		ARRAYSIZE(Indices));
 
-	FVertexPNCT Vertex{};
+	FVertexPNCTT Vertex{};
 	Vertex.Position = FVector(0.0f, -0.5f, 0.5f);
 	Mesh->MeshData.Vertices.Add(Vertex);
 	Vertex.Position = FVector(0.0f, 0.5f, 0.5f);

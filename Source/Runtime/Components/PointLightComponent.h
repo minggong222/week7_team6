@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Math/Quat.h"
 #include "Materials/Material.h"
+#include "Components/BillboardComponent.h"
 class FLineBatcher;
 
 class UPointLightComponent : public ULightComponent
@@ -19,7 +20,7 @@ public:
 	UPointLightComponent() = default;
   virtual ~UPointLightComponent() override = default;
 
-	void DrawDebug(FLineBatcher* LineBatcher) const;
+	virtual void DrawDebug(FLineBatcher* LineBatcher) const;
 
 	float GetFalloff() const { return LightFalloffExponent; }
 	void SetFalloff(float InFalloff) { LightFalloffExponent = InFalloff; }
@@ -49,7 +50,13 @@ public:
 		LightData.Intensity = Intensity;
 		FLinearColor Color = GetLightColor();
 		LightData.Color = {Color.R, Color.G, Color.B};
-		Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent())->GetMaterial(0)->BaseColor = {Color.R, Color.G, Color.B, Color.A};
+		UBillboardComponent* BillboardComponent = GetOwner()->FindComponentByClass<UBillboardComponent>();
+
+		if (BillboardComponent)
+		{
+			UMaterial* Material = BillboardComponent->GetMaterial(0);
+			Material->BaseColor = {Color.R, Color.G, Color.B, Color.A};
+		}
 		LightData.Radius = GetAttenuationRadius();
 		LightData.LightFalloffExponent = GetFalloff();
 		return LightData;

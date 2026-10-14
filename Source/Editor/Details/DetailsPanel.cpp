@@ -16,15 +16,22 @@
 #include "UObject/UObjectIterator.h"
 #include "GameFramework/Actor.h"
 
+constexpr float GRID_WIDTH_IN_FONT_UNITS = 7.0f;
+
 namespace
 {
+float GetGridWidth()
+{
+	return ImGui::GetFontSize() * GRID_WIDTH_IN_FONT_UNITS;
+}
+
 bool DrawAxisControl(const FString& _label, float& _value, float _speed, float _minValue, float _maxValue, float _resetValue, FVector4 _color)
 {
 	bool isValueChanged = false;
 
-	float lineHeight = GImGui->Font->LegacySize + GImGui->Style.FramePadding.y * 2.0f;
+	float lineHeight = ImGui::GetFrameHeight();
 	ImVec4 color(_color.X, _color.Y, _color.Z, _color.W);
-	ImVec2 buttonSize = {lineHeight + 2.0f, lineHeight};
+	ImVec2 buttonSize = {lineHeight, lineHeight};
 
 	// 각 버튼의 색상 설정
 	ImGui::PushStyleColor(ImGuiCol_Button, color);
@@ -71,7 +78,9 @@ bool DrawVector3Controller(const FString& _label, float* _values, float _resetVa
 		ImGui::TableSetColumnIndex(1);
 		// [컨트롤러 UI 코드] // 오른쪽 열: 컨트롤러
 		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{2, 0});
+		const ImGuiStyle& Style = ImGui::GetStyle();
+		const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{2.0f * Scale, 0.0f});
 		ImGui::PushFont(boldFont);
 
 		isVectorChanged |= DrawAxisControl("X", _values[0], 0.1f, 0.0f, 0.0f, _resetValue, {0.8f, 0.1f, 0.1f, 1.0f});
@@ -105,7 +114,7 @@ bool DrawVector3Controller(const FString& _label, float* _values, float _resetVa
 bool DrawRotatorAsXYZ(const FString& _label, FRotator& _rotator)
 {
 	float Euler[3] = {_rotator.Roll, _rotator.Pitch, _rotator.Yaw};
-	const bool isChanged = DrawVector3Controller(_label, Euler, 0.0f, 55.0f);
+	const bool isChanged = DrawVector3Controller(_label, Euler, 0.0f, GetGridWidth());
 	if (isChanged)
 	{
 		_rotator.Roll = Euler[0];
@@ -117,7 +126,8 @@ bool DrawRotatorAsXYZ(const FString& _label, FRotator& _rotator)
 
 void DrawTextureSlot(UMaterial** MaterialPtr, int32 SlotIndex)
 {
-	const float ThumbnailSize = 64.0f;
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float ThumbnailSize = 128.0f * Style.FontScaleDpi * Style.FontScaleMain;
 
 	UMaterial* Material = *MaterialPtr;
 	UTexture2D* Texture = nullptr;
@@ -393,7 +403,8 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 		return;
 	}
 
-	const float ThumbnailSize = 64.0f;
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float ThumbnailSize = 64.0f * Style.FontScaleDpi * Style.FontScaleMain;
 
 	// 메쉬 내의 매터리얼 별 Slot 순회
 	for (int32 Slot = 0; Slot < NumSlots; ++Slot)
@@ -430,7 +441,7 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 		{
 			if (ImGui::BeginTable("MaterialProperties", 2))
 			{
-				ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 110.0f);
+				ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, GetGridWidth());
 				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 				ImGui::TableNextRow();
@@ -603,6 +614,123 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 					ImGui::EndCombo();
 				}
 
+				ImGui::TableNextRow();
+
+				// 7: Normal Map
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Normal Map");
+
+				ImGui::TableSetColumnIndex(1);
+
+				UTexture2D* NormalTexture = (Effective && Effective->HasTexture(EMaterialTextureSlot::Normal))
+					? Effective->Textures[static_cast<int32>(EMaterialTextureSlot::Normal)]
+					: nullptr;
+
+				if (NormalTexture && NormalTexture->GetResource())
+				{
+					ImGui::Image((ImTextureID)NormalTexture->GetResource()->GetSRV(), {ThumbnailSize, ThumbnailSize});
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::SetTooltip("%s", NormalTexture->GetPath().c_str());
+					}
+				}
+				else
+				{
+					ImGui::Button("Empty##NormalMap", {ThumbnailSize, ThumbnailSize});
+				}
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* Payload = ImGui::AcceptDragDropPayload(EditorDragDrop::Texture))
+					{
+						UTexture2D* DroppedTexture = *static_cast<UTexture2D**>(Payload->Data);
+						Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+
+						if (Override)
+						{
+							Override->SetTexture(EMaterialTextureSlot::Normal, DroppedTexture);
+							NormalTexture = DroppedTexture;
+							Effective = Override;
+						}
+					}
+					ImGui::EndDragDropTarget();
+				}
+				ImGui::SameLine();
+
+				if (NormalTexture)
+				{
+					fs::path Path(NormalTexture->GetPath());
+					FString FileName = Path.filename().string();
+
+					ImGui::TextWrapped("%s", FileName.c_str());
+					if (ImGui::IsItemHovered())
+					{
+						ImGui::SetTooltip("%s", NormalTexture->GetPath().c_str());
+					}
+				}
+				else
+				{
+					ImGui::TextDisabled("(Empty)");
+				}
+
+				ImGui::TableNextRow();
+
+				// 8: Normal Scale
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Normal Scale");
+
+				ImGui::TableSetColumnIndex(1);
+				ImGui::SetNextItemWidth(-1.0f);
+
+				float TempNormalScale = Effective ? Effective->NormalScale : 1.0f;
+				if (ImGui::DragFloat("##NormalScale", &TempNormalScale, 0.01f))
+				{
+					Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+					if (Override)
+					{
+						Override->NormalScale = TempNormalScale;
+						Effective = Override;
+					}
+				}
+
+				ImGui::TableNextRow();
+
+				// 8-1: Shininess
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Shininess");
+
+				ImGui::TableSetColumnIndex(1);
+				ImGui::SetNextItemWidth(-1.0f);
+
+				float TempShininess = Effective ? Effective->Shininess : 1.0f;
+				if (ImGui::DragFloat("##Shininess", &TempShininess, 0.01f))
+				{
+					Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+					if (Override)
+					{
+						Override->Shininess = TempShininess;
+						Effective = Override;
+					}
+				}
+
+				ImGui::TableNextRow();
+
+				// 9: Flip Normal Green
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Flip Normal(Y)");
+
+				ImGui::TableSetColumnIndex(1);
+
+				bool bTempFlipNormalGreen = Effective ? Effective->bFlipNormalGreen : false;
+				if(ImGui::Checkbox("##FlipNormalGreen", &bTempFlipNormalGreen))
+				{
+					Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+					if (Override)
+					{
+						Override->bFlipNormalGreen = bTempFlipNormalGreen;
+						Effective = Override;
+					}
+				}
+
 				ImGui::EndTable();
 			}
 			ImGui::TreePop();
@@ -614,13 +742,13 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 }
 
 // UClass에 등록된 프로퍼티를 타입에 맞는 위젯으로 그린다
-void DrawProperty(UObject* Object, const FProperty& Property, ImFont* CustomFont)
+void DrawProperty(UObject* Object, const FProperty& Property)
 {
 	void* ValuePtr = reinterpret_cast<char*>(Object) + Property.Offset;
 	const FString Label = "##" + Property.Name;
 
 	ImGui::Text(Property.Name.c_str());
-	ImGui::SameLine(120.0f);
+	ImGui::SameLine(GetGridWidth());
 	ImGui::SetNextItemWidth(-1.0f);
 
 	switch (Property.Type)
@@ -677,14 +805,12 @@ void DrawProperty(UObject* Object, const FProperty& Property, ImFont* CustomFont
 
 		char Buffer[256] = {};
 		strncpy_s(Buffer, Value->c_str(), sizeof(Buffer) - 1);
-		if (CustomFont)
-			ImGui::PushFont(CustomFont);
+
 		if (ImGui::InputText(Label.c_str(), Buffer, sizeof(Buffer)))
 		{
 			*Value = Buffer;
 		}
-		if (CustomFont)
-			ImGui::PopFont();
+
 		break;
 	}
 	case EPropertyType::Transform:
@@ -692,9 +818,9 @@ void DrawProperty(UObject* Object, const FProperty& Property, ImFont* CustomFont
 		FTransform* Value = static_cast<FTransform*>(ValuePtr);
 
 		ImGui::NewLine();
-		bool bChanged = DrawVector3Controller("Location", Value->Location.V, 0.0f, 55.0f);
+		bool bChanged = DrawVector3Controller("Location", Value->Location.V, 0.0f, GetGridWidth());
 		bChanged |= DrawRotatorAsXYZ("Rotation", Value->Rotation);
-		bChanged |= DrawVector3Controller("Scale", Value->Scale.V, 1.0f, 55.0f);
+		bChanged |= DrawVector3Controller("Scale", Value->Scale.V, 1.0f, GetGridWidth());
 		if (bChanged)
 		{
 			if (USceneComponent* SceneComponent = Cast<USceneComponent>(Object))
@@ -727,7 +853,7 @@ void DrawProperty(UObject* Object, const FProperty& Property, ImFont* CustomFont
 }
 
 // 클래스 계층을 따라 올라가며 각 단계의 프로퍼티를 표시
-void DrawProperties(UObject* Object, ImFont* CustomFont)
+void DrawProperties(UObject* Object)
 {
 	if (!Object)
 	{
@@ -754,7 +880,7 @@ void DrawProperties(UObject* Object, ImFont* CustomFont)
 		{
 			for (const FProperty& Property : Class->GetProperties())
 			{
-				DrawProperty(Object, Property, CustomFont);
+				DrawProperty(Object, Property);
 			}
 		}
 		ImGui::PopID();
@@ -764,17 +890,6 @@ void DrawProperties(UObject* Object, ImFont* CustomFont)
 
 bool FDetailsPanel::Init()
 {
-	ImGuiIO& io = ImGui::GetIO();
-
-	io.Fonts->AddFontDefault();
-
-	const char* fontPath = "Assets/Fonts/HMKMRHD.TTF";
-	float fontSize = 15.0f;
-	const ImWchar* koreanRanges = io.Fonts->GetGlyphRangesKorean();
-
-	CustomFont = io.Fonts->AddFontFromFileTTF(fontPath, fontSize, nullptr, koreanRanges);
-	assert(CustomFont != nullptr);
-
 	return true;
 }
 
@@ -791,7 +906,7 @@ void FDetailsPanel::OnRender()
 	if (Target && Target->IsA<AActor>())
 	{
 		AActor* TargetActor = Cast<AActor>(Target);
-		const float SpawnButtonWidth = 70.0f;
+		const float SpawnButtonWidth = ImGui::CalcTextSize("Add").x + ImGui::GetStyle().FramePadding.x * 2.0f;
 		const float Available = ImGui::GetContentRegionAvail().x;
 		const float ItemSpacing = ImGui::GetStyle().ItemSpacing.x;
 		const float ComboWidth = Available - SpawnButtonWidth - ItemSpacing * 2.0f;
@@ -806,15 +921,25 @@ void FDetailsPanel::OnRender()
 		}
 
 		// 액터 -> 컴포넌트 순으로, 클래스별 프로퍼티 표시
-		DrawProperties(TargetActor, CustomFont);
+		DrawProperties(TargetActor);
 
 		// 선택된 컴포넌트뿐 아니라 같은 액터의 다른 컴포넌트도 보여준다.
 		// (예: 라이트는 빌보드를 클릭해서 고르지만 수치는 SpotLight 쪽에 있다)
 		for (UActorComponent* Component : TargetActor->GetComponents())
 		{
+			// 에디터 전용 컴포넌트는 스킵
+			USceneComponent* SceneComponent = Cast<USceneComponent>(Component);
+			if (SceneComponent)
+			{
+				if (SceneComponent->GetIsVisualizationComponent())
+				{
+					continue;
+				}
+			}
+
 			// 같은 클래스를 상속한 컴포넌트가 여럿이면 헤더 ID가 겹치므로 분리한다
 			ImGui::PushID(Component);
-			DrawProperties(Component, CustomFont);
+			DrawProperties(Component);
 			if (UMeshComponent* MeshComponent = Cast<UMeshComponent>(Component))
 			{
 				DrawMaterialSlots(MeshComponent);

@@ -6,7 +6,7 @@
 #include "Engine/Texture2D.h"
 
 #include "Math/Color.h"
-#include "FireballSceneData.h"
+#include "Rendering/SceneData/FireballSceneData.h"
 #include "Rendering/RenderingInfo.h"
 
 struct FFireballFrameConstants

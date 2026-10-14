@@ -50,7 +50,7 @@ bool UTextRenderComponent::RebuildPickingMesh() const
 	PickingMesh.Vertices.Reset();
 	PickingMesh.Indices.Reset();
 
-	FVertexPNCT Vertex;
+	FVertexPNCTT Vertex;
 	Vertex.Position = FVector(0, MinY, MinZ);
 	PickingMesh.Vertices.Add(Vertex);
 	Vertex.Position = FVector(0, MinY, MaxZ);

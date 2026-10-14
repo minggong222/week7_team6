@@ -70,9 +70,7 @@ public:
 		return Data ? Data->AABB : Super::CalcLocalBounds();
 	}
 
-	
-
-	
+	int WorldPrimitiveIndex = -1;
 
 protected:
 	virtual void OnBoundsMarkedDirty() override;
@@ -81,6 +79,7 @@ protected:
 	bool bCollisionEnabled = false;
 
 	/*TArray<UMaterial* MaterialOverride = nullptr;*/
+
 
 
 

@@ -32,8 +32,12 @@ void FContentDrawerPanel::OnRender()
 		return;
 	}
 
-	float treeViewWidth = 200.0f;
-	ImGui::BeginChild("FolderTreeView", ImVec2(treeViewWidth, 0));
+	const float Unit = ImGui::GetFrameHeight();
+
+	const float TreeViewWidth = Unit * 7.0f;
+	const float ThumbnailSize = Unit * 4.0f;
+
+	ImGui::BeginChild("FolderTreeView", ImVec2(TreeViewWidth, 0));
 	{
 		// 루트 노드
 		if (ImGui::TreeNodeEx(AssetRootPath.string().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanAvailWidth |
@@ -53,12 +57,17 @@ void FContentDrawerPanel::OnRender()
 
 	ImGui::BeginChild("AssetGridView");
 	{
+		const ImGuiStyle& Style = ImGui::GetStyle();
+
 		// 그리드 레이아웃 계산
-		float padding = 16.0f;
-		float thumbnailSize = 80.0f;
-		float cellSize = thumbnailSize + padding;
+		float padding = 32.0f;
 		float panelWidth = ImGui::GetContentRegionAvail().x;
-		int ColumnCount = static_cast<int>(panelWidth / cellSize);
+
+		const float ButtonWidth = ThumbnailSize + Style.FramePadding.x * 2.0f;
+
+		const float CellWidth = ButtonWidth + Style.CellPadding.x * 2.0f;
+
+		int ColumnCount = static_cast<int>(panelWidth / CellWidth);
 		if (ColumnCount < 1) ColumnCount = 1;
 
 		// 테이블 기반 그리드 시작
@@ -119,7 +128,7 @@ void FContentDrawerPanel::OnRender()
 				}
 				if (Thumbnail)
 				{
-					ImGui::ImageButton(PathString.c_str(), (ImTextureID)Thumbnail->GetResource()->GetSRV(), { thumbnailSize, thumbnailSize });
+					ImGui::ImageButton(PathString.c_str(), (ImTextureID)Thumbnail->GetResource()->GetSRV(), {ThumbnailSize, ThumbnailSize});
 				}
 
 				// 페이로드에 포인터를 그대로 실어서 받는 쪽이 AssetMap을 다시 뒤지지 않게 한다.
@@ -128,7 +137,7 @@ void FContentDrawerPanel::OnRender()
 					ImGui::SetDragDropPayload(EditorDragDrop::Texture, &TextureAsset, sizeof(UTexture2D*));
 
 					// 끌고 다니는 동안 커서를 따라다니는 미리보기
-					ImGui::Image((ImTextureID)TextureAsset->GetResource()->GetSRV(), { thumbnailSize, thumbnailSize });
+					ImGui::Image((ImTextureID)TextureAsset->GetResource()->GetSRV(), {ThumbnailSize, ThumbnailSize});
 					ImGui::TextUnformatted(FilenameString.c_str());
 
 					ImGui::EndDragDropSource();

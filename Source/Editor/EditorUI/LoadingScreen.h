@@ -29,8 +29,8 @@ private:
 	float TargetProgress = 0.0f;
 	float ElapsedTime = 0.0f;
 	float MinDuration = 2.0f;
-	float AnimationFps = 0.15f;
-	int32 TotalFrames = 24;
+	float AnimationFps = 22.0f;
+	int32 TotalFrames = 22;
 	int32 FrameColumns = 6;
 	int32 FrameRows = 4;
 	int32 CurrentFrameIndex = 0;

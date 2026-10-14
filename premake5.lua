@@ -197,6 +197,7 @@ project "HitoriEditor"
 		"Source/Programs/**.h",
 		"Source/Programs/**.cpp",
 		"Source/Editor/**.rc",   -- 창·exe 아이콘
+    "Source/Editor/app.manifest",  -- 매니페스트 파일
 	}
 
 	includedirs
@@ -221,5 +222,8 @@ project "HitoriEditor"
 
 	filter "configurations:ObjViewer"
 		targetname "ObjViewer"
+    
+  filter "files:**.manifest"
+    buildaction "Manifest"
 
 	filter {}

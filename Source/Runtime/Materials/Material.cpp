@@ -54,6 +54,7 @@ UMaterial* UMaterial::CreateInstance(const UMaterial* Source)
 	Instance->EmissiveColor = Source->EmissiveColor;
 	Instance->Shininess = Source->Shininess;
 	Instance->NormalScale = Source->NormalScale;
+	Instance->bFlipNormalGreen = Source->bFlipNormalGreen;
 	Instance->UVScrollSpeed = Source->UVScrollSpeed;
 
 	// 원본에 파라미터 버퍼가 있으면 동일 크기로 새로 생성
@@ -100,6 +101,7 @@ json UMaterial::SaveMaterial(const UMaterial* Material)
 	Out["EmissiveColor"] = Material->EmissiveColor;
 	Out["Shininess"] = Material->Shininess;
 	Out["NormalScale"] = Material->NormalScale;
+	Out["FlipNormal"] = Material->bFlipNormalGreen;
 	Out["UVScrollSpeed"] = {
 		Material->UVScrollSpeed.X,
 		Material->UVScrollSpeed.Y
@@ -175,6 +177,10 @@ UMaterial* UMaterial::LoadMaterial(const json& In)
 	if (In.contains("NormalScale"))
 	{
 		Instance->NormalScale = In["NormalScale"].get<float>();
+	}
+	if (In.contains("FlipNormal"))
+	{
+		Instance->bFlipNormalGreen = In["FlipNormal"].get<bool>();
 	}
 
 	if (In.contains("Textures"))

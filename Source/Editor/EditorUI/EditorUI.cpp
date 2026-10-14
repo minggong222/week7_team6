@@ -78,13 +78,14 @@ void FEditorUI::OnRender()
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuiStyle& style = ImGui::GetStyle();
 	float minWinSizeX = style.WindowMinSize.x;
-	style.WindowMinSize.x = 370.0f;
+	style.WindowMinSize.x = 370.0f * style.FontScaleDpi * style.FontScaleMain;
 	if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 	{
 		ImGuiID dockspace_id = ImGui::GetID("EngineDockingSpace");
 		ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspaceFlags);
 	}
 
+	style.WindowMinSize.x = minWinSizeX;
 	ImGui::End();
 
 	for (auto& Panel : Panels)
@@ -99,8 +100,11 @@ void FEditorUI::OnRender()
 // 파일 메뉴의 요청을 애플리케이션 콜백으로 전달한다.
 void FEditorUI::DrawMainMenuBar()
 {
-	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 10.0f));
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 10.0f));
+	const ImGuiStyle& Style = ImGui::GetStyle();
+	const float Scale = Style.FontScaleDpi * Style.FontScaleMain;
+	const ImVec2 MenuSpacing(8.0f * Scale, 6.0f * Scale);
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, MenuSpacing);
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, MenuSpacing);
 
 	if (ImGui::BeginMainMenuBar())
 	{

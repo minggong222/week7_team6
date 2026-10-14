@@ -65,16 +65,15 @@ AActor* UWorld::SpawnActor(UClass* Class, FName InName, const FTransform* Transf
 	if (NewActor->GetRootComponent())
 	{
 		NewActor->GetRootComponent()->SetRelativeTransform(SpawnTransform);
-
-		AddComponent(Cast<UPrimitiveComponent>(NewActor->GetRootComponent()));
-		AddComponent(Cast<UExponentialHeightFogComponent>(NewActor->GetRootComponent()));
-		AddComponent(Cast<UFireballComponent>(NewActor->GetRootComponent()));
-
 	}
 
 	for (UActorComponent* Component : NewActor->GetComponents())
 	{
+		// 여기 나열된 클래스들만 Component로 등록된다... 왜?
 		AddComponent(Cast<ULightComponent>(Component));
+		AddComponent(Cast<UPrimitiveComponent>(Component));
+		AddComponent(Cast<UExponentialHeightFogComponent>(Component));
+		AddComponent(Cast<UFireballComponent>(Component));
 	}
 
 	// 4. Level->Actors에 등록
@@ -248,17 +247,33 @@ bool UWorld::DestroyActor(AActor* Actor)
 			break;
 		}
 	}
-	if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+
+	const TArray<UActorComponent*>& Components = Actor->GetComponents();
+	
+	bool bIsDeleted = false;
+	for (int i = 0; i < Components.size(); ++i)
 	{
-		for (int32 Index = WorldPrimitiveComponents.Num() - 1; Index >= 0; --Index)
+		UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Components[i]);
+		if (Primitive)
 		{
-			if (WorldPrimitiveComponents[Index].Get() == Primitive)
+			int Index = Primitive->WorldPrimitiveIndex;
+			WorldPrimitiveComponents.RemoveAtSwap(Index);
+			bIsDeleted = true;
+
+			if (WorldPrimitiveComponents.size() > 0 && Index < WorldPrimitiveComponents.size())
 			{
-				WorldPrimitiveComponents.RemoveAt(Index, 1);
-				++PrimitiveTopologyRevision;
-				break;
+				UPrimitiveComponent* NewPrimitive = WorldPrimitiveComponents[Index].Get();
+				if (NewPrimitive)
+				{
+					NewPrimitive->WorldPrimitiveIndex = Index;
+				}
 			}
 		}
+	}
+
+	if (bIsDeleted)
+	{
+		++PrimitiveTopologyRevision;
 	}
 
 	// Fog Destroy
@@ -411,6 +426,7 @@ void UWorld::AddComponent(UPrimitiveComponent* PrimComp)
 {
 	if (PrimComp)
 	{
+		PrimComp->WorldPrimitiveIndex = WorldPrimitiveComponents.size();
 		WorldPrimitiveComponents.Add(PrimComp);
 		++PrimitiveTopologyRevision;
 	}
@@ -459,6 +475,7 @@ void UWorld::DuplicateSubObjects()
 			{
 				if (UPrimitiveComponent* Prim = Cast<UPrimitiveComponent>(Comp))
 				{
+					Prim->WorldPrimitiveIndex = WorldPrimitiveComponents.size();
 					WorldPrimitiveComponents.Add(Prim);
 				}
 				else if (UExponentialHeightFogComponent* Fog = Cast<UExponentialHeightFogComponent>(Comp))

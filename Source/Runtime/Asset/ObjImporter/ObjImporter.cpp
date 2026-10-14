@@ -447,6 +447,7 @@ bool FObjImporter::ParseObj(const FString& Path, FObjInfo& Out)
 		LOG(Error, "[OBJ] {}: no faces", Path);
 		return false;
 	}
+	
 
 	// 기본 머티리얼
 	FObjMaterialInfo DefaultMaterial;
@@ -552,7 +553,7 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 				Cache[RawIndex] = NewIndex;
 				Corners.Add(static_cast<uint32>(NewIndex));
 
-				FVertexPNCT Vertex;
+				FVertexPNCTT Vertex;
 				Vertex.Position = ToEngine(Raw.Positions[RawIndex.PositionIndex], Preset);
 				if (RawIndex.NormalIndex >= 0)
 				{
@@ -573,6 +574,7 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 					Vertex.UV = Raw.UVs[RawIndex.UVIndex];
 					Vertex.UV.Y = 1.0f - Vertex.UV.Y;
 				}
+
 				Cooked.Vertices.Add(std::move(Vertex));
 			}
 
@@ -588,12 +590,15 @@ bool FObjImporter::Cook(const FObjInfo& Raw, FStaticMeshRenderData& Out, EObjAxi
 		Cooked.Sections.Add(std::move(CookedSection));
 	}
 
+	// Tangent (변환이 끝난 정점 기준)
+	Cooked.CalculateTangents();
+
 	// AABB (변환이 끝난 Position 기준)
 	if (!Cooked.Vertices.IsEmpty())
 	{
 		FVector Min = Cooked.Vertices[0].Position;
 		FVector Max = Min;
-		for (const FVertexPNCT& Vertex : Cooked.Vertices)
+		for (const FVertexPNCTT& Vertex : Cooked.Vertices)
 		{
 			Min.X = std::min(Min.X, Vertex.Position.X);
 			Min.Y = std::min(Min.Y, Vertex.Position.Y);

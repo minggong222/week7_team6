@@ -19,23 +19,23 @@ mtllib Dice.mtl
 g cube
 
 # Vertices
-v 0.0 0.0 0.0  # 1 a
-v 0.0 1.0 0.0  # 2 b
-v 1.0 1.0 0.0  # 3 c
-v 1.0 0.0 0.0  # 4 d
-v 0.0 0.0 1.0  # 5 e
-v 0.0 1.0 1.0  # 6 f
-v 1.0 1.0 1.0  # 7 g
-v 1.0 0.0 1.0  # 8 h
+v 0 0 0  # 1 a
+v 0 1 0  # 2 b
+v 1 1 0  # 3 c
+v 1 0 0  # 4 d
+v 0 0 1  # 5 e
+v 0 1 1  # 6 f
+v 1 1 1  # 7 g
+v 1 0 1  # 8 h
 
 # Normal vectors
 # One for each face. Shared by all vertices in that face.
-vn  1.0  0.0  0.0  # 1 cghd
-vn -1.0  0.0  0.0  # 2 aefb
-vn  0.0  1.0  0.0  # 3 gcbf
-vn  0.0 -1.0  0.0  # 4 dhea
-vn  0.0  0.0  1.0  # 5 hgfe
-vn  0.0  0.0 -1.0  # 6 cdab
+vn  1  0  0  # 1 cghd
+vn -1  0  0  # 2 aefb
+vn  0  1  0  # 3 gcbf
+vn  0 -1  0  # 4 dhea
+vn  0  0  1  # 5 hgfe
+vn  0  0 -1  # 6 cdab
 
 # Texture
 # (u,v) coordinate into texture map image, ranging from 0.0 - 1.0.
@@ -48,20 +48,20 @@ vn  0.0  0.0 -1.0  # 6 cdab
 #  +---b---c---+---+     +---- u
 #  |   | 3 |   |   |
 #  +---f---g---+---+
-vt 0.25 1.00  # 1 f(5) = f for face 5
-vt 0.50 1.00  # 2 g(5)
+vt 0.25 1  # 1 f(5) = f for face 5
+vt 0.5 1  # 2 g(5)
 vt 0    0.75  # 3 f(2)
 vt 0.25 0.75  # 4 e(2,4,5)
-vt 0.50 0.75  # 5 h(1,4,5)
+vt 0.5 0.75  # 5 h(1,4,5)
 vt 0.75 0.75  # 6 g(1)
-vt 0    0.50  # 7 b(2)
-vt 0.25 0.50  # 8 a(2,4,6)
-vt 0.50 0.50  # 9 d(1,4,6)
-vt 0.75 0.50  # 10 c(1)
+vt 0    0.5  # 7 b(2)
+vt 0.25 0.5  # 8 a(2,4,6)
+vt 0.5 0.5  # 9 d(1,4,6)
+vt 0.75 0.5  # 10 c(1)
 vt 0.25 0.25  # 11 b(3,6)
-vt 0.50 0.25  # 12 c(3,6)
+vt 0.5 0.25  # 12 c(3,6)
 vt 0.25 0     # 13 f(3)
-vt 0.50 0     # 14 g(3)
+vt 0.5 0     # 14 g(3)
 
 # Define material for the following faces
 usemtl texture

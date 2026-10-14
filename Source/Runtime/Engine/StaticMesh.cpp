@@ -87,7 +87,7 @@ bool UStaticMesh::GenerateLODs()
 	}
 
 	const float* Positions = reinterpret_cast<const float*>(&MeshData.Vertices[0].Position);
-	const size_t PositionStride = sizeof(FVertexPNCT);
+	const size_t PositionStride = sizeof(FVertexPNCTT);
 
 	// 중간 단계 간소화 인덱스 생성 (원본의 25% 수준으로 대폭 축소)
 	{
@@ -212,7 +212,7 @@ bool UStaticMesh::RebuildFromMeshData(FStaticMeshRenderData&& InData)
 {
 	MeshData = std::move(InData);
 
-	VertexBuffer = FRenderCommand::CreateStaticVertexBuffer(MeshData.Vertices.GetData(), sizeof(FVertexPNCT) * static_cast<uint32>(MeshData.Vertices.Num()), sizeof(FVertexPNCT));
+	VertexBuffer = FRenderCommand::CreateStaticVertexBuffer(MeshData.Vertices.GetData(), sizeof(FVertexPNCTT) * static_cast<uint32>(MeshData.Vertices.Num()), sizeof(FVertexPNCTT));
 	IndexBuffer = FRenderCommand::CreateStaticIndexBuffer(MeshData.Indices.GetData(), static_cast<uint32>(MeshData.Indices.Num()));
 	if (!VertexBuffer || !IndexBuffer)
 	{

@@ -326,7 +326,8 @@ void FRenderer::BuildLightBuffers(const FScene& Scene)
 		else if (LightType == LightType_Ambient && !AmbientDone)
 		{
 			AmbientDone = true;
-			LightingGlobal.AmbientRadiance = {Component->LightColor.R, Component->LightColor.G, Component->LightColor.B, Component->Intensity};
+			const FLightData AmbientData = Component->CreateLightData();
+			LightingGlobal.AmbientRadiance = {AmbientData.Color.X, AmbientData.Color.Y, AmbientData.Color.Z, AmbientData.Intensity};
 		}
 	}
 	for (auto& Bound : Bounds)
@@ -917,6 +918,8 @@ void FRenderer::UpdateMaterialParams(UMaterial* material)
 		Params.Shininess = (std::max)(material->Shininess, 1.0f);
 		Params.EmissiveColor = material->EmissiveColor;
 		Params.NormalScale = material->NormalScale;
+		Params.bDisableShading = material->bDisableShading ? 1.0f : 0.0f;
+		Params.NormalGreenSign = material->bFlipNormalGreen ? -1.0f : 1.0f;
 		FRenderCommand::UpdateBufferData(material->ParamBuffer.get(), &Params, sizeof(FStaticMeshMaterialParams));
 		break;
 	}

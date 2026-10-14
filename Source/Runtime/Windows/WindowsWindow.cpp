@@ -130,6 +130,20 @@ bool FWindowsWindow::CheckResized()
 	return bResult;
 }
 
+float FWindowsWindow::GetScale() const
+{
+	UINT DPI = GetDpiForWindow(hWnd);
+
+	if (DPI == 0)
+	{
+		HDC HandleDeviceContext = GetDC(hWnd);
+		DPI = GetDeviceCaps(HandleDeviceContext, LOGPIXELSX);
+		ReleaseDC(hWnd, HandleDeviceContext);
+	}
+
+	return static_cast<float>(DPI) / 96.0f;
+}
+
 LRESULT FWindowsWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -237,6 +251,7 @@ LRESULT FWindowsWindow::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 		bIsInSizeMove = false;
 		break;
 	}
+
 	default:
 		return DefWindowProc(hWnd, msg, wParam, lParam);
 	}

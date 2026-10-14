@@ -50,7 +50,7 @@ void FOutputLogPanel::OnRender()
 	ImGui::TextDisabled("Filter");
 	ImGui::SameLine();
 
-	Filter.Draw("##Filter", 180.0f);
+	Filter.Draw("##Filter", 320.0f);
 
 	ImGui::SameLine();
 	ImGui::TextDisabled("[?]");
@@ -90,7 +90,8 @@ void FOutputLogPanel::OnRender()
 			ImGui::EndPopup();
 		}
 
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+		const float Scale = style.FontScaleDpi * style.FontScaleMain;
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f * Scale, 1.0f * Scale)); // Tighten spacing
 		if (CopyToClipboard)
 			ImGui::LogToClipboard();
 		for (const FLogData& item : Items)

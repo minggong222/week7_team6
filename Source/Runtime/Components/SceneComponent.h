@@ -132,6 +132,12 @@ class USceneComponent : public UActorComponent
 	// SceneComponent는 충돌이 없으므로 bSweep, Teleport는 무시한다.
 	virtual bool MoveComponent(const FVector& Delta, const FQuat& NewRotation, bool bSweep, FHitResult* OutHit = nullptr, ETeleportType Teleport = ETeleportType::None);
 
+	void SetIsEditorOnly(bool Value);
+	bool GetIsEditorOnly() const { return bIsEditorOnly; }
+
+	void SetIsVisualizationComponent(bool Value);
+	bool GetIsVisualizationComponent() const { return bIsVisualizationComponent; }
+
 protected:
 	virtual void OnBoundsMarkedDirty() {}
 
@@ -139,6 +145,12 @@ protected:
 
 	USceneComponent* AttachParent = nullptr; // Attach 부모 정보
 	TArray<USceneComponent*> AttachChildren;
+
+	// 에디터 전용 컴포넌트임을 나타냅니다. true로 지정되면 picking과 scale 및 rotation 조절이 비활성화됩니다.
+	bool bIsEditorOnly = false;
+
+	// 에디터 시각화 전용 컴포넌트임을 나타냅니다. true로 지정되면 Details에 표시되지 않습니다.
+	bool bIsVisualizationComponent = false;
 
 	bool bBoundsDirty = true; // 처음 생성 시에는 계산 필요
 	mutable bool bWorldMatrixDirty = true;
