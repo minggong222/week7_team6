@@ -694,6 +694,26 @@ void DrawMaterialSlots(UMeshComponent* MeshComponent)
 
 				ImGui::TableNextRow();
 
+				// 8-1: Shininess
+				ImGui::TableSetColumnIndex(0);
+				ImGui::Text("Shininess");
+
+				ImGui::TableSetColumnIndex(1);
+				ImGui::SetNextItemWidth(-1.0f);
+
+				float TempShininess = Effective ? Effective->Shininess : 1.0f;
+				if (ImGui::DragFloat("##Shininess", &TempShininess, 0.01f))
+				{
+					Override = EnsureMaterialOverride(MeshComponent, Slot, Effective, Override);
+					if (Override)
+					{
+						Override->Shininess = TempShininess;
+						Effective = Override;
+					}
+				}
+
+				ImGui::TableNextRow();
+
 				// 9: Flip Normal Green
 				ImGui::TableSetColumnIndex(0);
 				ImGui::Text("Flip Normal(Y)");

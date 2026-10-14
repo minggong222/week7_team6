@@ -46,6 +46,7 @@
 
 #include "Tasks/Tasks.h"
 #include "FScene.h"
+#include <chrono>
 
 // 렌더 자원·월드·에디터와 MultipleViewports 연결을 초기화한다.
 bool FEditorApplication::Init(HINSTANCE hInstance)
@@ -96,7 +97,7 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	const int32 ScreenWidth = 1920;
 	const int32 ScreenHeight = 1080;
 
-	if (!MainWindowCtx.Window->Create(hInstance, ScreenWidth, ScreenHeight, L"Hitori Engine", false))
+	if (!MainWindowCtx.Window->Create(hInstance, ScreenWidth, ScreenHeight, L"Shiba Engine", false))
 	{
 		LOG(Error, "Failed To Create Main Window!");
 		return false;
@@ -124,33 +125,49 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	LoadingScreen->Init();
 	LoadingScreen->SetProgress(0.0f);
 	LoadingScreen->SetStatusText("Scanning assets...");
-	LoadingScreen->Tick(0.016f);
+	LoadingScreen->Tick(0.0f);
 	// 초기 로딩 화면 출력 및 창 표시
 	PresentFrame();
 	MainWindow->Show();
 
+	// 애셋/초기화 단계 사이에 실행한다. 빠른 작업은 모아 약 22Hz로 표시한다.
+	auto LastLoadingFrame = std::chrono::steady_clock::now();
+	auto RefreshLoadingScreen = [this, &LastLoadingFrame](bool bForce = false)
+	{
+		MainWindow->ProcessMessage(bIsRunning);
+		if (!bIsRunning) return;
+		const auto Now = std::chrono::steady_clock::now();
+		const float DeltaTime = std::chrono::duration<float>(Now - LastLoadingFrame).count();
+		if (!bForce && DeltaTime < 1.0f / 22.0f) return;
+		LastLoadingFrame = Now;
+		LoadingScreen->Tick(DeltaTime);
+		PresentFrame();
+	};
+
 	// 애셋 초기화 및 진행률 연동
 	LOG(Info, "Initialize AssetManager...");
 	UAssetManager::Get().Init(
-		[this](float Ratio, const FString& AssetName)
+		[this, &RefreshLoadingScreen](float Ratio, const FString& AssetName)
 		{
 			// 창이 이미 닫혔으면 파괴된 창에 그리지 않는다.
 			if (LoadingScreen && bIsRunning)
 			{
 				LoadingScreen->SetProgress(Ratio);
 				LoadingScreen->SetStatusText(AssetName);
-				LoadingScreen->Tick(0.016f);
-				PresentFrame();
-				MainWindow->ProcessMessage(bIsRunning);
+				RefreshLoadingScreen();
 			}
 		});
 	LOG(Info, "Initialize AssetManager Success!");
+	LoadingScreen->SetStatusText("Initializing editor...");
+	RefreshLoadingScreen(true);
 
 	GridRenderer = MakeUnique<FGridRenderer>();
 	GridRenderer->Init(Renderer.get());
+	RefreshLoadingScreen();
 
 	GizmoRenderer = MakeUnique<FGizmoRenderer>();
 	GizmoRenderer->Init(Renderer.get());
+	RefreshLoadingScreen();
 
 	Gizmo = MakeUnique<FGizmo>();
 
@@ -167,6 +184,7 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	
 	OutlineRenderer = MakeUnique<FOutlineRenderer>();
 	OutlineRenderer->Init(Renderer.get());
+	RefreshLoadingScreen();
 
 	Outline = MakeUnique<FOutline>();
 
@@ -174,25 +192,33 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	
 	TextRenderer = MakeUnique<FTextRenderer>();
 	TextRenderer->Init();
+	RefreshLoadingScreen();
 
 	FogRenderer = MakeUnique<FFogRenderer>();
 	FogRenderer->Init();
+	RefreshLoadingScreen();
 
 	FireballRenderer = MakeUnique<FFireballRenderer>();
 	FireballRenderer->Init();
+	RefreshLoadingScreen();
 
 	DepthSceneRenderer = MakeUnique<FDepthSceneRenderer>();
 	DepthSceneRenderer->Init();
+	RefreshLoadingScreen();
 
 	AntiAliasingRenderer = MakeUnique<FAntiAliasingRenderer>();
 	AntiAliasingRenderer-> Init();
+	RefreshLoadingScreen();
 
 	SkyboxRenderer = MakeUnique<FSkyboxRenderer>();
 	SkyboxRenderer->Init("Assets/SkySphere/Sky.jpg");
+	LoadingScreen->SetStatusText("Initializing world...");
+	RefreshLoadingScreen();
 
 	// Scene
 	UWorld* World = FObjectFactory::ConstructObject<UWorld>();
 	World->Init();
+	RefreshLoadingScreen();
 
 	FWorldContext WorldContext = {World, EWorldType::Editor};
 	WorldContexts.Add(WorldContext);
@@ -204,11 +230,6 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	MultipleViewportsAdapter.SetSingleViewIndex(0);
 
 	PIEViewAdapter.InitializeFromWorld(*World);
-	if (LoadingScreen)
-	{
-		// 씬 적재 완료 상태 설정
-		LoadingScreen->SetSceneLoaded(true);
-	}
 
 	World->GetMainCamera()->GetCameraComponent()->SetExternalInputManaged(true);
 
@@ -244,6 +265,8 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	SettingsPanel->SetViewportAdapter(&MultipleViewportsAdapter);
 
 	ViewportsPanel->SetViewportAdapter(&MultipleViewportsAdapter);
+	RefreshLoadingScreen(true);
+	LoadingScreen->SetSceneLoaded(true);
 	return true;
 }
 

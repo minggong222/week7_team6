@@ -1,4 +1,4 @@
-<title>Hitori 엔진 구조 점검</title>
+<title>Shiba 엔진 구조 점검</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
@@ -195,7 +195,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line);
 <div class="wrap">
 	<header class="top">
 		<div class="eyebrow">Code audit · Unreal Engine 구조 대비</div>
-		<h1>Hitori 엔진 구조 점검</h1>
+		<h1>Shiba 엔진 구조 점검</h1>
 		<p class="lede">언리얼 엔진 구조를 따라 만든 엔진입니다. 상속, 소유, 코어 시스템, 네이밍을 UE와 비교했고, 그 과정에서 찾은 고칠 점을 우선순위와 함께 정리했습니다.</p>
 		<div class="meta">
 			<span>repo <b>week6_team2</b></span>
@@ -343,7 +343,7 @@ Component → Actor → Level → <span class="s">nullptr ★</span>  <span clas
 		</div>
 		<div class="table-wrap">
 			<table>
-				<thead><tr><th>시스템</th><th>Hitori</th><th>UE</th><th>평가</th></tr></thead>
+				<thead><tr><th>시스템</th><th>Shiba</th><th>UE</th><th>평가</th></tr></thead>
 				<tbody>
 					<tr><td>클래스 선언</td><td>직접 작성한 <code>DECLARE_CLASS</code>, <code>inline static FAutoRegister</code>로 자동 등록</td><td>UHT 코드 생성 (<code>UCLASS</code>, <code>GENERATED_BODY</code>)</td><td>매크로 수준에서는 충분히 비슷함</td></tr>
 					<tr><td>프로퍼티</td><td><code>offsetof</code> + <code>EPropertyType</code> enum인 POD 구조체</td><td><code>FProperty</code> 클래스 계층, <code>CPF_*</code> 플래그, 메타데이터</td><td>플래그가 없어 Edit·Transient 구분 불가</td></tr>

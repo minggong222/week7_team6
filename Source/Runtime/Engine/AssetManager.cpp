@@ -201,6 +201,7 @@ void UAssetManager::ScanAssets(const fs::path& AssetRoot, std::function<void(flo
 	{
 		if (!Entry.is_regular_file()) continue;
 		AssetFiles.Add(Entry.path());
+		if (OnProgress) OnProgress(0.0f, "Scanning assets...");
 	}
 
 	const int32 TotalFiles = static_cast<int32>(AssetFiles.Num());
@@ -251,13 +252,19 @@ void UAssetManager::LoadAsset(const FString& Key, const FString& Path)
 void UAssetManager::Init(std::function<void(float, const FString&)> OnProgress)
 {
 	FGeometryGenerator::CreateDefaultMeshDatas();
+	if (OnProgress) OnProgress(0.0f, "Creating default textures...");
 	// 머티리얼이 참조하므로 반드시 먼저 만든다
 	CreateDefaultTextures();
 	CreateDefaultMaterial();
+	if (OnProgress) OnProgress(0.0f, "Scanning assets...");
 	ScanAssets("Assets", OnProgress);
+	if (OnProgress) OnProgress(1.0f, "Creating default meshes...");
 	CreateDefaultMeshes();
+	if (OnProgress) OnProgress(1.0f, "Creating particle material...");
 	CreateParticleMaterial();
+	if (OnProgress) OnProgress(1.0f, "Creating billboard material...");
 	CreateBillboardMaterial();
+	if (OnProgress) OnProgress(1.0f, "Assets ready");
 }
 
 void UAssetManager::CreateDefaultTextures()

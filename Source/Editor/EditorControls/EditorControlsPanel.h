@@ -7,6 +7,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Engine/Light.h"
 #include "Engine/DirectionalLight.h"
+#include "Engine/AmbientLight.h"
 #include "Engine/PointLight.h"
 #include "Engine/SpotLight.h"
 #include "Engine/TextRenderActor.h"
@@ -34,7 +35,7 @@ public:
 
 	int32 SelectedIndex = 0;
 
-	const char* Items[8] = {"StaticMesh", "Particle", "Text", "DirectionalLight", "PointLight", "SpotLight", "Fog", "PlayerStart"};
+	const char* Items[9] = {"StaticMesh", "Particle", "Text", "DirectionalLight", "AmbientLight", "PointLight", "SpotLight", "Fog", "PlayerStart"};
 
 	const char* PIEMode[2] = {"Selected", "NewEditor"};
 	int32 SelectedPIEModIndex = 0;
@@ -52,6 +53,7 @@ public:
 		AEmitter::StaticClass(),
 		ATextRenderActor::StaticClass(),
 		ADirectionalLight::StaticClass(),
+		AAmbientLight::StaticClass(),
 		APointLight::StaticClass(),
 		ASpotLight::StaticClass(),
 		AExponentialHeightFog::StaticClass(),
