@@ -142,11 +142,6 @@ SamplerState g_Sample : register(s0);
 Constant Variable
 *******************************/
 
-// 조명 방향 및 색상
-static const float3 LightDir = normalize(float3(0.5f, 0.5f, -1.0f));
-static const float3 LightColor = float3(0.f, 0.f, 0.f);
-static const float3 AmbientColor = float3(0.25f, 0.25f, 0.25f);
-
 static const float EPSLION = 1e-4f;
 
 /******************************
@@ -478,7 +473,7 @@ PS_INPUT mainVS(VS_INPUT input)
     }
 
 #if LIGHTING_MODEL_GOURAUD
-    output.lighting = AmbientColor;
+    output.lighting = AmbientRadiance;
 
     for (uint i = 0; i < LightCount; ++i)
     {
@@ -491,8 +486,8 @@ PS_INPUT mainVS(VS_INPUT input)
             output.WorldPosition,
             GetNormalFromMap(output, output.normal, output.uv),
             float3(1.0f, 1.0f, 1.0f),  
-            float3(1.0f, 1.0f, 1.0f),  
-            16.0f,
+            SpecularColor,  
+            Shininess,
         };
 
         output.lighting += EvaluateShading(Data);
@@ -521,7 +516,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 #if LIGHTING_MODEL_GOURAUD
         lighting = input.lighting;
 #elif LIGHTING_MODEL_LAMBERT || LIGHTING_MODEL_PHONG
-        lighting = AmbientColor;
+        lighting = AmbientRadiance;
         uint X = (uint) floor((input.position.x / ViewSizeX) * TileCountX);
         uint Y = (uint) floor((input.position.y / ViewSizeY) * TileCountY);
         X = min(X, TileCountX - 1);
@@ -539,8 +534,8 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
                 input.WorldPosition,
                 mappedNormal,
                 albedo.xyz,  
-                /*Specular*/ float3(1.0f, 1.0f, 1.0f),  
-                /*Shininess*/ 16.0f,
+                SpecularColor,  
+                Shininess,
             };
 
             lighting += EvaluateShading(Data);

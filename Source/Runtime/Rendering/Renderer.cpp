@@ -231,12 +231,22 @@ void FRenderer::RenderOpaque(TArray<FRenderPacket>& InPackets,
 	const FViewConstants ViewConstants{ViewProjection, CameraPosition, static_cast<float>(ViewportSettings.Width), static_cast<float>(ViewportSettings.Height), {}};
 	FRenderCommand::UpdateBufferData(ViewCB.get(), &ViewConstants, sizeof(ViewConstants));
 
-	FLightingGlobals tempGlobal{.AmbientRadiance{1.0f, 1.0f, 1.0f, 0.5f}};
+	FLightingGlobals LightingGlobals
+	{
+		.AmbientRadiance = FVector4
+		{
+			Scene.AmbientSceneData.Color.R,
+			Scene.AmbientSceneData.Color.G,
+			Scene.AmbientSceneData.Color.B,
+			Scene.AmbientSceneData.Color.A,
+		},
+	};
+
 	if (!LightingGlobalsCB)
 	{
 		LightingGlobalsCB = FRenderCommand::CreateConstantBuffer(sizeof(FLightingGlobals));
 	}
-	FRenderCommand::UpdateBufferData(LightingGlobalsCB.get(), &tempGlobal, sizeof(tempGlobal));
+	FRenderCommand::UpdateBufferData(LightingGlobalsCB.get(), &LightingGlobals, sizeof(LightingGlobals));
 
 	const uint32 LightCount = static_cast<uint32>(Scene.LightDatas.Num());
 	if (!LightCountCB)
