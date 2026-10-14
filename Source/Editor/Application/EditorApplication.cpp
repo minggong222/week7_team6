@@ -102,11 +102,8 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	FLog::AddSink(OutputLogPanel);
 	LOG(Info, "Engine Initialize...");
 
-	LOG(Info, "Initialize Renderer...");
-	Renderer = MakeUnique<FRenderer>();
 	RenderDevice = MakeUnique<FDynamicRHI>();
 	FRenderCommand::Init(RenderDevice.get());
-	if (!Renderer->Init()) return false;
 
 	// Create Main Window & Swapchain
 	FWindowContext MainWindowCtx;
@@ -129,8 +126,6 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	// 로딩 도중 창을 닫으면 WM_QUIT가 이 값을 false로 바꾸고, Run은 바로 종료된다.
 	bIsRunning = true;
 
-	FRenderResourceManager::Init();
-
 	LOG(Info, "Initialize ImGui...");
 	ImGuiRenderer = MakeUnique<FImGuiRenderer>();
 	if (!ImGuiRenderer->Init(MainWindow, RenderDevice->GetDevice(), RenderDevice->GetContext()))
@@ -142,7 +137,7 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 	LoadingScreen = MakeUnique<FLoadingScreen>();
 	LoadingScreen->Init();
 	LoadingScreen->SetProgress(0.0f);
-	LoadingScreen->SetStatusText("Scanning assets...");
+	LoadingScreen->SetStatusText("Initializing renderer...");
 	LoadingScreen->Tick(0.0f);
 	// 초기 로딩 화면 출력 및 창 표시
 	PresentFrame();
@@ -162,7 +157,20 @@ bool FEditorApplication::Init(HINSTANCE hInstance)
 		PresentFrame();
 	};
 
+	// 로딩 화면을 먼저 표시한 뒤 렌더러와 셰이더를 초기화한다.
+	RefreshLoadingScreen(true);
+	LOG(Info, "Initialize Renderer...");
+	Renderer = MakeUnique<FRenderer>();
+	if (!Renderer->Init()) return false;
+	RefreshLoadingScreen(true);
+
+	LoadingScreen->SetStatusText("Initializing shaders...");
+	RefreshLoadingScreen(true);
+	FRenderResourceManager::Init();
+
 	// 애셋 초기화 및 진행률 연동
+	LoadingScreen->SetStatusText("Scanning assets...");
+	RefreshLoadingScreen(true);
 	LOG(Info, "Initialize AssetManager...");
 	UAssetManager::Get().Init(
 		[this, &RefreshLoadingScreen](float Ratio, const FString& AssetName)
