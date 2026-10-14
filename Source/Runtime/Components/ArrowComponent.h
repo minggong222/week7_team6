@@ -12,5 +12,6 @@ class UArrowComponent : public UStaticMeshComponent
 public:
 	UArrowComponent();
 	virtual ~UArrowComponent();
+	virtual void Serialize(json& Handle, bool bIsLoading) override;
 
 };

@@ -96,7 +96,18 @@ void USceneComponent::Serialize(json& Handle, const bool bIsLoading)
 {
 	Super::Serialize(Handle, bIsLoading);
 	if (bIsLoading)
+	{
+		if (Handle.contains("bIsEditorOnly"))
+			bIsEditorOnly = Handle["bIsEditorOnly"].get<bool>();
+		if (Handle.contains("bIsVisualizationComponent"))
+			bIsVisualizationComponent = Handle["bIsVisualizationComponent"].get<bool>();
 		MarkTransformDirtyRecursive();
+	}
+	else
+	{
+		Handle["bIsEditorOnly"] = bIsEditorOnly;
+		Handle["bIsVisualizationComponent"] = bIsVisualizationComponent;
+	}
 }
 
 FRotator USceneComponent::GetComponentRotation() const

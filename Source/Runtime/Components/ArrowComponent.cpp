@@ -25,3 +25,25 @@ UArrowComponent::UArrowComponent()
 UArrowComponent::~UArrowComponent()
 {
 }
+
+void UArrowComponent::Serialize(json& Handle, bool bIsLoading)
+{
+	Super::Serialize(Handle, bIsLoading);
+	if (!bIsLoading)
+		return;
+
+	UMaterial* Material = GetMaterial(0);
+	if (!Material)
+		return;
+
+	// 공유 에셋 머티리얼이면 화살표 전용 인스턴스에서 설정한다.
+	if (!Material->bIsInstance)
+	{
+		Material = UMaterial::CreateInstance(Material);
+		if (!Material)
+			return;
+		SetMaterial(0, Material);
+	}
+
+	Material->bDisableShading = true;
+}
