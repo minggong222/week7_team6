@@ -299,36 +299,44 @@ void FRenderer::BuildLightDatas(const FScene& Scene)
 	TArray<FLightTreeNode> LightTree;
 	TArray<FLightBound> Bounds;
 
-	LightDatas.Reserve(Scene.Lights.Num());
-	Bounds.Reserve(Scene.Lights.Num());
-	for (const auto& Component : Scene.Lights)
-	{
-		if (!Component.IsValid() || !Component->bVisible)
-			continue;
-		ELightComponentType LightType = Component->GetLightType();
-		if (LightType == LightType_Directional || LightType == LightType_Point || LightType == LightType_Spot)
+	{ // TODO: 여기 엄청난 병목구간임!! 여기에 프로파일링 코드 추가해보면 알 수 있음. FScene 내 저장 구조를 프록시 기반으로 개선 필수
+		LightDatas.Reserve(Scene.Lights.Num());
+		Bounds.Reserve(Scene.Lights.Num());
+		for (const auto& Component : Scene.Lights)
 		{
-			if (LightType != LightType_Directional)
+			if (!Component.IsValid() || !Component->bVisible)
+				continue;
+			ELightComponentType LightType = Component->GetLightType();
+			if (LightType == LightType_Directional || LightType == LightType_Point || LightType == LightType_Spot)
 			{
-				FLightBound Bound{.DataIndex{(uint32)LightDatas.size()}, .Bound{Component->GetBoundingSphere()}};
-				if (min.X > Bound.Bound.Center.X) min.X = Bound.Bound.Center.X;
-				if (min.Y > Bound.Bound.Center.Y) min.Y = Bound.Bound.Center.Y;
-				if (min.Z > Bound.Bound.Center.Z) min.Z = Bound.Bound.Center.Z;
-				if (max.X < Bound.Bound.Center.X) max.X = Bound.Bound.Center.X;
-				if (max.Y < Bound.Bound.Center.Y) max.Y = Bound.Bound.Center.Y;
-				if (max.Z < Bound.Bound.Center.Z) max.Z = Bound.Bound.Center.Z;
-				Bounds.Add(Bound);
-			}
-			else
-				DirectionalLightIndices.Add((uint32)LightDatas.size());
+				if (LightType != LightType_Directional)
+				{
+					FLightBound Bound{.DataIndex{(uint32)LightDatas.size()}, .Bound{Component->GetBoundingSphere()}};
+					if (min.X > Bound.Bound.Center.X)
+						min.X = Bound.Bound.Center.X;
+					if (min.Y > Bound.Bound.Center.Y)
+						min.Y = Bound.Bound.Center.Y;
+					if (min.Z > Bound.Bound.Center.Z)
+						min.Z = Bound.Bound.Center.Z;
+					if (max.X < Bound.Bound.Center.X)
+						max.X = Bound.Bound.Center.X;
+					if (max.Y < Bound.Bound.Center.Y)
+						max.Y = Bound.Bound.Center.Y;
+					if (max.Z < Bound.Bound.Center.Z)
+						max.Z = Bound.Bound.Center.Z;
+					Bounds.Add(Bound);
+				}
+				else
+					DirectionalLightIndices.Add((uint32)LightDatas.size());
 
-			LightDatas.Add(Component->CreateLightData());
-		}
-		else if (LightType == LightType_Ambient && !AmbientDone)
-		{
-			AmbientDone = true;
-			const FLightData AmbientData = Component->CreateLightData();
-			LightingGlobal.AmbientRadiance = {AmbientData.Color.X, AmbientData.Color.Y, AmbientData.Color.Z, AmbientData.Intensity};
+				LightDatas.Add(Component->CreateLightData());
+			}
+			else if (LightType == LightType_Ambient && !AmbientDone)
+			{
+				AmbientDone = true;
+				const FLightData AmbientData = Component->CreateLightData();
+				LightingGlobal.AmbientRadiance = {AmbientData.Color.X, AmbientData.Color.Y, AmbientData.Color.Z, AmbientData.Intensity};
+			}
 		}
 	}
 	for (auto& Bound : Bounds)

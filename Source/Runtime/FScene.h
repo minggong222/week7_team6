@@ -12,5 +12,5 @@ struct FScene
 {
 	FFogSceneData FogSceneData;
     TArray<FFireballSceneData> Fireballs;
-	TArray<TWeakObjectPtr<ULightComponent>> Lights;
+	TArray<TWeakObjectPtr<ULightComponent>> Lights; // TODO: 여기 엄청난 병목구간임!! FScene 내 저장 구조를 프록시 기반으로 개선 필수
 };
